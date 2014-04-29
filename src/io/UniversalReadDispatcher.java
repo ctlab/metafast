@@ -13,7 +13,6 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-
 public class UniversalReadDispatcher {
     NamedSource<Dna> reader;
     ProgressableIterator<Dna> iterator;
@@ -32,7 +31,6 @@ public class UniversalReadDispatcher {
         this.iterator = reader.iterator();
         this.workRangeSize = workRangeSize;
         out = null;
-
     }
 
     public UniversalReadDispatcher(NamedSource<Dna> reader,
@@ -52,7 +50,13 @@ public class UniversalReadDispatcher {
 
     private List<Dna> readRange(int workRangeSize) throws IOException {
         List<Dna> list = new ArrayList<Dna>();
-        while (list.size() < workRangeSize && iterator.hasNext()) {
+        while (this.iterator != null && list.size() < workRangeSize) {
+
+            // This part needed until fix to iterator.hasNext()
+            if (!this.iterator.hasNext()) {
+                this.iterator = null;
+                break;
+            }
             list.add(iterator.next());
             ++reads;
         }
@@ -104,4 +108,3 @@ public class UniversalReadDispatcher {
     }
 
 }
-
