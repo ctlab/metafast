@@ -66,7 +66,8 @@ public class IOUtils {
     public static void printKmers(ArrayLong2IntHashMap hm,
                                   String path,
                                   int threshold) throws IOException {
-        DataOutputStream stream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(path)));
+        DataOutputStream stream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(new File(path))));
+        //DataOutputStream stream = new DataOutputStream(new FileOutputStream(new File(path)));
 
         for (Long2IntMap map : hm.hm) {
             for (Long2IntMap.Entry e: map.long2IntEntrySet()) {

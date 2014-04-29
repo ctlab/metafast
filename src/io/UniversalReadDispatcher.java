@@ -2,12 +2,9 @@ package io;
 
 import ru.ifmo.genetics.dna.Dna;
 import ru.ifmo.genetics.dna.DnaQ;
-import ru.ifmo.genetics.io.*;
 import ru.ifmo.genetics.io.sources.NamedSource;
-import ru.ifmo.genetics.tools.io.LazyBinqReader;
 import ru.ifmo.genetics.utils.iterators.ProgressableIterator;
 
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -52,7 +49,7 @@ public class UniversalReadDispatcher {
         List<Dna> list = new ArrayList<Dna>();
         while (this.iterator != null && list.size() < workRangeSize) {
 
-            // This part needed until fix to iterator.hasNext()
+            // This part needed due to buggy iterator.hasNext()
             if (!this.iterator.hasNext()) {
                 this.iterator = null;
                 break;

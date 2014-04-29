@@ -20,21 +20,33 @@ import java.io.IOException;
 public class KmersCounterMain extends Tool {
 
     public static final String NAME = "kmer-counter";
-    public static final String DESCRIPTION = "Read files with FASTQ reads and count k-mers with De Bruijn graph";
+    public static final String DESCRIPTION = "Count k-mers with De Bruijn graph in given reads" +
+            "\nSupported input formats: FASTQ, BINQ, FASTA (without 'N')" +
+            "\nBinary output format: 64 bits to k-mer itself + 32 bits to frequency";
 
     static final int LOAD_TASK_SIZE = 1 << 15;
 
     public final Parameter<Integer> k = addParameter(new IntParameterBuilder("k")
             .mandatory()
             .withShortOpt("k")
-            .withDescription("k-mer size")
+            .withDescription("k-mer size (maximum 31 due to realization details)")
             .create());
 
     public final Parameter<File[]> inputFiles = addParameter(new FileMVParameterBuilder("reads")
             .withShortOpt("i")
             .mandatory()
-            .withDescription("list of input files with FASTQ reads from single environment")
+            .withDescription("list of reads files from single environment")
             .create());
+
+    public final Parameter<Integer> maximalBadFrequency = addParameter(new IntParameterBuilder("maximal-bad-frequence")
+            .optional()
+            .withShortOpt("b")
+            .withDescription("maximal frequency for a kmer to be assumed erroneous")
+            .withDefaultValue(0)
+            .create());
+
+    /*
+    To think about that params
 
     public final Parameter<Boolean> plainText = addParameter(new BoolParameterBuilder("plainText")
             .withShortOpt("pt")
@@ -49,6 +61,7 @@ public class KmersCounterMain extends Tool {
             .withDescription("print only k-mers counts for all possible k-mers (k < 15)")
             .withDefaultValue(false)
             .create());
+    */
 
     @Override
     protected void runImpl() throws ExecutionFailedException {
@@ -62,9 +75,18 @@ public class KmersCounterMain extends Tool {
             throw new ExecutionFailedException("Couldn't load kmers", e);
         }
 
+        File dir = new File(workDir + File.separator + "kmers");
+        if (!dir.exists()) {
+            dir.mkdir();
+        }
+
+        String fp = dir + File.separator + inputFiles.get()[0];
+        fp += inputFiles.get().length > 1 ? "+" : "";
+        fp += ".kmers";
+
         try {
-            String fp = workDir + File.separator + "kmers";
-            IOUtils.printKmers(hm, fp, 2);
+            debug("Starting to print k-mers to " + fp);
+            IOUtils.printKmers(hm, fp, maximalBadFrequency.get());
             info("k-mers printed to " + fp);
         } catch (IOException e) {
             e.printStackTrace();
