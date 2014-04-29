@@ -1,0 +1,201 @@
+<project name="jarsBuilder" default="metafast">
+    <property name="src.dir" value="src"/>
+    <property name="bin.dir" value="out/bin"/>
+    <property name="jars.dir" value="out"/>
+
+    <property name="itmo-assembler.path" value="lib/itmo-assembler.jar"/>
+    <property name="args4j.path" value="lib/args4j-2.0.21.jar"/>
+
+    <property name="metafast.main" value="Runner"/>
+    <property name="metafast.jar" value="metafast.jar"/>
+
+
+    <property name="builder.main" value="tools.SeqBuilderMain"/>
+    <property name="builder.jar" value="seqBuilder.jar"/>
+
+    <property name="merger.main" value="tools.SeqMergerMain"/>
+    <property name="merger.jar" value="seqMerger.jar"/>
+
+    <property name="antibody.main" value="tools.AntibodyFinderMain"/>
+    <property name="antibody.jar" value="antibodyFinder.jar"/>
+
+    <property name="features.main" value="tools.ReadsFeaturesBuilderMain"/>
+    <property name="features.jar" value="featuresBuilder.jar"/>
+
+    <property name="compare.main" value="tools.CompareReadsAndComponentsMain"/>
+    <property name="compare.jar" value="compare.jar"/>
+
+    <target name="metafast">
+        <mkdir dir="${bin.dir}"/>
+        
+        <javac srcdir="${src.dir}"
+               destdir="${bin.dir}"
+               classpath="${itmo-assembler.path}:${args4j.path}"
+               includeantruntime="false"
+               debug="true"
+               debuglevel="lines,vars,source">
+            <include name="${metafast.main}.java"/>
+            <include name="tools/**"/>
+        </javac>
+
+        <jar destfile="${jars.dir}/${metafast.jar}"
+             basedir="${bin.dir}">
+            <manifest>
+                <attribute name="Main-Class" value="${metafast.main}"/>
+            </manifest>
+
+            <zipfileset src="${itmo-assembler.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${args4j.path}" excludes="META-INF/*.SF"/>
+        </jar>
+
+        <delete dir="${bin.dir}"/>        
+    </target>
+    
+    
+    <target name="tools" 
+            depends="builder-jar, 
+                     merger-jar,
+                     antibody-jar,
+                     features-jar">
+    </target>
+
+    <target name="builder-jar">
+        <mkdir dir="${bin.dir}"/>
+        
+        <javac srcdir="${src.dir}"
+               destdir="${bin.dir}"
+               classpath="${itmo-assembler.path}:${args4j.path}"
+               includeantruntime="false"
+               debug="true"
+               debuglevel="lines,vars,source">
+            <include name="${builder.main}.java"/>
+        </javac>
+
+        <jar destfile="${jars.dir}/${builder.jar}"
+             basedir="${bin.dir}">
+            <manifest>
+                <attribute name="Main-Class" value="${builder.main}"/>
+            </manifest>
+
+            <zipfileset src="${itmo-assembler.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${args4j.path}" excludes="META-INF/*.SF"/>
+        </jar>
+
+        <delete dir="${bin.dir}"/>
+    </target>
+
+    <target name="merger-jar">
+        <mkdir dir="${bin.dir}"/>
+        
+        <javac srcdir="${src.dir}"
+               destdir="${bin.dir}"
+               classpath="${itmo-assembler.path}:${args4j.path}"
+               includeantruntime="false"
+               debug="true"
+               debuglevel="lines,vars,source">
+            <include name="${merger.main}.java"/>
+        </javac>
+
+        <jar destfile="${jars.dir}/${merger.jar}"
+             basedir="${bin.dir}">
+            <manifest>
+                <attribute name="Main-Class" value="${merger.main}"/>
+            </manifest>
+
+            <zipfileset src="${itmo-assembler.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${args4j.path}" excludes="META-INF/*.SF"/>
+        </jar>
+
+        <delete dir="${bin.dir}"/>
+    </target>
+
+    <target name="antibody-jar">
+        <mkdir dir="${bin.dir}"/>
+        
+        <javac srcdir="${src.dir}"
+               destdir="${bin.dir}"
+               classpath="${itmo-assembler.path}:${args4j.path}"
+               includeantruntime="false"
+               debug="true"
+               debuglevel="lines,vars,source">
+            <include name="${antibody.main}.java"/>
+        </javac>
+
+        <jar destfile="${jars.dir}/${antibody.jar}"
+             basedir="${bin.dir}">
+            <manifest>
+                <attribute name="Main-Class" value="${antibody.main}"/>
+            </manifest>
+
+            <zipfileset src="${itmo-assembler.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${args4j.path}" excludes="META-INF/*.SF"/>
+        </jar>
+
+        <delete dir="${bin.dir}"/>
+    </target>
+
+    
+    <target name="features-jar">
+        <mkdir dir="${bin.dir}"/>
+        
+        <javac srcdir="${src.dir}"
+               destdir="${bin.dir}"
+               classpath="${itmo-assembler.path}:${args4j.path}"
+               includeantruntime="false"
+               debug="true"
+               debuglevel="lines,vars,source">
+            <include name="${features.main}.java"/>
+        </javac>
+
+        <jar destfile="${jars.dir}/${features.jar}"
+             basedir="${bin.dir}">
+            <manifest>
+                <attribute name="Main-Class" value="${features.main}"/>
+            </manifest>
+
+            <zipfileset src="${itmo-assembler.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${args4j.path}" excludes="META-INF/*.SF"/>
+        </jar>
+
+        <delete dir="${bin.dir}"/>
+    </target>
+
+
+    <target name="compare-jar">
+        <mkdir dir="${bin.dir}"/>
+        
+        <javac srcdir="${src.dir}"
+               destdir="${bin.dir}"
+               classpath="${itmo-assembler.path}:${args4j.path}"
+               includeantruntime="false"
+               debug="true"
+               debuglevel="lines,vars,source">
+            <include name="${compare.main}.java"/>
+        </javac>
+
+        <jar destfile="${jars.dir}/${compare.jar}"
+             basedir="${bin.dir}">
+            <manifest>
+                <attribute name="Main-Class" value="${compare.main}"/>
+            </manifest>
+
+            <zipfileset src="${itmo-assembler.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${args4j.path}" excludes="META-INF/*.SF"/>
+        </jar>
+
+        <!--taskdef resource="proguard/ant/task.properties" classpath="lib/proguard.jar" />
+        <proguard>
+            -injars ${jars.dir}/${compare.jar}
+            -outjars out/short.jar
+            -libraryjars  ${java.home}/lib/rt.jar
+            -keep class ${compare.main} { public static void main(java.lang.String[]); }
+            -keep class org.apache.log4j.** {*;}
+
+            -dontwarn
+        </proguard-->
+
+        <delete dir="${bin.dir}"/>
+    </target>
+
+
+</project>
