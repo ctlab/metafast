@@ -50,6 +50,5 @@ public class Sequence {
             pw.println(seqInfo);
             pw.println(seq);
         }
-
     }
 }

@@ -11,6 +11,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SequencesFinders {
+    /*
+    TODO: Parallel it
+     */
     public static List<Sequence> thresholdStrategy(ArrayLong2IntHashMap hm,
                                                    int freqThreshold,
                                                    int lenThreshold,

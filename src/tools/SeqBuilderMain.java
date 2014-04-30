@@ -153,91 +153,9 @@ public class SeqBuilderMain extends Tool {
             e.printStackTrace();
         }
         info("Sequences printed to " + destination);
-    }
 
-    /*
-    Old code, will be removed soon
-     */
-    public void calcSequences(ArrayLong2IntHashMap hm, String fastaFP) throws FileNotFoundException {
-        int freqThreshold = maximalBadFrequency.get();
-        int lenThreshold = sequenceLen.get();
-        int kValue = k.get();
-
-        HashMapOperations.banBranchingKmers(hm, freqThreshold, kValue, this.logger);
-
-        int sequenceId = 0;
-
-        ArrayList<Integer> sequenceLen = new ArrayList<Integer>();
-        ArrayList<Long> sequenceWeight = new ArrayList<Long>();
-
-        long kmersInSeq = 0;
-        long totalKmersInSequences = 0;
-
-        PrintWriter fastaPW = new PrintWriter(fastaFP);
-
-        for (int i = 0; i < hm.hm.length; ++i) {
-            for (Entry entry : hm.hm[i].long2IntEntrySet()) {
-                int value = entry.getIntValue();
-                if (value <= freqThreshold) {
-                    continue;
-                }
-                long key = entry.getLongKey();
-                ShortKmer kmer = new ShortKmer(key, kValue);
-
-                if (HashMapOperations.getLeftNucleotide(hm, kmer, freqThreshold) >= 0) {
-                    continue;
-                }
-
-                StringBuilder sequenceSB = new StringBuilder(kmer.toString());
-                long seqWeight = 0, minWeight = value, maxWeight = value;
-
-                while (true) {
-                    long kmerRepr = kmer.toLong();
-                    value = hm.get(kmerRepr);
-                    seqWeight += value;
-                    minWeight = Math.min(minWeight, value);
-                    maxWeight = Math.max(maxWeight, value);
-
-                    hm.add(kmerRepr, -(value + 1));
-
-                    byte rightNuc = HashMapOperations.getRightNucleotide(hm, kmer, freqThreshold);
-                    if (rightNuc < 0) {
-                        break;
-                    }
-                    sequenceSB.append(DnaTools.toChar(rightNuc));
-                    kmer.shiftRight(rightNuc);
-                }
-
-                if (sequenceSB.length() >= lenThreshold) {
-                    sequenceId++;
-                    String sequenceStr = sequenceSB.toString();
-
-                    sequenceLen.add(sequenceStr.length());
-                    sequenceWeight.add(seqWeight);
-
-                    totalKmersInSequences += seqWeight;
-                    kmersInSeq += sequenceStr.length() - kValue + 1;
-
-                    String seqInfo = String.format(">%d length=%d sum_weight=%d min_weight=%d max_weight=%d",
-                            sequenceId, sequenceStr.length(), seqWeight, minWeight, maxWeight);
-                    fastaPW.println(seqInfo);
-                    fastaPW.println(sequenceStr);
-
-                    if (sequenceId % 10000 == 0) {
-                        debug("sequenceId = " + sequenceId + ", last len = " + sequenceStr.length());
-                    }
-                }
-
-            }
-        }
-        info(sequenceId + " sequences found");
-        info(kmersInSeq + " unique k-mers out of " + hm.size() + " in sequences");
-        info("Total k-mers in sequences = " + totalKmersInSequences);
-        info("N50 value of sequences = " + getN50(sequenceLen));
-
-        dumpSeqInfo(sequenceLen, sequenceWeight, workDir + File.separator + "seq-info");
-
-        fastaPW.close();
+        //info("N50 value of sequences = " + getN50(sequenceLen));
+        //dumpSeqInfo(sequenceLen, sequenceWeight, workDir + File.separator + "seq-info");
     }
 
     void dumpStat(int[] stat, String filename) throws FileNotFoundException {

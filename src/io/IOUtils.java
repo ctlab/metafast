@@ -70,7 +70,7 @@ public class IOUtils {
         //DataOutputStream stream = new DataOutputStream(new FileOutputStream(new File(path)));
 
         for (Long2IntMap map : hm.hm) {
-            for (Long2IntMap.Entry e: map.long2IntEntrySet()) {
+            for (Long2IntMap.Entry e : map.long2IntEntrySet()) {
                 if (e.getIntValue() > threshold) {
                     stream.writeLong(e.getLongKey());
                     stream.writeInt(e.getIntValue());
@@ -91,7 +91,9 @@ public class IOUtils {
         return hm;
     }
 
-
+    /*
+    TODO: parallel it
+     */
     public static void addKmers(File[] files,
                                 ArrayLong2IntHashMap hm,
                                 int freqThreshold,
