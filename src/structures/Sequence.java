@@ -3,6 +3,10 @@ package structures;
 
 import ru.ifmo.genetics.dna.kmers.ShortKmer;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+
 public class Sequence {
     String repr;
 
@@ -34,5 +38,18 @@ public class Sequence {
 
     public ShortKmer endKmer(int k) {
         return new ShortKmer(repr.substring(repr.length() - k, repr.length()));
+    }
+
+    public static void printSequences(Iterable<Sequence> sequences, File destination) throws FileNotFoundException {
+        PrintWriter pw = new PrintWriter(destination);
+        int sequenceId = 0;
+        for (Sequence seq : sequences) {
+            sequenceId++;
+            String seqInfo = String.format(">%d length=%d av_weight=%d min_weight=%d max_weight=%d",
+                    sequenceId, seq.length(), seq.averageWeight(), seq.minWeight, seq.maxWeight);
+            pw.println(seqInfo);
+            pw.println(seq);
+        }
+
     }
 }

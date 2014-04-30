@@ -15,16 +15,16 @@ import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.*;
+import structures.Sequence;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 public class SeqBuilderMain extends Tool {
-    public static final String NAME = "sequences-builder";
+    public static final String NAME = "seq-builder";
     public static final String DESCRIPTION = "Metagenome De Bruijn graph analysis and sequences building";
-
-    static final int LOAD_TASK_SIZE = 1 << 15;
 
     static final int STAT_LEN = 1024;
 
@@ -55,47 +55,32 @@ public class SeqBuilderMain extends Tool {
             .withDescription("sequence minimal length to be written to " + SEQUENCES_FILENAME)
             .create());
 
-    public final Parameter<Long> maxSize = addParameter(new LongParameterBuilder("max-size")
-            .optional()
-            .withDescription("maximal hashset size")
-            .withDefaultValue(NumUtils.highestBits(Misc.availableMemory() / 42, 3))
-            .memoryParameter()
-            .create());
-
-    public final Parameter<File[]> inputFiles = addParameter(new FileMVParameterBuilder("reads")
+    public final Parameter<File[]> inputFiles = addParameter(new FileMVParameterBuilder("k-mers")
             .withShortOpt("i")
             .mandatory()
-            .withDescription("list of input files")
+            .withDescription("list of input files with k-mers in binary format")
             .create());
 
-    public final Parameter<KmerIteratorFactory> kmerIteratorFactory = Parameter.createParameter(
-            new KmerIteratorFactoryParameterBuilder("kmer-iterator-factory")
-                    .optional()
-                    .withDescription("factory used for iterating through kmers")
-                    .withDefaultValue(new ShortKmerIteratorFactory())
-                    .create());
-
-    private int LEN;
-    private long MAX_SIZE;
+    public final Parameter<File> outputFile = addParameter(new FileParameterBuilder("output")
+            .withShortOpt("o")
+            .withDescription("Destination of resulting FASTA sequences")
+            .create());
 
     @Override
     protected void runImpl() throws ExecutionFailedException {
-        LEN = k.get();
-        MAX_SIZE = maxSize.get();
 
         if (maximalBadFrequency.get() != null && bottomCutPercent.get() != null) {
             throw new IllegalArgumentException("-b and -bp can not be set both");
         }
 
-        debug("MAXIMAL_SIZE = " + MAX_SIZE);
-
         ArrayLong2IntHashMap hm;
         try {
-            hm = IOUtils.loadBINQReads(inputFiles.get(), LEN, LOAD_TASK_SIZE,
-                    kmerIteratorFactory.get(), availableProcessors.get(), this.logger);
+            hm = IOUtils.loadKmers(inputFiles.get(), 0, availableProcessors.get(), this.logger);
         } catch (IOException e) {
             throw new ExecutionFailedException("Couldn't load kmers", e);
         }
+
+        debug("k-mers loaded");
 
         long totalKmers = 0;
         int[] stat = new int[STAT_LEN];
@@ -141,18 +126,38 @@ public class SeqBuilderMain extends Tool {
             }
             maximalBadFrequency.set(threshold);
         }
+
         info("Maximal bad frequency = " + maximalBadFrequency.get());
 
-//        try {
-//            calcSequences(hm, workDir + File.separator + SEQUENCES_FILENAME);
-//        } catch (FileNotFoundException e) {
-//            e.printStackTrace();
-//        }
-        info("hm brackets = " + hm.hm.length);
-        info("Sequences found = " + SequencesFinders.thresholdStrategy(hm, maximalBadFrequency.get(), sequenceLen.get(), k.get(), this.logger).size());
+        File destination = outputFile.get();
+        if (destination == null) {
+            File dir = new File(workDir + File.separator + "sequences");
+            if (!dir.isDirectory()) {
+                dir.mkdir();
+            }
+            String basename = inputFiles.get()[0].getName().replace(".kmers", "");
+            String fp = dir + File.separator + basename;
+            fp += (inputFiles.get().length > 1 ? "+" : "") + ".seq.fasta";
 
+            destination = new File(fp);
+        }
+
+        //info("hm brackets = " + hm.hm.length);
+        List<Sequence> sequences = SequencesFinders.thresholdStrategy(hm, maximalBadFrequency.get(),
+                sequenceLen.get(), k.get(), this.logger);
+        info("Sequences found = " + sequences.size());
+
+        try {
+            Sequence.printSequences(sequences, destination);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        info("Sequences printed to " + destination);
     }
 
+    /*
+    Old code, will be removed soon
+     */
     public void calcSequences(ArrayLong2IntHashMap hm, String fastaFP) throws FileNotFoundException {
         int freqThreshold = maximalBadFrequency.get();
         int lenThreshold = sequenceLen.get();

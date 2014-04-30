@@ -20,9 +20,9 @@ import java.io.IOException;
 public class KmersCounterMain extends Tool {
 
     public static final String NAME = "kmer-counter";
-    public static final String DESCRIPTION = "Count k-mers with De Bruijn graph in given reads" +
-            "\nSupported input formats: FASTQ, BINQ, FASTA (without 'N')" +
-            "\nBinary output format: 64 bits to k-mer itself + 32 bits to frequency";
+
+    public static final String DESCRIPTION = "Count k-mers in given reads with ArrayLong2IntHashMap";
+//            "\nBinary output format: 64 bits to k-mer itself + 32 bits to frequency";
 
     static final int LOAD_TASK_SIZE = 1 << 15;
 
@@ -35,7 +35,7 @@ public class KmersCounterMain extends Tool {
     public final Parameter<File[]> inputFiles = addParameter(new FileMVParameterBuilder("reads")
             .withShortOpt("i")
             .mandatory()
-            .withDescription("list of reads files from single environment")
+            .withDescription("list of reads files from single environment. FASTQ, BINQ, FASTA (without 'N')")
             .create());
 
     public final Parameter<Integer> maximalBadFrequency = addParameter(new IntParameterBuilder("maximal-bad-frequence")

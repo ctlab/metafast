@@ -49,7 +49,7 @@ public class UniversalReadDispatcher {
         List<Dna> list = new ArrayList<Dna>();
         while (this.iterator != null && list.size() < workRangeSize) {
 
-            // This part needed due to buggy iterator.hasNext()
+            // This part is needed due to buggy iterator.hasNext()
             if (!this.iterator.hasNext()) {
                 this.iterator = null;
                 break;

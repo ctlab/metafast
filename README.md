@@ -8,9 +8,12 @@ Print available tools:
 java -jar metafast.jar -ts
 ~~~
 
+### Authors - TODO
+
 ### Examples - TODO
 
 ~~~ sh
+java -Xmx14G -jar metafast.jar -t kmer-counter -k 31 -i SRR413558merged.fastq -v --force -w tmpWD
 java -Xmx15G -jar metafast.jar -t sequences-builder -bp 10 -k 31 -l 100 --reads SRR413558merged.binq --force -v --max-size 2000000000
 ~~~
 
