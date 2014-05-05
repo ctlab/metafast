@@ -135,8 +135,14 @@ public class SeqBuilderMain extends Tool {
         }
 
         //info("hm brackets = " + hm.hm.length);
-        List<Sequence> sequences = SequencesFinders.thresholdStrategy(hm, maximalBadFrequency.get(),
-                sequenceLen.get(), k.get(), this.logger);
+        List<Sequence> sequences;
+        try {
+            sequences = SequencesFinders.thresholdStrategy(hm, availableProcessors.get(),
+                    maximalBadFrequency.get(), sequenceLen.get(), k.get());
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            return;
+        }
         info("Sequences found = " + sequences.size());
 
         try {

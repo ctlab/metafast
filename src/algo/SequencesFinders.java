@@ -1,56 +1,34 @@
 package algo;
 
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
-import org.apache.log4j.Logger;
 import ru.ifmo.genetics.dna.DnaTools;
 import ru.ifmo.genetics.dna.kmers.ShortKmer;
+import ru.ifmo.genetics.executors.BlockingThreadPoolExecutor;
 import ru.ifmo.genetics.structures.map.ArrayLong2IntHashMap;
 import structures.Sequence;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class SequencesFinders {
-    /*
-    TODO: Parallel it
-     */
+
     public static List<Sequence> thresholdStrategy(ArrayLong2IntHashMap hm,
+                                                   int availableProcessors,
                                                    int freqThreshold,
                                                    int lenThreshold,
-                                                   int k,
-                                                   Logger logger) {
-        int LOG_GAP = 10000;
+                                                   int k) throws InterruptedException {
+        //List<Sequence> ans = Collections.synchronizedList(new ArrayList<Sequence>());
+        List<Sequence> ans = new CopyOnWriteArrayList<Sequence>();
 
-        List<Sequence> ans = new ArrayList<Sequence>();
+        BlockingThreadPoolExecutor executor = new BlockingThreadPoolExecutor(availableProcessors);
 
         for (int i = 0; i < hm.hm.length; ++i) {
-            for (Long2IntMap.Entry entry : hm.hm[i].long2IntEntrySet()) {
-                int value = entry.getIntValue();
-                if (value <= freqThreshold) {
-                    continue;
-                }
-
-                long key = entry.getLongKey();
-                ShortKmer kmer = new ShortKmer(key, k);
-
-                if (HashMapOperations.getRightNucleotide(hm, kmer, freqThreshold) < 0 ||
-                        HashMapOperations.getLeftNucleotide(hm, kmer, freqThreshold) >= 0) {
-                    continue;
-                }
-
-                Sequence sequence = getSequenceShiftingRight(hm, kmer, freqThreshold);
-
-                if (sequence.length() >= lenThreshold) {
-                    ans.add(sequence);
-
-                    if (ans.size() % LOG_GAP == 0) {
-                        logger.debug("sequenceId = " + ans.size() + ", last len = " + sequence.length());
-                    }
-                }
-
-            }
+            executor.blockingExecute(new
+                    AddSequencesShiftingRightTask(hm, hm.hm[i], freqThreshold, ans, lenThreshold, k));
         }
 
+        System.out.println(executor.getTaskCount());
+        executor.shutdownAndAwaitTermination();
         return ans;
     }
 
