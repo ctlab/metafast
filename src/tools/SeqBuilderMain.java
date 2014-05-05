@@ -67,12 +67,12 @@ public class SeqBuilderMain extends Tool {
 
         ArrayLong2IntHashMap hm;
         try {
-            hm = IOUtils.loadKmers(inputFiles.get(), 0, availableProcessors.get(), this.logger);
-        } catch (IOException e) {
-            throw new ExecutionFailedException("Couldn't load kmers", e);
+            hm = IOUtils.loadKmers(inputFiles.get(), 0, availableProcessors.get());
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            return;
         }
-
-        debug("k-mers loaded");
+        debug(hm.size() + " k-mers loaded");
 
         long totalKmers = 0;
         int[] stat = new int[STAT_LEN];

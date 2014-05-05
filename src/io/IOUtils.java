@@ -6,6 +6,7 @@ import ru.ifmo.genetics.dna.DnaTools;
 import ru.ifmo.genetics.dna.kmers.Kmer;
 import ru.ifmo.genetics.dna.kmers.KmerIteratorFactory;
 import ru.ifmo.genetics.dna.kmers.ShortKmer;
+import ru.ifmo.genetics.executors.BlockingThreadPoolExecutor;
 import ru.ifmo.genetics.io.sources.NamedSource;
 import ru.ifmo.genetics.structures.map.ArrayLong2IntHashMap;
 
@@ -24,6 +25,8 @@ import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
  * Time: 17:32
  */
 public class IOUtils {
+    static final int BYTES_PER_KMER = 12;
+
     public static void addFASTASequences(File[] files,
                                          ArrayLong2IntHashMap hm,
                                          int k,
@@ -91,9 +94,6 @@ public class IOUtils {
         return hm;
     }
 
-    /*
-    TODO: parallel it
-     */
     public static void addKmers(File[] files,
                                 ArrayLong2IntHashMap hm,
                                 int freqThreshold,
@@ -121,6 +121,39 @@ public class IOUtils {
             logger.debug(file + " : " + totalKmersAdded + " / " + totalKmers + " total k-mers added");
         }
         logger.debug("k-mers loaded");
+    }
+
+    public static ArrayLong2IntHashMap loadKmers(File[] files,
+                                                 int freqThreshold,
+                                                 int availableProcessors) throws InterruptedException {
+
+        ArrayLong2IntHashMap hm =
+                new ArrayLong2IntHashMap((int) (Math.log(availableProcessors) / Math.log(2)) + 4);
+        addKmers(files, hm, freqThreshold, availableProcessors);
+        return hm;
+    }
+
+    public static void addKmers(File[] files,
+                                ArrayLong2IntHashMap hm,
+                                int freqThreshold,
+                                int availableProcessors) throws InterruptedException {
+
+        BlockingThreadPoolExecutor executor = new BlockingThreadPoolExecutor(availableProcessors);
+
+        for (File file : files) {
+            long bytesInFile = file.length();
+            long kmersCount = bytesInFile / BYTES_PER_KMER;
+            long kmersPerThread = kmersCount / availableProcessors + 1;
+
+            long kmersSum = 0;
+            for (int i = 0; i < availableProcessors; i++) {
+                long kmersToAdd = Math.min(kmersPerThread, kmersCount - kmersSum);
+                executor.blockingExecute(new KmersToHMAdditionTask(hm, file, kmersSum, kmersToAdd, freqThreshold));
+                kmersSum += kmersToAdd;
+            }
+        }
+
+        executor.shutdownAndAwaitTermination();
     }
 
     public static ArrayLong2IntHashMap loadBINQReads(File[] files,
@@ -210,6 +243,4 @@ public class IOUtils {
         logger.info("k-mers loaded");
     }
 
-
 }
-
