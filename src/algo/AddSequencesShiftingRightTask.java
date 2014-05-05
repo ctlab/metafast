@@ -10,30 +10,51 @@ import structures.Sequence;
 import java.util.List;
 
 /**
- * Created by ulyantsev on 05.05.14.
- *
+ * Task class to add sequences from single <tt>Long2IntOpenHashMap</tt>
+ * taken from <tt>ArrayLong2IntHashMap</tt>
+ * @author Vladimir Ulyantsev
  */
 public class AddSequencesShiftingRightTask implements Runnable {
 
     ArrayLong2IntHashMap hm;
-    Long2IntOpenHashMap currentHM;
+    Long2IntOpenHashMap openHM;
     int freqThreshold;
     List<Sequence> sequenceList;
     int lenThreshold;
     int k;
 
     public AddSequencesShiftingRightTask(ArrayLong2IntHashMap hm,
-                                         Long2IntOpenHashMap currentHM,
+                                         Long2IntOpenHashMap openHM,
                                          int freqThreshold,
                                          List<Sequence> sequenceList,
                                          int lenThreshold,
                                          int k) {
         this.hm = hm;
-        this.currentHM = currentHM;
+        this.openHM = openHM;
         this.freqThreshold = freqThreshold;
         this.sequenceList = sequenceList;
         this.lenThreshold = lenThreshold;
         this.k = k;
+    }
+
+    @Override
+    public void run() {
+        for (Long2IntMap.Entry entry : openHM.long2IntEntrySet()) {
+            int value = entry.getIntValue();
+            if (value <= freqThreshold) {
+                continue;
+            }
+
+            long key = entry.getLongKey();
+            ShortKmer kmer = new ShortKmer(key, k);
+
+            if (HashMapOperations.getRightNucleotide(hm, kmer, freqThreshold) < 0 ||
+                    HashMapOperations.getLeftNucleotide(hm, kmer, freqThreshold) >= 0) {
+                continue;
+            }
+
+            processSequence(kmer);
+        }
     }
 
     private void processSequence(ShortKmer startKmer) {
@@ -68,27 +89,6 @@ public class AddSequencesShiftingRightTask implements Runnable {
 
         if (sequenceSB.length() >= lenThreshold) {
             sequenceList.add(new Sequence(sequenceSB.toString(), seqWeight, minWeight, maxWeight));
-        }
-
-    }
-
-    @Override
-    public void run() {
-        for (Long2IntMap.Entry entry : currentHM.long2IntEntrySet()) {
-            int value = entry.getIntValue();
-            if (value <= freqThreshold) {
-                continue;
-            }
-
-            long key = entry.getLongKey();
-            ShortKmer kmer = new ShortKmer(key, k);
-
-            if (HashMapOperations.getRightNucleotide(hm, kmer, freqThreshold) < 0 ||
-                    HashMapOperations.getLeftNucleotide(hm, kmer, freqThreshold) >= 0) {
-                continue;
-            }
-
-            processSequence(kmer);
         }
     }
 }
