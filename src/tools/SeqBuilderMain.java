@@ -1,16 +1,8 @@
 package tools;
 
-import algo.HashMapOperations;
 import algo.SequencesFinders;
 import io.IOUtils;
-import it.unimi.dsi.fastutil.longs.Long2IntMap.Entry;
-import ru.ifmo.genetics.dna.DnaTools;
-import ru.ifmo.genetics.dna.kmers.KmerIteratorFactory;
-import ru.ifmo.genetics.dna.kmers.ShortKmer;
-import ru.ifmo.genetics.dna.kmers.ShortKmerIteratorFactory;
 import ru.ifmo.genetics.structures.map.ArrayLong2IntHashMap;
-import ru.ifmo.genetics.utils.Misc;
-import ru.ifmo.genetics.utils.NumUtils;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
