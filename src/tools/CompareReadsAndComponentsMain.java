@@ -1,6 +1,6 @@
 package tools;
 
-import algo.ConnectedComponent;
+import structures.ConnectedComponent;
 import ru.ifmo.genetics.dna.DnaTools;
 import ru.ifmo.genetics.dna.kmers.ShortKmer;
 import ru.ifmo.genetics.structures.map.ArrayLong2IntHashMap;

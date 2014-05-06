@@ -1,6 +1,6 @@
 package tools;
 
-import algo.ConnectedComponent;
+import structures.ConnectedComponent;
 import algo.KmerOperations;
 import io.IOUtils;
 import it.unimi.dsi.fastutil.longs.Long2IntMap.*;
