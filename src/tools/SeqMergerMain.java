@@ -1,10 +1,8 @@
 package tools;
 
+import algo.ComponentsBuilder;
 import structures.ConnectedComponent;
-import algo.KmerOperations;
 import io.IOUtils;
-import it.unimi.dsi.fastutil.longs.Long2IntMap.*;
-import it.unimi.dsi.fastutil.longs.LongArrayFIFOQueue;
 import ru.ifmo.genetics.structures.map.ArrayLong2IntHashMap;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
@@ -15,8 +13,8 @@ import java.io.*;
 import java.util.*;
 
 public class SeqMergerMain extends Tool {
-    public static final String NAME = "sequences-merger";
-    public static final String DESCRIPTION = "Connected components builder";
+    public static final String NAME = "seq-merger";
+    public static final String DESCRIPTION = "Graph components builder";
 
     public final Parameter<Integer> k = addParameter(new IntParameterBuilder("k")
             .mandatory()
@@ -61,15 +59,18 @@ public class SeqMergerMain extends Tool {
             IOUtils.addFASTASequences(sequencesFiles.get(), hm, k.get(), minLen.get(), this.logger);
         } catch (IOException e) {
             e.printStackTrace();
+            return;
         }
 
-        List<ConnectedComponent> components = null;
+        List<ConnectedComponent> components;
         try {
             String statFP = workDir + File.separator + "components-stat-" +
                     minComponentSize.get() + "-" + maxComponentSize.get();
-            components = splitStrategy(hm, minComponentSize.get(), maxComponentSize.get(), statFP);
+            components = ComponentsBuilder.splitStrategy(hm, k.get(), minComponentSize.get(),
+                    maxComponentSize.get(), statFP, this.logger, availableProcessors.get());
         } catch (FileNotFoundException e) {
             e.printStackTrace();
+            return;
         }
         info(components.size() + " components found");
 
@@ -79,98 +80,6 @@ public class SeqMergerMain extends Tool {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    private List<ConnectedComponent> splitStrategy(ArrayLong2IntHashMap hm,
-                                                   int b1,
-                                                   int b2,
-                                                   String statFP) throws FileNotFoundException {
-        List<ConnectedComponent> ans = new ArrayList<ConnectedComponent>();
-
-        PrintWriter statPW = new PrintWriter(statFP);
-        for (int freqThreshold = 0; ; freqThreshold++) {
-            List<ConnectedComponent> components = getComponents(hm, freqThreshold);
-            if (components.size() == 0) {
-                break;
-            }
-            for (ConnectedComponent comp : components) {
-                if (comp.size() < b1) {
-                    banComponent(hm, comp);
-                } else if (comp.size() < b2) {
-                    ans.add(comp);
-                    statPW.println(comp.size() + " " + comp.getWeight() + " " + freqThreshold);
-                    banComponent(hm, comp);
-                }
-            }
-            debug("Freq = " + freqThreshold + ", components count = " + ans.size());
-        }
-        statPW.close();
-
-        return ans;
-    }
-
-    private static void banComponent(ArrayLong2IntHashMap hm, ConnectedComponent component) {
-        for (long kmer : component.kmers) {
-            hm.add(kmer, -hm.get(kmer));
-        }
-    }
-
-    private List<ConnectedComponent> getComponents(ArrayLong2IntHashMap hm, int freqThreshold) {
-        List<ConnectedComponent> ans = new ArrayList<ConnectedComponent>();
-
-        ArrayLong2IntHashMap processedKmers =
-                new ArrayLong2IntHashMap((int) (Math.log(availableProcessors.get()) / Math.log(2)) + 4);
-        for (int i = 0; i < hm.hm.length; ++i) {
-            for (Entry entry : hm.hm[i].long2IntEntrySet()) {
-                long kmer = entry.getLongKey();
-                if (processedKmers.get(kmer) > 0) {
-                    continue;
-                }
-
-                int value = entry.getIntValue();
-                if (value > freqThreshold) {
-                    ConnectedComponent comp = getComponent(hm, k.get(), kmer, freqThreshold, processedKmers);
-                    ans.add(comp);
-                }
-            }
-        }
-
-        return ans;
-    }
-
-    private static ConnectedComponent getComponent(ArrayLong2IntHashMap hm,
-                                                   int kValue,
-                                                   long kmer,
-                                                   int freqThreshold,
-                                                   ArrayLong2IntHashMap processedKmers) {
-        if (hm.get(kmer) <= freqThreshold || processedKmers.get(kmer) > 0) {
-            return null;
-        }
-        ConnectedComponent ans = new ConnectedComponent();
-
-        long weight = hm.get(kmer);
-        LongArrayFIFOQueue queue = new LongArrayFIFOQueue();
-
-        queue.enqueue(kmer);
-        processedKmers.add(kmer, 1);
-
-        while (queue.size() > 0) {
-            long kmerRepr = queue.dequeue();
-            ans.add(kmerRepr);
-
-            for (long neighbour : KmerOperations.possibleNeighbours(kmerRepr, kValue)) {
-                int value = hm.get(neighbour);
-                if (value <= freqThreshold || processedKmers.get(neighbour) > 0) {
-                    continue;
-                }
-                weight += value;
-                processedKmers.add(neighbour, 1);
-                queue.enqueue(neighbour);
-            }
-        }
-
-        ans.setWeight(weight);
-        return ans;
     }
 
     @Override
