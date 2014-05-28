@@ -41,7 +41,7 @@ public class KmersCounterMain extends Tool {
     public final Parameter<Integer> maximalBadFrequency = addParameter(new IntParameterBuilder("maximal-bad-frequence")
             .optional()
             .withShortOpt("b")
-            .withDescription("maximal frequency for a kmer to be assumed erroneous")
+            .withDescription("maximal frequency for a k-mer to be assumed erroneous")
             .withDefaultValue(0)
             .create());
 
@@ -72,7 +72,7 @@ public class KmersCounterMain extends Tool {
             hm = IOUtils.loadReads(inputFiles.get(), LEN, LOAD_TASK_SIZE,
                     new ShortKmerIteratorFactory(), availableProcessors.get(), this.logger);
         } catch (IOException e) {
-            throw new ExecutionFailedException("Couldn't load kmers", e);
+            throw new ExecutionFailedException("Couldn't load k-mers", e);
         }
 
         File dir = new File(workDir + File.separator + "kmers");

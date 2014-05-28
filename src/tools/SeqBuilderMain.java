@@ -21,12 +21,12 @@ public class SeqBuilderMain extends Tool {
     static final int STAT_LEN = 1024;
 
     static final String SEQUENCES_FILENAME = "sequences.fasta";
-    static final String DISTIBUTION_FILENAME = "distribution";
+    static final String DISTRIBUTION_FILENAME = "distribution";
 
-    public final Parameter<Integer> maximalBadFrequency = addParameter(new IntParameterBuilder("maximal-bad-frequence")
+    public final Parameter<Integer> maximalBadFrequency = addParameter(new IntParameterBuilder("maximal-bad-frequency")
             .optional()
             .withShortOpt("b")
-            .withDescription("maximal frequency for a kmer to be assumed erroneous")
+            .withDescription("maximal frequency for a k-mer to be assumed erroneous")
             .create());
 
     public final Parameter<Integer> bottomCutPercent = addParameter(new IntParameterBuilder("bottom-cut-percent")
@@ -87,7 +87,7 @@ public class SeqBuilderMain extends Tool {
         }
 
         try {
-            dumpStat(stat, workDir + File.separator + DISTIBUTION_FILENAME);
+            dumpStat(stat, workDir + File.separator + DISTRIBUTION_FILENAME);
         } catch (FileNotFoundException e) {
             throw new ExecutionFailedException(e);
         }

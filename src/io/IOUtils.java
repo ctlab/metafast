@@ -238,7 +238,7 @@ public class IOUtils {
                     worker.interrupt();
                 }
             }
-            logger.info(dispatcher.reads + " reads added form " + file);
+            logger.info(dispatcher.reads + " reads added from " + file);
         }
         logger.info("k-mers loaded");
     }
