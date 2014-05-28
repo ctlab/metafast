@@ -35,7 +35,7 @@ public class KmersCounterMain extends Tool {
     public final Parameter<File[]> inputFiles = addParameter(new FileMVParameterBuilder("reads")
             .withShortOpt("i")
             .mandatory()
-            .withDescription("list of reads files from single environment. FASTQ, BINQ, FASTA (without 'N')")
+            .withDescription("list of reads files from single environment. FASTQ, BINQ, FASTA (ignored reads with 'N')")
             .create());
 
     public final Parameter<Integer> maximalBadFrequency = addParameter(new IntParameterBuilder("maximal-bad-frequence")

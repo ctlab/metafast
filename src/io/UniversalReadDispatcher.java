@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 public class UniversalReadDispatcher {
     NamedSource<Dna> reader;
@@ -48,14 +49,21 @@ public class UniversalReadDispatcher {
     private List<Dna> readRange(int workRangeSize) throws IOException {
         List<Dna> list = new ArrayList<Dna>();
         while (this.iterator != null && list.size() < workRangeSize) {
-
-            // This part is needed due to buggy iterator.hasNext()
-            if (!this.iterator.hasNext()) {
+            try {
+                list.add(iterator.next());
+                ++reads;
+            } catch (NoSuchElementException e) {
                 this.iterator = null;
                 break;
+            } catch (IllegalArgumentException ignored) {
+
             }
-            list.add(iterator.next());
-            ++reads;
+//            //This part is needed due to buggy iterator.hasNext()
+//            if (!this.iterator.hasNext()) {
+//                this.iterator = null;
+//                break;
+//            }
+//            list.add(iterator.next());
         }
         return list;
     }
