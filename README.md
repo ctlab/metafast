@@ -8,13 +8,20 @@ Print available tools:
 java -jar metafast.jar -ts
 ~~~
 
-### Authors - TODO
+Print options for selected tool (kmer-counter, for example)
+~~~ sh
+java -jar metafast.jar -t kmer-counter
+~~~
 
-### Examples - TODO
+### Authors
 
+Toolkit developed by Vladimir Ulyantsev (ITMO University); inspired and supervised by Dmitry Alexeev (NII PCM). Experiments and testing - Alexander Tyakht, Veronika Golovanova (NII PCM).
+
+### Examples
+
+Count and save binary file with 31-mers from SRR413558merged.fastq. 14 GB given to java virtual machine. Locate all files  in /tmpWD. -v to print all debug information. --force to allow files overwriting.
 ~~~ sh
 java -Xmx14G -jar metafast.jar -t kmer-counter -k 31 -i SRR413558merged.fastq -v --force -w tmpWD
-java -Xmx15G -jar metafast.jar -t sequences-builder -bp 10 -k 31 -l 100 --reads SRR413558merged.binq --force -v --max-size 2000000000
 ~~~
 
 ### See also
