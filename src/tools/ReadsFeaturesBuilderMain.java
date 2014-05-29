@@ -13,11 +13,10 @@ import java.io.*;
 import java.util.*;
 
 public class ReadsFeaturesBuilderMain extends Tool {
-    public static final String NAME = "reads-features-builder";
+    public static final String NAME = "features-builder";
     public static final String DESCRIPTION = "Features builder";
 
     static final int LOAD_TASK_SIZE = 1 << 15;
-    static final long MAX_SIZE = 10000000000L;
 
     public final Parameter<Integer> k = addParameter(new IntParameterBuilder("k")
             .mandatory()
@@ -33,17 +32,17 @@ public class ReadsFeaturesBuilderMain extends Tool {
 
     public final Parameter<File[]> readsFiles = addParameter(new FileMVParameterBuilder("reads")
             .withShortOpt("i")
-            .withDescription("BINQ reads")
+            .withDescription("FASTQ, BINQ, FASTA (ignored reads with 'N') reads")
             .create());
 
     public final Parameter<File[]> kmersFiles = addParameter(new FileMVParameterBuilder("kmers")
             .withShortOpt("ki")
-            .withDescription("kmers files in binary (long+int) format")
+            .withDescription("k-mers files in binary (long+int) format")
             .create());
 
     public final Parameter<Integer> threshold = addParameter(new IntParameterBuilder("threshold")
             .withShortOpt("b")
-            .withDescription("")
+            .withDescription("threshold for k-mers from <reads>")
             .withDefaultValue(0)
             .create());
 
@@ -51,6 +50,7 @@ public class ReadsFeaturesBuilderMain extends Tool {
     protected void runImpl() throws ExecutionFailedException {
         List<List<ConnectedComponent>> models = new ArrayList<List<ConnectedComponent>>();
         List<String> modelsDirs = new ArrayList<String>();
+
         for (File componentsFile : componentsFiles.get()) {
             try {
                 List<ConnectedComponent> components =
@@ -72,10 +72,10 @@ public class ReadsFeaturesBuilderMain extends Tool {
             for (File readsFile : readsFiles.get()) {
                 ArrayLong2IntHashMap readsHM;
                 try {
-                    readsHM = IOUtils.loadBINQReads(new File[]{readsFile}, k.get(), LOAD_TASK_SIZE,
+                    readsHM = IOUtils.loadReads(new File[]{readsFile}, k.get(), LOAD_TASK_SIZE,
                             new ShortKmerIteratorFactory(), availableProcessors.get(), this.logger);
                 } catch (IOException e) {
-                    throw new ExecutionFailedException("Couldn't load kmers from " + readsFile, e);
+                    throw new ExecutionFailedException("Couldn't load k-mers from " + readsFile, e);
                 }
 
                 for (int i = 0; i < models.size(); i++) {
@@ -84,6 +84,7 @@ public class ReadsFeaturesBuilderMain extends Tool {
                         buildAndPrintVector(readsHM, models.get(i), vectorFP);
                     } catch (FileNotFoundException e) {
                         e.printStackTrace();
+                        return;
                     }
                     info("Features for " + readsFile + " printed to " + vectorFP);
                 }
@@ -97,7 +98,7 @@ public class ReadsFeaturesBuilderMain extends Tool {
                     kmersHM = IOUtils.loadKmers(new File[]{kmersFile},
                             threshold.get(), availableProcessors.get(), this.logger);
                 } catch (IOException e) {
-                    throw new ExecutionFailedException("Couldn't load kmers from " + kmersFile, e);
+                    throw new ExecutionFailedException("Couldn't load k-mers from " + kmersFile, e);
                 }
 
                 for (int i = 0; i < models.size(); i++) {
