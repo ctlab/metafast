@@ -80,7 +80,7 @@ public class KmersCounterMain extends Tool {
             dir.mkdir();
         }
 
-        String fp = dir + File.separator + inputFiles.get()[0];
+        String fp = dir + File.separator + inputFiles.get()[0].getName();
         fp += inputFiles.get().length > 1 ? "+" : "";
         fp += ".kmers";
 
