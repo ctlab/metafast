@@ -5,7 +5,6 @@ import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.BoolParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileMVParameterBuilder;
-import ru.ifmo.genetics.utils.tool.inputParameterBuilder.IntParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.StringParameterBuilder;
 
 import java.io.*;
@@ -57,16 +56,46 @@ public class DistanceMatrixBuilderMain extends Tool {
 
         for (int i = 0; i < cnt; i++) {
             for (int j = i + 1; j < cnt; j++) {
-                distMatrix[i][j] = bcdist(features.get(i), features.get(j));
+                distMatrix[i][j] = brayCurtisDistance(features.get(i), features.get(j));
                 distMatrix[j][i] = distMatrix[i][j];
             }
         }
 
-
+        String matrixPath = workDir + File.separator + "dist_matrix";
+        try {
+            printMatrix(distMatrix, matrixPath);
+            info("Distance matrix printed to " + matrixPath);
+        } catch (FileNotFoundException e) {
+            throw new ExecutionFailedException("Failed to print matrix to " + matrixPath);
+        }
     }
 
-    private void printMatrix(double[][] matrix) {
+    private void printMatrix(double[][] matrix, String fp) throws FileNotFoundException {
+        PrintWriter matrixPW = new PrintWriter(fp);
 
+        if (printNames.get()) {
+            matrixPW.print("#");
+            for (File featuresFile : featuresFiles.get()) {
+                matrixPW.print(separator.get());
+                matrixPW.print(featuresFile.getName());
+            }
+            matrixPW.println();
+        }
+
+        for (int i = 0; i < matrix.length; i++) {
+            if (printNames.get()) {
+                matrixPW.print(featuresFiles.get()[i].getName() + separator.get());
+            }
+            for (int j = 0; j < matrix[i].length; j++) {
+                if (j > 0) {
+                    matrixPW.print(separator.get());
+                }
+                matrixPW.print(matrix[i][j]);
+            }
+            matrixPW.println();
+        }
+
+        matrixPW.close();
     }
 
     private List<Long> readVector(File file) throws IOException {
@@ -84,7 +113,7 @@ public class DistanceMatrixBuilderMain extends Tool {
         return ans;
     }
 
-    private double bcdist(List<Long> vector1, List<Long> vector2) {
+    private double brayCurtisDistance(List<Long> vector1, List<Long> vector2) {
         assert vector1.size() == vector2.size();
 
         double sumdiff = 0, sum = 0;
