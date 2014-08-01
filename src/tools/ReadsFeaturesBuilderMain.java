@@ -1,5 +1,7 @@
 package tools;
 
+import ru.ifmo.genetics.utils.tool.values.InMemoryValue;
+import ru.ifmo.genetics.utils.tool.values.InValue;
 import structures.ConnectedComponent;
 import io.IOUtils;
 import ru.ifmo.genetics.dna.kmers.ShortKmerIteratorFactory;
@@ -36,8 +38,8 @@ public class ReadsFeaturesBuilderMain extends Tool {
             .create());
 
     public final Parameter<File[]> kmersFiles = addParameter(new FileMVParameterBuilder("kmers")
-            .withShortOpt("ki")
-            .withDescription("k-mers files in binary (long+int) format")
+            .withShortOpt("ka")
+            .withDescription("additional k-mers files in binary (long+int) format")
             .create());
 
     public final Parameter<Integer> threshold = addParameter(new IntParameterBuilder("threshold")
@@ -45,6 +47,12 @@ public class ReadsFeaturesBuilderMain extends Tool {
             .withDescription("threshold for k-mers from <reads>")
             .withDefaultValue(0)
             .create());
+
+
+    // output values
+    private final InMemoryValue<File[]> featuresFilesPr = new InMemoryValue<File[]>();
+    public final InValue<File[]> featuresFilesOut = addOutput("features-files", featuresFilesPr, File[].class);
+
 
     @Override
     protected void runImpl() throws ExecutionFailedException {
@@ -68,6 +76,11 @@ public class ReadsFeaturesBuilderMain extends Tool {
             debug("Dir created for vectors: " + modelDir);
         }
 
+        int featuresFilesCount = (readsFiles.get() == null ? 0 : readsFiles.get().length)
+                                  + (kmersFiles.get() == null ? 0 : kmersFiles.get().length);
+        File[] featuresFiles = new File[featuresFilesCount];
+        int curFiles = 0;
+
         if (readsFiles.get() != null) {
             for (File readsFile : readsFiles.get()) {
                 ArrayLong2IntHashMap readsHM;
@@ -87,6 +100,8 @@ public class ReadsFeaturesBuilderMain extends Tool {
                         return;
                     }
                     info("Features for " + readsFile + " printed to " + vectorFP);
+                    featuresFiles[curFiles] = new File(vectorFP);
+                    curFiles++;
                 }
             }
         }
@@ -109,9 +124,13 @@ public class ReadsFeaturesBuilderMain extends Tool {
                         e.printStackTrace();
                     }
                     info("Features for " + kmersFile + " printed to " + vectorFP);
+                    featuresFiles[curFiles] = new File(vectorFP);
+                    curFiles++;
                 }
             }
         }
+
+        featuresFilesPr.set(featuresFiles);
     }
 
     private static void buildAndPrintVector(ArrayLong2IntHashMap readsHM,

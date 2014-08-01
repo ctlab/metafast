@@ -9,9 +9,13 @@ import ru.ifmo.genetics.utils.tool.Tool;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.BoolParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileMVParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.IntParameterBuilder;
+import ru.ifmo.genetics.utils.tool.values.InMemoryValue;
+import ru.ifmo.genetics.utils.tool.values.InValue;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by ulyantsev on 17.04.14.
@@ -45,6 +49,7 @@ public class KmersCounterMain extends Tool {
             .withDefaultValue(0)
             .create());
 
+
     /*
     To think about that params
 
@@ -62,6 +67,11 @@ public class KmersCounterMain extends Tool {
             .withDefaultValue(false)
             .create());
     */
+
+    private final InMemoryValue<File> resultingKmerFilesPr = new InMemoryValue<File>();
+    public final InValue<File> resultingKmerFiles =
+            addOutput("resulting-kmer-files", resultingKmerFilesPr, File.class);
+
 
     @Override
     protected void runImpl() throws ExecutionFailedException {
@@ -84,13 +94,15 @@ public class KmersCounterMain extends Tool {
         fp += inputFiles.get().length > 1 ? "+" : "";
         fp += ".kmers";
 
+
+        debug("Starting to print k-mers to " + fp);
         try {
-            debug("Starting to print k-mers to " + fp);
             IOUtils.printKmers(hm, fp, maximalBadFrequency.get());
-            info("k-mers printed to " + fp);
         } catch (IOException e) {
             e.printStackTrace();
         }
+        info("k-mers printed to " + fp);
+        resultingKmerFilesPr.set(new File(fp));
     }
 
     @Override

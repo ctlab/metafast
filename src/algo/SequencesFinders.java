@@ -23,7 +23,7 @@ public class SequencesFinders {
                     AddSequencesShiftingRightTask(hm, hm.hm[i], freqThreshold, ans, lenThreshold, k));
         }
 
-        System.out.println(executor.getTaskCount());
+//        System.out.println(executor.getTaskCount());
         executor.shutdownAndAwaitTermination();
         return ans;
     }

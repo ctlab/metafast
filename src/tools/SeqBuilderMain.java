@@ -7,6 +7,8 @@ import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.*;
+import ru.ifmo.genetics.utils.tool.values.InMemoryValue;
+import ru.ifmo.genetics.utils.tool.values.InValue;
 import structures.Sequence;
 
 import java.io.*;
@@ -54,9 +56,16 @@ public class SeqBuilderMain extends Tool {
             .create());
 
     public final Parameter<File> outputFile = addParameter(new FileParameterBuilder("output")
+            .optional()
             .withShortOpt("o")
+            .withDefaultComment("workDir/sequences/<input-file-base-name>.seq.fasta")
             .withDescription("Destination of resulting FASTA sequences")
             .create());
+
+
+    // output values
+    public final InValue<File> outputFileOut = addOutput("output-file", outputFile, File.class);
+
 
     @Override
     protected void runImpl() throws ExecutionFailedException {
@@ -132,6 +141,7 @@ public class SeqBuilderMain extends Tool {
             fp += (inputFiles.get().length > 1 ? "+" : "") + ".seq.fasta";
 
             destination = new File(fp);
+            outputFile.set(destination);
         }
 
         //info("hm brackets = " + hm.hm.length);

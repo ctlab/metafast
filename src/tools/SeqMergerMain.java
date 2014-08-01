@@ -1,6 +1,7 @@
 package tools;
 
 import algo.ComponentsBuilder;
+import ru.ifmo.genetics.utils.tool.values.InValue;
 import structures.ConnectedComponent;
 import io.IOUtils;
 import ru.ifmo.genetics.structures.map.ArrayLong2IntHashMap;
@@ -50,6 +51,11 @@ public class SeqMergerMain extends Tool {
             .withDescription("file with found components")
             .withDefaultValue(workDir.append("components"))
             .create());
+
+
+    // output values
+    public final InValue<File> componentsFileOut = addOutput("components-file", componentsFile, File.class);
+
 
     @Override
     protected void runImpl() throws ExecutionFailedException {
