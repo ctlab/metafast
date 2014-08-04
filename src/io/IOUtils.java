@@ -196,7 +196,7 @@ public class IOUtils {
             }
         }
         logger.info(dispatcher.reads + " reads added");
-        logger.info("k-mers loaded");
+//        logger.info("k-mers loaded");
     }
 
     public static ArrayLong2IntHashMap loadReads(File[] files,
@@ -240,7 +240,7 @@ public class IOUtils {
             }
             logger.info(dispatcher.reads + " reads added from " + file);
         }
-        logger.info("k-mers loaded");
+//        logger.info("k-mers loaded");
     }
 
 }
