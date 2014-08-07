@@ -8,6 +8,7 @@ import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.BoolParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileMVParameterBuilder;
+import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.IntParameterBuilder;
 import ru.ifmo.genetics.utils.tool.values.InMemoryValue;
 import ru.ifmo.genetics.utils.tool.values.InValue;
@@ -45,8 +46,13 @@ public class KmersCounterMain extends Tool {
     public final Parameter<Integer> maximalBadFrequency = addParameter(new IntParameterBuilder("maximal-bad-frequence")
             .optional()
             .withShortOpt("b")
-            .withDescription("maximal frequency for a k-mer to be assumed erroneous")
-            .withDefaultValue(0)
+            .withDescription("maximal frequency for a k-mer to be assumed erroneous (while saving kmers from sequences)")
+            .withDefaultValue(1)
+            .create());
+
+    public final Parameter<File> outputDir = addParameter(new FileParameterBuilder("output-dir")
+            .withDescription("Output directory")
+            .withDefaultValue(workDir.append("kmers"))
             .create());
 
 
@@ -70,7 +76,7 @@ public class KmersCounterMain extends Tool {
 
     private final InMemoryValue<File> resultingKmerFilesPr = new InMemoryValue<File>();
     public final InValue<File> resultingKmerFiles =
-            addOutput("resulting-kmer-files", resultingKmerFilesPr, File.class);
+            addOutput("resulting-kmers-file", resultingKmerFilesPr, File.class);
 
 
     @Override
@@ -85,7 +91,7 @@ public class KmersCounterMain extends Tool {
             throw new ExecutionFailedException("Couldn't load k-mers", e);
         }
 
-        File dir = new File(workDir + File.separator + "kmers");
+        File dir = outputDir.get();
         if (!dir.exists()) {
             dir.mkdir();
         }
@@ -110,7 +116,7 @@ public class KmersCounterMain extends Tool {
     }
 
     public static void main(String[] args) {
-        new SeqBuilderMain().mainImpl(args);
+        new KmersCounterMain().mainImpl(args);
     }
 
     public KmersCounterMain() {

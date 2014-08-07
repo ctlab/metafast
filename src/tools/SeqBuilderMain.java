@@ -25,6 +25,18 @@ public class SeqBuilderMain extends Tool {
     static final String SEQUENCES_FILENAME = "sequences.fasta";
     static final String DISTRIBUTION_FILENAME = "distribution";
 
+    public final Parameter<Integer> k = addParameter(new IntParameterBuilder("k")
+            .mandatory()
+            .withShortOpt("k")
+            .withDescription("k-mer size")
+            .create());
+
+    public final Parameter<File[]> inputFiles = addParameter(new FileMVParameterBuilder("k-mers")
+            .withShortOpt("i")
+            .mandatory()
+            .withDescription("list of input files with k-mers in binary format")
+            .create());
+
     public final Parameter<Integer> maximalBadFrequency = addParameter(new IntParameterBuilder("maximal-bad-frequency")
             .optional()
             .withShortOpt("b")
@@ -37,34 +49,22 @@ public class SeqBuilderMain extends Tool {
             .withDescription("k-mers percent to be assumed erroneous")
             .create());
 
-    public final Parameter<Integer> k = addParameter(new IntParameterBuilder("k")
-            .mandatory()
-            .withShortOpt("k")
-            .withDescription("k-mer size")
-            .create());
-
     public final Parameter<Integer> sequenceLen = addParameter(new IntParameterBuilder("sequence-len")
             .mandatory()
             .withShortOpt("l")
             .withDescription("sequence minimal length to be written to " + SEQUENCES_FILENAME)
             .create());
 
-    public final Parameter<File[]> inputFiles = addParameter(new FileMVParameterBuilder("k-mers")
-            .withShortOpt("i")
-            .mandatory()
-            .withDescription("list of input files with k-mers in binary format")
-            .create());
-
-    public final Parameter<File> outputFile = addParameter(new FileParameterBuilder("output")
-            .optional()
+    public final Parameter<File> outputDir = addParameter(new FileParameterBuilder("output-dir")
             .withShortOpt("o")
-            .withDefaultComment("workDir/sequences/<input-file-base-name>.seq.fasta")
+            .withDefaultValue(workDir.append("sequences"))
             .withDescription("Destination of resulting FASTA sequences")
             .create());
 
 
     // output values
-    public final InValue<File> outputFileOut = addOutput("output-file", outputFile, File.class);
+    private final InMemoryValue<File> outputFilePr = new InMemoryValue<File>();
+    public final InValue<File> outputFileOut = addOutput("output-file", outputFilePr, File.class);
 
 
     @Override
@@ -130,19 +130,16 @@ public class SeqBuilderMain extends Tool {
 
         info("Maximal bad frequency = " + maximalBadFrequency.get());
 
-        File destination = outputFile.get();
-        if (destination == null) {
-            File dir = new File(workDir + File.separator + "sequences");
-            if (!dir.isDirectory()) {
-                dir.mkdir();
-            }
-            String basename = inputFiles.get()[0].getName().replace(".kmers", "");
-            String fp = dir + File.separator + basename;
-            fp += (inputFiles.get().length > 1 ? "+" : "") + ".seq.fasta";
-
-            destination = new File(fp);
-            outputFile.set(destination);
+        File dir = outputDir.get();
+        if (!dir.isDirectory()) {
+            dir.mkdir();
         }
+        String basename = inputFiles.get()[0].getName().replace(".kmers", "");
+        String fp = dir + File.separator + basename;
+        fp += (inputFiles.get().length > 1 ? "+" : "") + ".seq.fasta";
+
+        File destination = new File(fp);
+        outputFilePr.set(destination);
 
         //info("hm brackets = " + hm.hm.length);
         List<Sequence> sequences;

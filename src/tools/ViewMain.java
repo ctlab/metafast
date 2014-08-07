@@ -32,7 +32,7 @@ public class ViewMain extends Tool {
     public final Parameter<Integer> k = addParameter(new IntParameterBuilder("k")
             .withShortOpt("k")
             .withDefaultValue(31)
-            .withDescription("k-mer size, used while saving object")
+            .withDescription("k-mer size, used while saving object (NEED with ANY operation)")
             .create());
 
     public final Parameter<File> kmersFile = addParameter(new FileParameterBuilder("kmers-file")

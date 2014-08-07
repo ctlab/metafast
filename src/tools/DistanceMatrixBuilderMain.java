@@ -36,7 +36,7 @@ public class DistanceMatrixBuilderMain extends Tool {
             .optional()
             .withShortOpt("b")
             .withDescription("maximal frequency for a k-mer to be assumed erroneous")
-            .withDefaultValue(0)
+            .withDefaultValue(1)
             .create());
 
     public final Parameter<Integer> minLen = addParameter(new IntParameterBuilder("min-seq-len")
@@ -48,28 +48,29 @@ public class DistanceMatrixBuilderMain extends Tool {
 
 
     // running tools
-    public KmersCounterMain kmersCounter = new KmersCounterMain();
+    public KmersCounterForManyFilesMain kmersCounter = new KmersCounterForManyFilesMain();
     {
         setFix(kmersCounter.k, k);
         setFix(kmersCounter.inputFiles, inputFiles);
         setFix(kmersCounter.maximalBadFrequency, maximalBadFrequency);
+        setFixDefault(kmersCounter.outputDir);
         addSubTool(kmersCounter);
     }
 
-    public SeqBuilderMain seqBuilder = new SeqBuilderMain();
+    public SeqBuilderForManyFilesMain seqBuilder = new SeqBuilderForManyFilesMain();
     {
-        setFix(seqBuilder.maximalBadFrequency, maximalBadFrequency);
         setFix(seqBuilder.k, k);
-        setFix(seqBuilder.inputFiles, new FilesFromOneFileYielder(kmersCounter.resultingKmerFiles));
+        setFix(seqBuilder.inputFiles, kmersCounter.resultingKmerFiles);
+        setFix(seqBuilder.maximalBadFrequency, maximalBadFrequency);
         setFix(seqBuilder.sequenceLen, minLen);
-        setFix(seqBuilder.outputFile, (File) null); // setFixDefault with null default value
+        setFixDefault(seqBuilder.outputDir);
         addSubTool(seqBuilder);
     }
 
     public SeqMergerMain seqMerger = new SeqMergerMain();
     {
         setFix(seqMerger.k, k);
-        setFix(seqMerger.sequencesFiles, new FilesFromOneFileYielder(seqBuilder.outputFileOut));
+        setFix(seqMerger.sequencesFiles, seqBuilder.outputFilesOut);
         setFix(seqMerger.minLen, minLen);
         addSubTool(seqMerger);
     }
