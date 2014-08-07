@@ -46,14 +46,27 @@ public class AddSequencesShiftingRightTask implements Runnable {
             }
 
             long key = entry.getLongKey();
-            ShortKmer kmer = new ShortKmer(key, k);
+            ShortKmer kmerF = new ShortKmer(key, k);
+            ShortKmer[] kmers = new ShortKmer[]{kmerF, kmerF.rc()};
 
-            if (HashMapOperations.getRightNucleotide(hm, kmer, freqThreshold) < 0 ||
-                    HashMapOperations.getLeftNucleotide(hm, kmer, freqThreshold) >= 0) {
-                continue;
+            for (ShortKmer kmer : kmers) {
+                boolean isLeft = false;
+                byte nuc = HashMapOperations.getLeftNucleotide(hm, kmer, freqThreshold);
+                if (nuc < 0) {
+                    isLeft = true;
+                } else {
+                    byte rightNuc = kmer.nucAt(k - 1);
+                    kmer.shiftLeft(nuc);
+                    if (HashMapOperations.getRightNucleotide(hm, kmer, freqThreshold) < 0) {
+                        isLeft = true;
+                    }
+                    kmer.shiftRight(rightNuc);
+                }
+
+                if (isLeft) {
+                    processSequence(kmer);
+                }
             }
-
-            processSequence(kmer);
         }
     }
 
@@ -63,28 +76,24 @@ public class AddSequencesShiftingRightTask implements Runnable {
         StringBuilder sequenceSB = new StringBuilder(startKmer.toString());
         long seqWeight = value, minWeight = value, maxWeight = value;
 
-        byte rightNuc = HashMapOperations.getRightNucleotide(hm, startKmer, freqThreshold);
-        if (rightNuc < 0) {
-            return;
-        }
-
         ShortKmer kmer = new ShortKmer(startKmer);
-        while (true) {
-            kmer.shiftRight(rightNuc);
-            byte nextRightNuc = HashMapOperations.getRightNucleotide(hm, kmer, freqThreshold);
 
-            if (nextRightNuc < 0 || HashMapOperations.getLeftNucleotide(hm, kmer, freqThreshold) < 0) {
+        while (true) {
+            byte rightNuc = HashMapOperations.getRightNucleotide(hm, kmer, freqThreshold);
+            if (rightNuc < 0) {
+                break;
+            }
+            kmer.shiftRight(rightNuc);
+            byte leftNuc = HashMapOperations.getLeftNucleotide(hm, kmer, freqThreshold);
+            if (leftNuc < 0) {
                 break;
             }
 
             sequenceSB.append(DnaTools.toChar(rightNuc));
-
             value = hm.get(kmer.toLong());
             seqWeight += value;
             minWeight = Math.min(minWeight, value);
             maxWeight = Math.max(maxWeight, value);
-
-            rightNuc = nextRightNuc;
         }
 
         if (sequenceSB.length() >= lenThreshold) {

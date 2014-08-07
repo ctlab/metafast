@@ -3,6 +3,7 @@ package io;
 import org.apache.log4j.Logger;
 import ru.ifmo.genetics.dna.Dna;
 import ru.ifmo.genetics.dna.DnaQ;
+import ru.ifmo.genetics.dna.DnaTools;
 import ru.ifmo.genetics.dna.kmers.Kmer;
 import ru.ifmo.genetics.dna.kmers.KmerIteratorFactory;
 import ru.ifmo.genetics.dna.kmers.ShortKmer;
