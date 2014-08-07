@@ -74,7 +74,8 @@ public class AddSequencesShiftingRightTask implements Runnable {
         int value = hm.get(startKmer.toLong());
 
         StringBuilder sequenceSB = new StringBuilder(startKmer.toString());
-        long seqWeight = value, minWeight = value, maxWeight = value;
+        long seqWeight = value;
+        int minWeight = value, maxWeight = value;
 
         ShortKmer kmer = new ShortKmer(startKmer);
 
@@ -97,7 +98,8 @@ public class AddSequencesShiftingRightTask implements Runnable {
         }
 
         if (sequenceSB.length() >= lenThreshold) {
-            sequenceList.add(new Sequence(sequenceSB.toString(), seqWeight, minWeight, maxWeight));
+            sequenceList.add(new Sequence(sequenceSB.toString(),
+                    (int) (seqWeight / (sequenceSB.length() - k + 1)), minWeight, maxWeight));
         }
     }
 }

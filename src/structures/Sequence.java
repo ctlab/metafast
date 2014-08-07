@@ -10,11 +10,11 @@ import java.io.PrintWriter;
 public class Sequence {
     String repr;
 
-    long totalWeight, minWeight, maxWeight;
+    int avgWeight, minWeight, maxWeight;
 
-    public Sequence(String repr, long totalWeight, long minWeight, long maxWeight) {
+    public Sequence(String repr, int avgWeight, int minWeight, int maxWeight) {
         this.repr = repr;
-        this.totalWeight = totalWeight;
+        this.avgWeight = avgWeight;
         this.minWeight = minWeight;
         this.maxWeight = maxWeight;
     }
@@ -29,7 +29,7 @@ public class Sequence {
     }
 
     public int averageWeight() {
-        return (int) (totalWeight / length());
+        return avgWeight;
     }
 
     public ShortKmer startKmer(int k) {
