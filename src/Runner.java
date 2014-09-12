@@ -39,8 +39,15 @@ public class Runner {
 
         boolean printHelp = (args.length > 0) && (args[0].equals("-h") || args[0].equals("--help"));
         if (printHelp) {
-            out.println("Usage: metafast [<JVM options>] [<Launch options>] [<Tool parameters>]");
-            out.println("TODO: complete help");
+            out.println("Fast metagenome analysis toolkit.");
+            out.println("");
+            out.println("Usage: java [<JVM options>] -jar <path-to-jar>/metafast.jar [<Launch options>] [<Tool parameters>]");
+            out.println("");
+            out.println("This toolkit allows you to run different tools from it.");
+            out.println("To see available tools type:           java -jar <path-to-jar>/metafast.jar -ts");
+            out.println("To see help for selected tool type:    java -jar <path-to-jar>/metafast.jar -t <tool-name>");
+            out.println("To run selected tool type:             java -jar <path-to-jar>/metafast.jar -t <tool-name> <tool-parameters>");
+            out.println("");
             return;
         }
 

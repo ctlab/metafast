@@ -32,11 +32,10 @@ public class DistanceMatrixCalculatorMain extends Tool {
             .withDefaultComment("tab")
             .create());
 
-    public final Parameter<Boolean> printNames = addParameter(new BoolParameterBuilder("print-names")
-            .withShortOpt("pn")
+    public final Parameter<Boolean> withoutNames = addParameter(new BoolParameterBuilder("without-names")
+            .withShortOpt("wn")
             .optional()
-            .withDescription("add to matrix row and column with given file names")
-            .withDefaultValue(false)
+            .withDescription("do not print matrix row and column names (as given file names)")
             .create());
 
     @Override
@@ -73,7 +72,7 @@ public class DistanceMatrixCalculatorMain extends Tool {
     private void printMatrix(double[][] matrix, String fp) throws FileNotFoundException {
         PrintWriter matrixPW = new PrintWriter(fp);
 
-        if (printNames.get()) {
+        if (!withoutNames.get()) {
             matrixPW.print("#");
             for (File featuresFile : featuresFiles.get()) {
                 matrixPW.print(separator.get());
@@ -83,7 +82,7 @@ public class DistanceMatrixCalculatorMain extends Tool {
         }
 
         for (int i = 0; i < matrix.length; i++) {
-            if (printNames.get()) {
+            if (!withoutNames.get()) {
                 matrixPW.print(featuresFiles.get()[i].getName() + separator.get());
             }
             for (int j = 0; j < matrix[i].length; j++) {

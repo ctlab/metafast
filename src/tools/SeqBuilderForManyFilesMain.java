@@ -52,7 +52,7 @@ public class SeqBuilderForManyFilesMain extends Tool {
     public final Parameter<Integer> sequenceLen = addParameter(new IntParameterBuilder("sequence-len")
             .mandatory()
             .withShortOpt("l")
-            .withDescription("sequence minimal length to be written to sequences.fasta")
+            .withDescription("minimal sequence length to be written to sequences.fasta")
             .create());
 
     public final Parameter<File> outputDir = addParameter(new FileParameterBuilder("output-dir")

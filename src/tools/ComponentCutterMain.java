@@ -31,13 +31,13 @@ public class ComponentCutterMain extends Tool {
 
     public final Parameter<Integer> minComponentSize = addParameter(new IntParameterBuilder("min-component-size")
             .withShortOpt("b1")
-            .withDescription("minimum component size in component-cutter")
+            .withDescription("minimum component size in component-cutter (in k-mers)")
             .withDefaultValue(1000)
             .create());
 
     public final Parameter<Integer> maxComponentSize = addParameter(new IntParameterBuilder("max-component-size")
             .withShortOpt("b2")
-            .withDescription("maximum component size in component-cutter")
+            .withDescription("maximum component size in component-cutter (in k-mers)")
             .withDefaultValue(10000)
             .create());
 

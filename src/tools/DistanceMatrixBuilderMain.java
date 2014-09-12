@@ -22,7 +22,7 @@ public class DistanceMatrixBuilderMain extends Tool {
             .optional()
             .withShortOpt("k")
             .withDefaultValue(31)
-            .withDescription("k-mer size (maximum 31 due to realization details)")
+            .withDescription("k-mer size (in nucleotides, maximum 31 due to realization details)")
             .create());
 
     public final Parameter<File[]> inputFiles = addParameter(new FileMVParameterBuilder("reads")
@@ -40,7 +40,7 @@ public class DistanceMatrixBuilderMain extends Tool {
 
     public final Parameter<Integer> minLen = addParameter(new IntParameterBuilder("min-seq-len")
             .withShortOpt("l")
-            .withDescription("minimum sequence length to be added to a component")
+            .withDescription("minimum sequence length to be added to a component (in nucleotides)")
             .withDefaultValue(100)
             .create());
 
