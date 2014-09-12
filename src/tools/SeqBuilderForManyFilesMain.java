@@ -46,7 +46,7 @@ public class SeqBuilderForManyFilesMain extends Tool {
     public final Parameter<Integer> bottomCutPercent = addParameter(new IntParameterBuilder("bottom-cut-percent")
             .optional()
             .withShortOpt("bp")
-            .withDescription("k-mers percent to be assumed erroneous")
+            .withDescription("k-mers percent to be assumed erroneous while building sequences in seq-builder (if specified, --maximal-bad-frequency wouldn't be used in seq-builder)")
             .create());
 
     public final Parameter<Integer> sequenceLen = addParameter(new IntParameterBuilder("sequence-len")

@@ -102,12 +102,15 @@ public class KmersCounterMain extends Tool {
 
 
         debug("Starting to print k-mers to " + fp);
+        long c = 0;
         try {
-            IOUtils.printKmers(hm, fp, maximalBadFrequency.get());
+            c = IOUtils.printKmers(hm, fp, maximalBadFrequency.get());
         } catch (IOException e) {
             e.printStackTrace();
         }
-        info("k-mers printed to " + fp);
+        info(hm.size() + " k-mers found, "
+                + c + " (" + String.format("%.1f", c * 100.0 / hm.size()) + "%) of them is good (not erroneous)");
+        info("Good k-mers printed to " + fp);
         resultingKmerFilesPr.set(new File(fp));
     }
 

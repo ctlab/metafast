@@ -2,39 +2,40 @@ package algo;
 
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import ru.ifmo.genetics.dna.DnaTools;
 import ru.ifmo.genetics.dna.kmers.ShortKmer;
 import ru.ifmo.genetics.structures.map.ArrayLong2IntHashMap;
+import ru.ifmo.genetics.utils.KmerUtils;
 import structures.Sequence;
 
 import java.util.List;
+import java.util.Queue;
 
 /**
- * Task class to add sequences from single <tt>Long2IntOpenHashMap</tt>
- * taken from <tt>ArrayLong2IntHashMap</tt>
- * @author Vladimir Ulyantsev
+ * Task class to search and add simple sequences to queue <code>sequences</code>.
  */
 public class AddSequencesShiftingRightTask implements Runnable {
 
-    ArrayLong2IntHashMap hm;
-    Long2IntOpenHashMap openHM;
+    final ArrayLong2IntHashMap hm;
+    final Long2IntOpenHashMap openHM;
+    final int k;
     int freqThreshold;
-    List<Sequence> sequenceList;
     int lenThreshold;
-    int k;
+    final Queue<Sequence> sequences;
+    final LongOpenHashSet used;
 
     public AddSequencesShiftingRightTask(ArrayLong2IntHashMap hm,
                                          Long2IntOpenHashMap openHM,
-                                         int freqThreshold,
-                                         List<Sequence> sequenceList,
-                                         int lenThreshold,
-                                         int k) {
+                                         int k, int freqThreshold, int lenThreshold,
+                                         Queue<Sequence> sequences, LongOpenHashSet used) {
         this.hm = hm;
         this.openHM = openHM;
-        this.freqThreshold = freqThreshold;
-        this.sequenceList = sequenceList;
-        this.lenThreshold = lenThreshold;
         this.k = k;
+        this.freqThreshold = freqThreshold;
+        this.lenThreshold = lenThreshold;
+        this.sequences = sequences;
+        this.used = used;
     }
 
     @Override
@@ -98,7 +99,25 @@ public class AddSequencesShiftingRightTask implements Runnable {
         }
 
         if (sequenceSB.length() >= lenThreshold) {
-            sequenceList.add(new Sequence(sequenceSB.toString(),
+            long stKmer = startKmer.toLong();
+            long endKmer = kmer.toLong();
+
+            // we want to print one sequence of two (fw and rc) - one with min long value of start kmer
+            if (stKmer > endKmer) {
+                return;
+            }
+
+            if (stKmer == endKmer) {  // print any sequence, but only one of them
+                synchronized (used) {
+                    if (used.contains(stKmer) || used.contains(endKmer)) {
+                        // sequence was already printed
+                        return;
+                    } else {
+                        used.add(stKmer);
+                    }
+                }
+            }
+            sequences.add(new Sequence(sequenceSB.toString(),
                     (int) (seqWeight / (sequenceSB.length() - k + 1)), minWeight, maxWeight));
         }
     }

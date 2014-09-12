@@ -16,20 +16,20 @@ import java.util.List;
  *
  */
 public class DistanceMatrixCalculatorMain extends Tool {
-    public static final String NAME = "calc-dist";
-    public static final String DESCRIPTION = "Calculates distance matrix using features files";
+    public static final String NAME = "dist-matrix-calculator";
+    public static final String DESCRIPTION = "Calculates distance matrix using features values";
 
 
     public final Parameter<File[]> featuresFiles = addParameter(new FileMVParameterBuilder("features")
             .mandatory()
-            .withDescription("features files provided from features-builder (for same components)")
+            .withDescription("features values files (for same components)")
             .create());
 
     public final Parameter<String> separator = addParameter(new StringParameterBuilder("separator")
             .withShortOpt("s")
             .withDescription("matrix values separator")
-            .withDefaultValue(" ")
-            .withDefaultComment("one white space")
+            .withDefaultValue("\t")
+            .withDefaultComment("tab")
             .create());
 
     public final Parameter<Boolean> printNames = addParameter(new BoolParameterBuilder("print-names")

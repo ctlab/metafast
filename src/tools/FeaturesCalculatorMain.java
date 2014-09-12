@@ -15,8 +15,8 @@ import java.io.*;
 import java.util.*;
 
 public class FeaturesCalculatorMain extends Tool {
-    public static final String NAME = "features-builder";
-    public static final String DESCRIPTION = "Features builder";
+    public static final String NAME = "features-calculator";
+    public static final String DESCRIPTION = "Calculates features values for input reads files";
 
     static final int LOAD_TASK_SIZE = 1 << 15;
 
@@ -29,12 +29,12 @@ public class FeaturesCalculatorMain extends Tool {
     public final Parameter<File[]> componentsFiles = addParameter(new FileMVParameterBuilder("components-files")
             .mandatory()
             .withShortOpt("m")
-            .withDescription("files with connected components")
+            .withDescription("files with connected components (one component is considered as one feature)")
             .create());
 
     public final Parameter<File[]> readsFiles = addParameter(new FileMVParameterBuilder("reads")
             .withShortOpt("i")
-            .withDescription("FASTQ, BINQ, FASTA (ignored reads with 'N') reads")
+            .withDescription("FASTQ, BINQ, FASTA reads")
             .create());
 
     public final Parameter<File[]> kmersFiles = addParameter(new FileMVParameterBuilder("kmers")

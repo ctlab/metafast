@@ -14,6 +14,7 @@ import structures.Sequence;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.List;
 
 public class SeqBuilderMain extends Tool {
@@ -76,8 +77,8 @@ public class SeqBuilderMain extends Tool {
 
         ArrayLong2IntHashMap hm;
         try {
-            hm = IOUtils.loadKmers(inputFiles.get(), 0, availableProcessors.get());
-        } catch (InterruptedException e) {
+            hm = IOUtils.loadKmers(inputFiles.get(), 0, availableProcessors.get(), this.logger);
+        } catch (IOException e) {
             e.printStackTrace();
             return;
         }
@@ -128,7 +129,7 @@ public class SeqBuilderMain extends Tool {
             maximalBadFrequency.set(threshold);
         }
 
-        info("Maximal bad frequency = " + maximalBadFrequency.get());
+        info("Using maximal bad frequency = " + maximalBadFrequency.get());
 
         File dir = outputDir.get();
         if (!dir.isDirectory()) {
@@ -142,7 +143,7 @@ public class SeqBuilderMain extends Tool {
         outputFilePr.set(destination);
 
         //info("hm brackets = " + hm.hm.length);
-        List<Sequence> sequences;
+        Deque<Sequence> sequences;
         try {
             sequences = SequencesFinders.thresholdStrategy(hm, availableProcessors.get(),
                     maximalBadFrequency.get(), sequenceLen.get(), k.get());
@@ -150,7 +151,7 @@ public class SeqBuilderMain extends Tool {
             e.printStackTrace();
             return;
         }
-        info("Sequences found = " + sequences.size());
+        info(sequences.size() + " sequences found");
 
         try {
             Sequence.printSequences(sequences, destination);

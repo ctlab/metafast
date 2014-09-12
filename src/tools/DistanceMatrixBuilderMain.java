@@ -3,18 +3,17 @@ package tools;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
-import ru.ifmo.genetics.utils.tool.inputParameterBuilder.BoolParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileMVParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.IntParameterBuilder;
-import ru.ifmo.genetics.utils.tool.inputParameterBuilder.StringParameterBuilder;
 import ru.ifmo.genetics.utils.tool.values.FilesFromOneFileYielder;
+import ru.ifmo.genetics.utils.tool.values.IfYielder;
+import ru.ifmo.genetics.utils.tool.values.InValue;
+import ru.ifmo.genetics.utils.tool.values.SimpleFixingInValue;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
 
 public class DistanceMatrixBuilderMain extends Tool {
-    public static final String NAME = "build-matrix";
+    public static final String NAME = "matrix-builder";
     public static final String DESCRIPTION = "Builds the distance matrix for input sequences/kmers";
 
 
@@ -29,10 +28,10 @@ public class DistanceMatrixBuilderMain extends Tool {
     public final Parameter<File[]> inputFiles = addParameter(new FileMVParameterBuilder("reads")
             .withShortOpt("i")
             .mandatory()
-            .withDescription("list of reads files from single environment. FASTQ, BINQ, FASTA (ignored reads with 'N')")
+            .withDescription("list of reads files from single environment. FASTQ, BINQ, FASTA")
             .create());
 
-    public final Parameter<Integer> maximalBadFrequency = addParameter(new IntParameterBuilder("maximal-bad-frequence")
+    public final Parameter<Integer> maximalBadFrequency = addParameter(new IntParameterBuilder("maximal-bad-frequency")
             .optional()
             .withShortOpt("b")
             .withDescription("maximal frequency for a k-mer to be assumed erroneous")
@@ -52,7 +51,17 @@ public class DistanceMatrixBuilderMain extends Tool {
     {
         setFix(kmersCounter.k, k);
         setFix(kmersCounter.inputFiles, inputFiles);
-        setFix(kmersCounter.maximalBadFrequency, maximalBadFrequency);
+        setFix(kmersCounter.maximalBadFrequency,
+                new IfYielder<Integer>(new InValue<Boolean>() {
+                        @Override
+                        public Boolean get() {
+                            return maximalBadFrequency.get() >= 1;
+                        }
+                    },
+                    new SimpleFixingInValue<Integer>(1),
+                    maximalBadFrequency
+                )
+        );
         setFixDefault(kmersCounter.outputDir);
         addSubTool(kmersCounter);
     }
@@ -67,28 +76,30 @@ public class DistanceMatrixBuilderMain extends Tool {
         addSubTool(seqBuilder);
     }
 
-    public SeqMergerMain seqMerger = new SeqMergerMain();
+    public ComponentCutterMain compCutter = new ComponentCutterMain();
     {
-        setFix(seqMerger.k, k);
-        setFix(seqMerger.sequencesFiles, seqBuilder.outputFilesOut);
-        setFix(seqMerger.minLen, minLen);
-        addSubTool(seqMerger);
+        setFix(compCutter.k, k);
+        setFix(compCutter.sequencesFiles, seqBuilder.outputFilesOut);
+        setFix(compCutter.minLen, minLen);
+        setFixDefault(compCutter.componentsFile);
+        addSubTool(compCutter);
     }
 
-    public ReadsFeaturesBuilderMain featuresBuilder = new ReadsFeaturesBuilderMain();
+    public FeaturesCalculatorMain featuresCalculator = new FeaturesCalculatorMain();
     {
-        setFix(featuresBuilder.k, k);
-        setFix(featuresBuilder.componentsFiles, new FilesFromOneFileYielder(seqMerger.componentsFileOut));
-        setFix(featuresBuilder.readsFiles, inputFiles);
-        setFix(featuresBuilder.threshold, kmersCounter.maximalBadFrequency);
-        addSubTool(featuresBuilder);
+        setFix(featuresCalculator.k, k);
+        setFix(featuresCalculator.componentsFiles, new FilesFromOneFileYielder(compCutter.componentsFileOut));
+        setFix(featuresCalculator.readsFiles, inputFiles);
+        setFix(featuresCalculator.threshold, kmersCounter.maximalBadFrequency);
+        setFixDefault(featuresCalculator.kmersFiles);
+        addSubTool(featuresCalculator);
     }
 
-    public CalculateDistanceMatrixMain calcDist = new CalculateDistanceMatrixMain();
+    public DistanceMatrixCalculatorMain distMatrixCalculator = new DistanceMatrixCalculatorMain();
     {
-        setFix(calcDist.featuresFiles, featuresBuilder.featuresFilesOut);
-        setFixDefault(calcDist.separator);
-        addSubTool(calcDist);
+        setFix(distMatrixCalculator.featuresFiles, featuresCalculator.featuresFilesOut);
+        setFixDefault(distMatrixCalculator.separator);
+        addSubTool(distMatrixCalculator);
     }
 
 
@@ -96,9 +107,9 @@ public class DistanceMatrixBuilderMain extends Tool {
     protected void runImpl() throws ExecutionFailedException {
         addStep(kmersCounter);
         addStep(seqBuilder);
-        addStep(seqMerger);
-        addStep(featuresBuilder);
-        addStep(calcDist);
+        addStep(compCutter);
+        addStep(featuresCalculator);
+        addStep(distMatrixCalculator);
     }
 
 

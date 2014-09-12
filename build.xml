@@ -13,13 +13,13 @@
     <property name="builder.main" value="tools.SeqBuilderMain"/>
     <property name="builder.jar" value="seqBuilder.jar"/>
 
-    <property name="merger.main" value="tools.SeqMergerMain"/>
+    <property name="merger.main" value="tools.ComponentCutterMain"/>
     <property name="merger.jar" value="seqMerger.jar"/>
 
     <property name="antibody.main" value="tools.AntibodyFinderMain"/>
     <property name="antibody.jar" value="antibodyFinder.jar"/>
 
-    <property name="features.main" value="tools.ReadsFeaturesBuilderMain"/>
+    <property name="features.main" value="tools.FeaturesCalculatorMain"/>
     <property name="features.jar" value="featuresBuilder.jar"/>
 
     <property name="compare.main" value="tools.CompareReadsAndComponentsMain"/>

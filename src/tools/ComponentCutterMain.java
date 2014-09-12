@@ -14,8 +14,8 @@ import java.io.*;
 import java.util.*;
 
 public class ComponentCutterMain extends Tool {
-    public static final String NAME = "seq-merger";
-    public static final String DESCRIPTION = "Graph components builder";
+    public static final String NAME = "component-cutter";
+    public static final String DESCRIPTION = "Build graph components from tangled graph";
 
     public final Parameter<Integer> k = addParameter(new IntParameterBuilder("k")
             .mandatory()
@@ -31,13 +31,13 @@ public class ComponentCutterMain extends Tool {
 
     public final Parameter<Integer> minComponentSize = addParameter(new IntParameterBuilder("min-component-size")
             .withShortOpt("b1")
-            .withDescription("minimum component size while building component in seq-merger")
+            .withDescription("minimum component size in component-cutter")
             .withDefaultValue(1000)
             .create());
 
     public final Parameter<Integer> maxComponentSize = addParameter(new IntParameterBuilder("max-component-size")
             .withShortOpt("b2")
-            .withDescription("maximum component size while building component in seq-merger")
+            .withDescription("maximum component size in component-cutter")
             .withDefaultValue(10000)
             .create());
 
@@ -48,7 +48,7 @@ public class ComponentCutterMain extends Tool {
             .create());
 
     public final Parameter<File> componentsFile = addParameter(new FileParameterBuilder("components-file")
-            .withDescription("file with found components")
+            .withDescription("file to write found components to")
             .withDefaultValue(workDir.append("components"))
             .create());
 
