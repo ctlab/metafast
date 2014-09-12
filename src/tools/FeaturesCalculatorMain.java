@@ -14,7 +14,7 @@ import ru.ifmo.genetics.utils.tool.inputParameterBuilder.*;
 import java.io.*;
 import java.util.*;
 
-public class ReadsFeaturesBuilderMain extends Tool {
+public class FeaturesCalculatorMain extends Tool {
     public static final String NAME = "features-builder";
     public static final String DESCRIPTION = "Features builder";
 
@@ -159,10 +159,10 @@ public class ReadsFeaturesBuilderMain extends Tool {
     }
 
     public static void main(String[] args) {
-        new ReadsFeaturesBuilderMain().mainImpl(args);
+        new FeaturesCalculatorMain().mainImpl(args);
     }
 
-    public ReadsFeaturesBuilderMain() {
+    public FeaturesCalculatorMain() {
         super(NAME, DESCRIPTION);
     }
 }

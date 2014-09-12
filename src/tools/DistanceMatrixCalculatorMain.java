@@ -15,7 +15,7 @@ import java.util.List;
  * Created by ulyantsev on 29.05.14.
  *
  */
-public class CalculateDistanceMatrixMain extends Tool {
+public class DistanceMatrixCalculatorMain extends Tool {
     public static final String NAME = "calc-dist";
     public static final String DESCRIPTION = "Calculates distance matrix using features files";
 
@@ -137,7 +137,7 @@ public class CalculateDistanceMatrixMain extends Tool {
         new SeqBuilderMain().mainImpl(args);
     }
 
-    public CalculateDistanceMatrixMain() {
+    public DistanceMatrixCalculatorMain() {
         super(NAME, DESCRIPTION);
     }
 }

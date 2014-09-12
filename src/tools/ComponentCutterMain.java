@@ -13,7 +13,7 @@ import ru.ifmo.genetics.utils.tool.inputParameterBuilder.*;
 import java.io.*;
 import java.util.*;
 
-public class SeqMergerMain extends Tool {
+public class ComponentCutterMain extends Tool {
     public static final String NAME = "seq-merger";
     public static final String DESCRIPTION = "Graph components builder";
 
@@ -31,13 +31,13 @@ public class SeqMergerMain extends Tool {
 
     public final Parameter<Integer> minComponentSize = addParameter(new IntParameterBuilder("min-component-size")
             .withShortOpt("b1")
-            .withDescription("minimum component size to be added")
+            .withDescription("minimum component size while building component in seq-merger")
             .withDefaultValue(1000)
             .create());
 
     public final Parameter<Integer> maxComponentSize = addParameter(new IntParameterBuilder("max-component-size")
             .withShortOpt("b2")
-            .withDescription("maximum component size to be added")
+            .withDescription("maximum component size while building component in seq-merger")
             .withDefaultValue(10000)
             .create());
 
@@ -93,10 +93,10 @@ public class SeqMergerMain extends Tool {
     }
 
     public static void main(String[] args) {
-        new SeqMergerMain().mainImpl(args);
+        new ComponentCutterMain().mainImpl(args);
     }
 
-    public SeqMergerMain() {
+    public ComponentCutterMain() {
         super(NAME, DESCRIPTION);
     }
 }
