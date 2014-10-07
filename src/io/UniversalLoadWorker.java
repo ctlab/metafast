@@ -13,11 +13,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 
-/**
- * Vladimir Ulyantsev
- * Date: 24.04.14
- * Time: 18:13
- */
 public class UniversalLoadWorker implements Runnable {
 
     private UniversalReadDispatcher dispatcher;
@@ -43,24 +38,13 @@ public class UniversalLoadWorker implements Runnable {
         this.factory = factory;
     }
 
-    public void add(Kmer kmer) {
-        long key = kmer.toLong();
-        hm.add(key, 1);
-    }
 
-    void add(Dna dna) {
-        ShortKmer kmer = new ShortKmer(0, LEN);
-        for (int pos = 0; pos < dna.length(); pos++) {
-            kmer.shiftRight(dna.nucAt(pos));
-            if (pos >= LEN - 1) {
-                add(kmer);
+
+    void add(Iterable<Dna> dnas) {
+        for (Dna dna : dnas) {
+            for (ShortKmer kmer : ShortKmer.kmersOf(dna, LEN)) {
+                hm.add(kmer.toLong(), 1);
             }
-        }
-    }
-
-    void add(Iterable<Dna> dnaqs) {
-        for (Dna dnaq : dnaqs) {
-            add(dnaq);
         }
     }
 

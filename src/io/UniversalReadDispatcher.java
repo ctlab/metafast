@@ -3,6 +3,7 @@ package io;
 import ru.ifmo.genetics.dna.Dna;
 import ru.ifmo.genetics.dna.DnaQ;
 import ru.ifmo.genetics.io.sources.NamedSource;
+import ru.ifmo.genetics.io.sources.Source;
 import ru.ifmo.genetics.utils.iterators.ProgressableIterator;
 
 import java.io.IOException;
@@ -12,7 +13,6 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 public class UniversalReadDispatcher {
-    NamedSource<Dna> reader;
     ProgressableIterator<Dna> iterator;
     int workRangeSize;
     final OutputStream out;
@@ -24,19 +24,17 @@ public class UniversalReadDispatcher {
     int r = 0;
     int w = 0;
 
-    public UniversalReadDispatcher(NamedSource<Dna> reader, int workRangeSize) {
-        this.reader = reader;
+    public UniversalReadDispatcher(Source<Dna> reader, int workRangeSize) {
         this.iterator = reader.iterator();
         this.workRangeSize = workRangeSize;
         out = null;
     }
 
-    public UniversalReadDispatcher(NamedSource<Dna> reader,
+    public UniversalReadDispatcher(Source<Dna> reader,
                                    OutputStream out,
                                    int workRangeSize,
                                    long totalReadsProcessed,
                                    int workersNumber) {
-        this.reader = reader;
         this.iterator = reader.iterator();
 
         this.workRangeSize = workRangeSize;
@@ -47,23 +45,10 @@ public class UniversalReadDispatcher {
     }
 
     private List<Dna> readRange(int workRangeSize) throws IOException {
-        List<Dna> list = new ArrayList<Dna>();
-        while (this.iterator != null && list.size() < workRangeSize) {
-            try {
-                list.add(iterator.next());
-                ++reads;
-            } catch (NoSuchElementException e) {
-                this.iterator = null;
-                break;
-            } catch (IllegalArgumentException ignored) {
-
-            }
-//            //This part is needed due to buggy iterator.hasNext()
-//            if (!this.iterator.hasNext()) {
-//                this.iterator = null;
-//                break;
-//            }
-//            list.add(iterator.next());
+        List<Dna> list = new ArrayList<Dna>(workRangeSize);
+        while ((list.size() < workRangeSize) && iterator.hasNext()) {
+            list.add(iterator.next());
+            ++reads;
         }
         return list;
     }
@@ -71,7 +56,7 @@ public class UniversalReadDispatcher {
     public List<Dna> getWorkRange(long id) {
         List<Dna> list;
         try {
-            synchronized (reader) {
+            synchronized (iterator) {
                 list = readRange(workRangeSize);
                 ar[r] = id;
                 r = (r + 1) % ar.length;
@@ -85,7 +70,7 @@ public class UniversalReadDispatcher {
     public List<Dna> getWorkRange() {
         List<Dna> list;
         try {
-            synchronized (reader) {
+            synchronized (iterator) {
                 list = readRange(workRangeSize);
             }
         } catch (IOException e) {

@@ -3,6 +3,7 @@ package algo;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import ru.ifmo.genetics.dna.Dna;
 import ru.ifmo.genetics.dna.DnaTools;
 import ru.ifmo.genetics.dna.kmers.ShortKmer;
 import ru.ifmo.genetics.structures.map.ArrayLong2IntHashMap;
@@ -117,7 +118,7 @@ public class AddSequencesShiftingRightTask implements Runnable {
                     }
                 }
             }
-            sequences.add(new Sequence(sequenceSB.toString(),
+            sequences.add(new Sequence(new Dna(sequenceSB.toString()),
                     (int) (seqWeight / (sequenceSB.length() - k + 1)), minWeight, maxWeight));
         }
     }

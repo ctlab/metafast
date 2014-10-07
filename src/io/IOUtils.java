@@ -2,28 +2,27 @@ package io;
 
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import ru.ifmo.genetics.dna.Dna;
+import ru.ifmo.genetics.dna.DnaQ;
 import ru.ifmo.genetics.dna.DnaTools;
 import ru.ifmo.genetics.dna.kmers.Kmer;
 import ru.ifmo.genetics.dna.kmers.KmerIteratorFactory;
 import ru.ifmo.genetics.dna.kmers.ShortKmer;
+import ru.ifmo.genetics.dna.kmers.ShortKmerIteratorFactory;
 import ru.ifmo.genetics.executors.BlockingThreadPoolExecutor;
+import ru.ifmo.genetics.io.ReadersUtils;
 import ru.ifmo.genetics.io.sources.NamedSource;
+import ru.ifmo.genetics.io.sources.Source;
 import ru.ifmo.genetics.structures.map.ArrayLong2IntHashMap;
 
 import java.io.*;
+import java.util.Iterator;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 
 import org.apache.log4j.Logger;
-import ru.ifmo.genetics.tools.io.LazyBinqReader;
-import ru.ifmo.genetics.tools.io.LazyDnaReader;
+import ru.ifmo.genetics.tools.ec.DnaQReadDispatcher;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 
-/**
- * Vladimir Ulyantsev
- * Date: 11.02.14
- * Time: 17:32
- */
 public class IOUtils {
     static final int BYTES_PER_KMER = 12;
 
@@ -35,16 +34,17 @@ public class IOUtils {
         int totalSeq = 0;
         long totalLen = 0;
         for (File file : files) {
-            BufferedReader reader = new BufferedReader(new FileReader(file));
+            Source<Dna> source = ReadersUtils.readDnaLazy(file);
+            Iterator<Dna> in = source.iterator();
 
             int cnt = 0;
             long len = 0;
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.charAt(0) != '>' && line.length() >= minSeqLen) {
-                    addSequence(hm, line, k);
+            while (in.hasNext()) {
+                Dna dna = in.next();
+                if (dna.length() >= minSeqLen) {
+                    addSequence(hm, dna, k);
                     cnt++;
-                    len += line.length();
+                    len += dna.length();
                 }
             }
             logger.debug(cnt + " sequences added, summary len = " + len + " from " + file.getPath());
@@ -57,12 +57,10 @@ public class IOUtils {
         logger.debug("k-mers HM size = " + hm.size());
     }
 
-    private static void addSequence(ArrayLong2IntHashMap hm, String seq, int k) {
-        ShortKmer kmer = new ShortKmer(seq.substring(0, k));
-        hm.add(kmer.toLong(), 1);
-        for (int pos = k; pos < seq.length(); pos++) {
-            kmer.shiftRight(DnaTools.fromChar(seq.charAt(pos)));
-            hm.add(kmer.toLong(), 1);
+    private static void addSequence(ArrayLong2IntHashMap hm, Dna dna, int k) {
+        Iterator<ShortKmer> it = ShortKmer.kmersOf(dna, k).iterator();
+        while (it.hasNext()) {
+            hm.add(it.next().toLong(), 1);
         }
     }
 
@@ -178,9 +176,11 @@ public class IOUtils {
                                     KmerIteratorFactory<? extends Kmer> factory,
                                     int availableProcessors,
                                     Logger logger) throws IOException {
-        LazyBinqReader reader = new LazyBinqReader(files);
+        Source<DnaQ> source = ReadersUtils.readDnaQLazy(files);
+        Iterator<DnaQ> it = source.iterator();
 
-        DnaQReadDispatcher dispatcher = new DnaQReadDispatcher(reader, loadTaskSize);
+
+        DnaQReadDispatcher dispatcher = new DnaQReadDispatcher(source, loadTaskSize, null);
         KmerLoadWorker[] workers = new KmerLoadWorker[availableProcessors];
         CountDownLatch latch = new CountDownLatch(workers.length);
 
@@ -198,7 +198,7 @@ public class IOUtils {
                 worker.interrupt();
             }
         }
-        logger.info(dispatcher.reads + " reads added");
+        logger.info(dispatcher.getReads() + " reads added");
 //        logger.info("k-mers loaded");
     }
 
@@ -222,7 +222,7 @@ public class IOUtils {
                                 int availableProcessors,
                                 Logger logger) throws ExecutionFailedException {
         for (File file : files) {
-            NamedSource<Dna> reader = LazyDnaReader.sourceFromFile(file);
+            NamedSource<Dna> reader = ReadersUtils.readDnaLazy(file);
 
             UniversalReadDispatcher dispatcher = new UniversalReadDispatcher(reader, loadTaskSize);
             UniversalLoadWorker[] workers = new UniversalLoadWorker[availableProcessors];

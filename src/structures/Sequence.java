@@ -1,55 +1,38 @@
 package structures;
 
-
-import ru.ifmo.genetics.dna.kmers.ShortKmer;
+import ru.ifmo.genetics.dna.Dna;
+import ru.ifmo.genetics.io.writers.WritersUtils;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
+import java.io.IOException;
+import java.util.LinkedList;
 
-public class Sequence {
-    String repr;
-
+public class Sequence extends Dna {
     int avgWeight, minWeight, maxWeight;
 
-    public Sequence(String repr, int avgWeight, int minWeight, int maxWeight) {
-        this.repr = repr;
+    public Sequence(Dna dna, int avgWeight, int minWeight, int maxWeight) {
+        super(dna);
         this.avgWeight = avgWeight;
         this.minWeight = minWeight;
         this.maxWeight = maxWeight;
     }
 
-    public int length() {
-        return repr.length();
-    }
-
-    @Override
-    public String toString() {
-        return repr;
-    }
 
     public int averageWeight() {
         return avgWeight;
     }
 
-    public ShortKmer startKmer(int k) {
-        return new ShortKmer(repr.substring(0, k));
-    }
 
-    public ShortKmer endKmer(int k) {
-        return new ShortKmer(repr.substring(repr.length() - k, repr.length()));
-    }
+    public static void printSequences(Iterable<Sequence> sequences, File file) throws IOException {
+        LinkedList<String> comments = new LinkedList<String>();
 
-    public static void printSequences(Iterable<Sequence> sequences, File destination) throws FileNotFoundException {
-        PrintWriter pw = new PrintWriter(destination);
         int sequenceId = 0;
         for (Sequence seq : sequences) {
             sequenceId++;
-            String seqInfo = String.format(">%d length=%d av_weight=%d min_weight=%d max_weight=%d",
-                    sequenceId, seq.length(), seq.averageWeight(), seq.minWeight, seq.maxWeight);
-            pw.println(seqInfo);
-            pw.println(seq);
+            String seqInfo = String.format("%d length=%d av_weight=%d min_weight=%d max_weight=%d",
+                    sequenceId, seq.length(), seq.avgWeight, seq.minWeight, seq.maxWeight);
+            comments.add(seqInfo);
         }
-        pw.close();
+        WritersUtils.writeDnasToFastaFile(comments, sequences, file, false);
     }
 }

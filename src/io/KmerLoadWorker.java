@@ -5,6 +5,7 @@ import ru.ifmo.genetics.dna.DnaQ;
 import ru.ifmo.genetics.dna.kmers.*;
 import ru.ifmo.genetics.dna.kmers.KmerIteratorFactory;
 import ru.ifmo.genetics.structures.map.ArrayLong2IntHashMap;
+import ru.ifmo.genetics.tools.ec.DnaQReadDispatcher;
 
 import java.util.List;
 import java.util.Random;

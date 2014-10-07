@@ -31,22 +31,17 @@ public class Runner {
 
 //        System.err.println("Found " + tools.size() + " tools");
 
-        if (args.length == 0) {
-//            out.println("TODO: Version");
-            out.println("-h or --help to print help");
-            return;
-        }
 
-        boolean printHelp = (args.length > 0) && (args[0].equals("-h") || args[0].equals("--help"));
+        boolean printHelp = (args.length == 0) || (args[0].equals("-h") || args[0].equals("--help"));
         if (printHelp) {
-            out.println("Fast metagenome analysis toolkit.");
+            out.println("Fast metagenome analysis toolkit (version 0.1.0)");
             out.println("");
             out.println("Usage: java [<JVM options>] -jar <path-to-jar>/metafast.jar [<Launch options>] [<Tool parameters>]");
             out.println("");
             out.println("This toolkit allows you to run different tools from it.");
-            out.println("To see available tools type:           java -jar <path-to-jar>/metafast.jar -ts");
-            out.println("To see help for selected tool type:    java -jar <path-to-jar>/metafast.jar -t <tool-name>");
-            out.println("To run selected tool type:             java -jar <path-to-jar>/metafast.jar -t <tool-name> <tool-parameters>");
+            out.println("To see available tools:              java -jar <path-to-jar>/metafast.jar -ts");
+            out.println("To see help for selected tool:       java -jar <path-to-jar>/metafast.jar -t <tool-name>");
+            out.println("To run selected tool:                java -jar <path-to-jar>/metafast.jar -t <tool-name> <tool-parameters>");
             out.println("");
             return;
         }

@@ -155,8 +155,8 @@ public class SeqBuilderMain extends Tool {
 
         try {
             Sequence.printSequences(sequences, destination);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+        } catch (IOException e) {
+            throw new RuntimeException("Can't write sequences to file", e);
         }
         info("Sequences printed to " + destination);
 
