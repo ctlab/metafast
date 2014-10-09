@@ -18,10 +18,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by ulyantsev on 17.04.14.
- *
- */
 public class KmersCounterMain extends Tool {
 
     public static final String NAME = "kmer-counter";
@@ -29,7 +25,7 @@ public class KmersCounterMain extends Tool {
     public static final String DESCRIPTION = "Count k-mers in given reads with ArrayLong2IntHashMap";
 //            "\nBinary output format: 64 bits to k-mer itself + 32 bits to frequency";
 
-    static final int LOAD_TASK_SIZE = 1 << 15;
+    static final int LOAD_TASK_SIZE = 1 << 15;  // 32 K reads
 
     public final Parameter<Integer> k = addParameter(new IntParameterBuilder("k")
             .mandatory()
