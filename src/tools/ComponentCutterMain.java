@@ -49,7 +49,7 @@ public class ComponentCutterMain extends Tool {
 
     public final Parameter<File> componentsFile = addParameter(new FileParameterBuilder("components-file")
             .withDescription("file to write found components to")
-            .withDefaultValue(workDir.append("components"))
+            .withDefaultValue(workDir.append("components.bin"))
             .create());
 
 

@@ -12,6 +12,7 @@ import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.IntParameterBuilder;
 import ru.ifmo.genetics.utils.tool.values.InMemoryValue;
 import ru.ifmo.genetics.utils.tool.values.InValue;
+import ru.ifmo.genetics.utils.NumUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -80,12 +81,14 @@ public class KmersCounterMain extends Tool {
         int LEN = k.get();
 
         ArrayLong2IntHashMap hm;
+        logger.debug("Starting to load reads...");
         try {
             hm = IOUtils.loadReads(inputFiles.get(), LEN, LOAD_TASK_SIZE,
                     new ShortKmerIteratorFactory(), availableProcessors.get(), this.logger);
         } catch (IOException e) {
             throw new ExecutionFailedException("Couldn't load k-mers", e);
         }
+        logger.debug("Finished to load reads!");
 
         File dir = outputDir.get();
         if (!dir.exists()) {
@@ -94,7 +97,7 @@ public class KmersCounterMain extends Tool {
 
         String fp = dir + File.separator + inputFiles.get()[0].getName();
         fp += inputFiles.get().length > 1 ? "+" : "";
-        fp += ".kmers";
+        fp += ".kmers.bin";
 
 
         debug("Starting to print k-mers to " + fp);
@@ -104,8 +107,8 @@ public class KmersCounterMain extends Tool {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        info(hm.size() + " k-mers found, "
-                + c + " (" + String.format("%.1f", c * 100.0 / hm.size()) + "%) of them is good (not erroneous)");
+        info(NumUtils.groupDigits(hm.size()) + " k-mers found, "
+                + NumUtils.groupDigits(c) + " (" + String.format("%.1f", c * 100.0 / hm.size()) + "%) of them is good (not erroneous)");
         info("Good k-mers printed to " + fp);
         resultingKmerFilesPr.set(new File(fp));
     }

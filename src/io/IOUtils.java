@@ -22,6 +22,7 @@ import java.util.concurrent.CountDownLatch;
 import org.apache.log4j.Logger;
 import ru.ifmo.genetics.tools.ec.DnaQReadDispatcher;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
+import ru.ifmo.genetics.utils.NumUtils;
 
 public class IOUtils {
     static final int BYTES_PER_KMER = 12;
@@ -118,9 +119,11 @@ public class IOUtils {
 
             inputStream.close();
 
-            logger.debug(file + " : " + uniqueKmersAdded + " / " + uniqueKmers + " unique k-mers added");
-            logger.debug(file + " : " + totalKmersAdded + " / " + totalKmers + " total k-mers added");
-            logger.info(uniqueKmersAdded + " k-mers loaded from " + file);
+            logger.debug(file + " : " + NumUtils.groupDigits(uniqueKmersAdded) + " / "
+                    + NumUtils.groupDigits(uniqueKmers) + " unique k-mers added/all");
+            logger.debug(file + " : " + NumUtils.groupDigits(totalKmersAdded) + " / " 
+                    + NumUtils.groupDigits(totalKmers) + " total k-mers added/all");
+            logger.info(NumUtils.groupDigits(uniqueKmersAdded) + " k-mers loaded from " + file);
         }
     }
 
@@ -198,7 +201,7 @@ public class IOUtils {
                 worker.interrupt();
             }
         }
-        logger.info(dispatcher.getReads() + " reads added");
+        logger.info(NumUtils.groupDigits(dispatcher.getReads()) + " reads added");
 //        logger.info("k-mers loaded");
     }
 
@@ -210,6 +213,9 @@ public class IOUtils {
                                                  Logger logger) throws IOException, ExecutionFailedException {
         ArrayLong2IntHashMap hm =
                 new ArrayLong2IntHashMap((int) (Math.log(availableProcessors) / Math.log(2)) + 4);
+
+        logger.debug("Created " + hm.hm.length + " hash maps in main map");
+
         addReads(files, hm, k, loadTaskSize, factory, availableProcessors, logger);
         return hm;
     }
@@ -222,18 +228,23 @@ public class IOUtils {
                                 int availableProcessors,
                                 Logger logger) throws ExecutionFailedException {
         for (File file : files) {
+            logger.info("Processing file " + file + "...");
+
             NamedSource<Dna> reader = ReadersUtils.readDnaLazy(file);
 
-            UniversalReadDispatcher dispatcher = new UniversalReadDispatcher(reader, loadTaskSize);
+            UniversalReadDispatcher dispatcher = new UniversalReadDispatcher(reader, loadTaskSize, hm);
             UniversalLoadWorker[] workers = new UniversalLoadWorker[availableProcessors];
             CountDownLatch latch = new CountDownLatch(workers.length);
 
+            logger.debug("Starting workers...");
             for (int i = 0; i < workers.length; ++i) {
                 workers[i] = new UniversalLoadWorker(dispatcher, latch, k, hm, factory);
                 new Thread(workers[i]).start();
             }
 
+
             try {
+                logger.debug("Waiting workers...");
                 latch.await();
             } catch (InterruptedException e) {
                 logger.warn("Main thread interrupted");
@@ -241,7 +252,7 @@ public class IOUtils {
                     worker.interrupt();
                 }
             }
-            logger.info(dispatcher.reads + " reads added from " + file);
+            logger.info(NumUtils.groupDigits(dispatcher.reads) + " reads added from " + file);
         }
 //        logger.info("k-mers loaded");
     }

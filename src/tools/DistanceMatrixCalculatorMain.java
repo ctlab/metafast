@@ -60,7 +60,7 @@ public class DistanceMatrixCalculatorMain extends Tool {
             }
         }
 
-        String matrixPath = workDir + File.separator + "dist_matrix";
+        String matrixPath = workDir + File.separator + "dist_matrix.txt";
         try {
             printMatrix(distMatrix, matrixPath);
             info("Distance matrix printed to " + matrixPath);

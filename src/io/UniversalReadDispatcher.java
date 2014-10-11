@@ -1,9 +1,14 @@
 package io;
 
+import org.apache.log4j.Logger;
 import ru.ifmo.genetics.dna.Dna;
 import ru.ifmo.genetics.dna.DnaQ;
 import ru.ifmo.genetics.io.sources.NamedSource;
 import ru.ifmo.genetics.io.sources.Source;
+import ru.ifmo.genetics.structures.map.ArrayLong2IntHashMap;
+import ru.ifmo.genetics.utils.Misc;
+import ru.ifmo.genetics.utils.NumUtils;
+import ru.ifmo.genetics.utils.TextUtils;
 import ru.ifmo.genetics.utils.iterators.ProgressableIterator;
 
 import java.io.IOException;
@@ -13,6 +18,8 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 public class UniversalReadDispatcher {
+    protected final Logger logger = Logger.getLogger("read-dispatcher");
+
     ProgressableIterator<Dna> iterator;
     int workRangeSize;
     final OutputStream out;
@@ -23,11 +30,14 @@ public class UniversalReadDispatcher {
     long[] ar;
     int r = 0;
     int w = 0;
+    final ArrayLong2IntHashMap hm; // tmp
 
-    public UniversalReadDispatcher(Source<Dna> reader, int workRangeSize) {
+    public UniversalReadDispatcher(Source<Dna> reader, int workRangeSize, ArrayLong2IntHashMap hm) {
         this.iterator = reader.iterator();
         this.workRangeSize = workRangeSize;
         out = null;
+        logger.debug("Using " + workRangeSize + " reads as workRangeSize");
+        this.hm = hm;
     }
 
     public UniversalReadDispatcher(Source<Dna> reader,
@@ -42,6 +52,7 @@ public class UniversalReadDispatcher {
         this.totalReadsProcessed = totalReadsProcessed;
 
         ar = new long[workersNumber];
+        hm = null;
     }
 
     private List<Dna> readRange(int workRangeSize) throws IOException {
@@ -49,6 +60,16 @@ public class UniversalReadDispatcher {
         while ((list.size() < workRangeSize) && iterator.hasNext()) {
             list.add(iterator.next());
             ++reads;
+
+            if (reads % 1000000 == 0) {
+                logger.debug("Processed " + NumUtils.groupDigits(reads) + " reads:");
+                logger.debug("Total hm size = " + NumUtils.groupDigits(hm.size()) + ", " +
+                        "size in hm.hm = {" + NumUtils.groupDigits(hm.hm[0].size()) + ", "
+                        + NumUtils.groupDigits(hm.hm[1].size()) + ", "
+                        + NumUtils.groupDigits(hm.hm[2].size()) + ", "
+                        + NumUtils.groupDigits(hm.hm[3].size()) + ", ...}");
+                logger.debug("Available memory (without running GC) = " + Misc.availableMemoryWithoutRunningGCAsString());
+            }
         }
         return list;
     }
