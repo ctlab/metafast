@@ -71,7 +71,7 @@ public class ComponentCutterMain extends Tool {
         List<ConnectedComponent> components;
         try {
             String statFP = workDir + File.separator + "components-stat-" +
-                    minComponentSize.get() + "-" + maxComponentSize.get();
+                    minComponentSize.get() + "-" + maxComponentSize.get() + ".txt";
             components = ComponentsBuilder.splitStrategy(hm, k.get(), minComponentSize.get(),
                     maxComponentSize.get(), statFP, this.logger, availableProcessors.get());
         } catch (FileNotFoundException e) {

@@ -9,6 +9,8 @@ import ru.ifmo.genetics.utils.tool.Tool;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.*;
 import ru.ifmo.genetics.utils.tool.values.InMemoryValue;
 import ru.ifmo.genetics.utils.tool.values.InValue;
+import ru.ifmo.genetics.utils.FileUtils;
+import ru.ifmo.genetics.utils.NumUtils;
 import structures.Sequence;
 
 import java.io.*;
@@ -82,7 +84,7 @@ public class SeqBuilderMain extends Tool {
             e.printStackTrace();
             return;
         }
-        debug(hm.size() + " k-mers loaded");
+        debug(NumUtils.groupDigits(hm.size()) + " k-mers loaded");
 
         long totalKmers = 0;
         int[] stat = new int[STAT_LEN];
@@ -135,7 +137,7 @@ public class SeqBuilderMain extends Tool {
         if (!dir.isDirectory()) {
             dir.mkdir();
         }
-        String basename = inputFiles.get()[0].getName().replace(".kmers", "");
+        String basename = FileUtils.removeExtension(inputFiles.get()[0].getName(), ".kmers.bin");
         String fp = dir + File.separator + basename;
         fp += (inputFiles.get().length > 1 ? "+" : "") + ".seq.fasta";
 
