@@ -10,6 +10,7 @@ import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.*;
+import ru.ifmo.genetics.utils.FileUtils;
 
 import java.io.*;
 import java.util.*;
@@ -69,8 +70,8 @@ public class FeaturesCalculatorMain extends Tool {
                 throw new ExecutionFailedException("Couldn't load components", e);
             }
 
-            String modelDir =
-                    String.format(workDir + File.separator + "%03d-" + componentsFile.getName(), models.size());
+            String compName = FileUtils.removeExtension(componentsFile.getName(), ".bin");
+            String modelDir = String.format(workDir + File.separator + "%03d-" + compName, models.size());
             modelsDirs.add(modelDir);
             (new File(modelDir)).mkdir();
             debug("Dir created for vectors: " + modelDir);

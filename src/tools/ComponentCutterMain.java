@@ -9,6 +9,7 @@ import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.*;
+import ru.ifmo.genetics.utils.NumUtils;
 
 import java.io.*;
 import java.util.*;
@@ -78,7 +79,7 @@ public class ComponentCutterMain extends Tool {
             e.printStackTrace();
             return;
         }
-        info(components.size() + " components found");
+        info(NumUtils.groupDigits(components.size()) + " components found");
 
         try {
             ConnectedComponent.saveComponents(components, componentsFile.get().getAbsolutePath());

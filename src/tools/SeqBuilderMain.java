@@ -106,7 +106,7 @@ public class SeqBuilderMain extends Tool {
 
         if (bottomCutPercent.get() != null) {
             long kmersToCut = totalKmers * bottomCutPercent.get() / 100;
-            debug("K-mers under given threshold = " + kmersToCut);
+            debug("K-mers under given threshold = " + NumUtils.groupDigits(kmersToCut));
             long currentKmersCount = 0;
             for (int i = 0; i < stat.length - 1; i++) {
                 if (currentKmersCount >= kmersToCut) {
@@ -153,7 +153,7 @@ public class SeqBuilderMain extends Tool {
             e.printStackTrace();
             return;
         }
-        info(sequences.size() + " sequences found");
+        info(NumUtils.groupDigits(sequences.size()) + " sequences found");
 
         try {
             Sequence.printSequences(sequences, destination);
