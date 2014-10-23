@@ -37,15 +37,15 @@
         </java>
 
         <jar destfile="${jars.dir}/${metafast.jar}"
-             basedir="${bin.dir}">
+             basedir="${bin.dir}" duplicate="preserve">
             <manifest>
                 <attribute name="Main-Class" value="${metafast.main}"/>
             </manifest>
 
-            <zipfileset src="${itmo-assembler.path}" excludes="META-INF/*.SF"/>
             <zipfileset src="${args4j.path}" excludes="META-INF/*.SF"/>
             <fileset file="VERSION"/>
             <fileset file="TOOLS"/>
+            <zipfileset src="${itmo-assembler.path}" excludes="META-INF/*.SF"/>
         </jar>
 
         <delete dir="${bin.dir}"/>

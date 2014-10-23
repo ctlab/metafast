@@ -1,0 +1,12 @@
+antibody-sequences-finder                tools.AntibodyFinderMain                                                         Antibody sequences finder in De Bruijn graph
+comparison-script                        tools.CompareReadsAndComponentsMain                                              Statistics
+component-cutter                         tools.ComponentCutterMain                                                        Build graph components from tangled graph
+dist-matrix-calculator                   tools.DistanceMatrixCalculatorMain                                               Calculates distance matrix using features values
+features-calculator                      tools.FeaturesCalculatorMain                                                     Calculates features values for input reads files
+kmer-counter                             tools.KmersCounterMain                                                           Count k-mers in given reads with ArrayLong2IntHashMap
+kmer-counter-many                        tools.KmersCounterForManyFilesMain                                               Count k-mers for many files independently
+matrix-builder                           tools.DistanceMatrixBuilderMain                                                  Builds the distance matrix for input sequences/kmers
+seq-builder                              tools.SeqBuilderMain                                                             Metagenome De Bruijn graph analysis and sequences building
+seq-builder-many                         tools.SeqBuilderForManyFilesMain                                                 Metagenome De Bruijn graph analysis and sequences building for many files independently
+supergraph-sequence-builder              tools.SupergraphSeqBuilderMain                                                   NOT COMPLETED
+view                                     tools.ViewMain                                                                   Converts different binary objects to text format

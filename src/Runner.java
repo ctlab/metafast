@@ -34,45 +34,6 @@ public class Runner extends ru.ifmo.genetics.Runner {
     }
 
 
-/*
-
-        boolean printTools = (args.length > 0) && (args[0].equals("-ts") || args[0].equals("--tools"));
-        if (printTools) {
-            out.println("Available tools:");
-            out.println();
-            for (Tool t : tools) {
-                out.println(fit(t.name, 30) + " " + fit(t.getClass().getName(), 40) + " " + t.description);
-            }
-            out.println();
-            return;
-        }
-
-        boolean toolIsSet = (args.length > 0) && (args[0].equals("-t") || args[0].equals("--tool"));
-        if (toolIsSet) {
-            if (args.length < 2) {
-                throw new RuntimeException("Tool name isn't specified");
-            }
-
-            Tool toolInst = null;
-            for (Tool tool : tools) {
-                if (tool.name.equals(args[1])) {
-                    toolInst = tool;
-                }
-            }
-            if (toolInst == null) {
-                throw new RuntimeException("Tool name is incorrect");
-            }
-
-            args = Arrays.copyOfRange(args, 2, args.length);
-            toolInst.mainImpl(args);
-            return;
-        }
-
-        out.println("Runner: unknown parameters");
-    }
-
-
-    */
 
     public static void main(String[] args) {
         new Runner().run(args);
