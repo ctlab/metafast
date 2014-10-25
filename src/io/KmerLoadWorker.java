@@ -5,6 +5,7 @@ import ru.ifmo.genetics.dna.DnaQ;
 import ru.ifmo.genetics.dna.kmers.*;
 import ru.ifmo.genetics.dna.kmers.KmerIteratorFactory;
 import ru.ifmo.genetics.structures.map.ArrayLong2IntHashMap;
+import ru.ifmo.genetics.structures.map.BigLong2IntHashMap;
 import ru.ifmo.genetics.tools.ec.DnaQReadDispatcher;
 
 import java.util.List;
@@ -17,7 +18,7 @@ public class KmerLoadWorker implements Runnable {
     CountDownLatch latch;
     int LEN;
     long step;
-    ArrayLong2IntHashMap hm;
+    BigLong2IntHashMap hm;
     KmerIteratorFactory<? extends Kmer> factory;
 
     boolean interrupted = false;
@@ -27,7 +28,7 @@ public class KmerLoadWorker implements Runnable {
     Logger logger;
 
     public KmerLoadWorker(DnaQReadDispatcher dispatcher, CountDownLatch latch, Random random,
-                          int LEN, ArrayLong2IntHashMap hm,
+                          int LEN, BigLong2IntHashMap hm,
                           KmerIteratorFactory<? extends Kmer> factory) {
 
         this.dispatcher = dispatcher;
@@ -42,7 +43,7 @@ public class KmerLoadWorker implements Runnable {
 
     public void add(Kmer kmer) {
         long key = kmer.toLong();
-        hm.add(key, 1);
+        hm.addAndBound(key, 1);
     }
 
     void add(DnaQ dnaq) {

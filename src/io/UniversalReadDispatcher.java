@@ -6,6 +6,7 @@ import ru.ifmo.genetics.dna.DnaQ;
 import ru.ifmo.genetics.io.sources.NamedSource;
 import ru.ifmo.genetics.io.sources.Source;
 import ru.ifmo.genetics.structures.map.ArrayLong2IntHashMap;
+import ru.ifmo.genetics.structures.map.BigLong2IntHashMap;
 import ru.ifmo.genetics.utils.Misc;
 import ru.ifmo.genetics.utils.NumUtils;
 import ru.ifmo.genetics.utils.TextUtils;
@@ -30,9 +31,9 @@ public class UniversalReadDispatcher {
     long[] ar;
     int r = 0;
     int w = 0;
-    final ArrayLong2IntHashMap hm; // tmp
+    final BigLong2IntHashMap hm; // tmp
 
-    public UniversalReadDispatcher(Source<Dna> reader, int workRangeSize, ArrayLong2IntHashMap hm) {
+    public UniversalReadDispatcher(Source<Dna> reader, int workRangeSize, BigLong2IntHashMap hm) {
         this.iterator = reader.iterator();
         this.workRangeSize = workRangeSize;
         out = null;
@@ -64,10 +65,10 @@ public class UniversalReadDispatcher {
             if (reads % 1000000 == 0) {
                 logger.debug("Processed " + NumUtils.groupDigits(reads) + " reads:");
                 logger.debug("Total hm size = " + NumUtils.groupDigits(hm.size()) + ", " +
-                        "size in hm.hm = {" + NumUtils.groupDigits(hm.hm[0].size()) + ", "
-                        + NumUtils.groupDigits(hm.hm[1].size()) + ", "
-                        + NumUtils.groupDigits(hm.hm[2].size()) + ", "
-                        + NumUtils.groupDigits(hm.hm[3].size()) + ", ...}");
+                        "size in hm.hm = {" + NumUtils.groupDigits(hm.maps[0].size()) + ", "
+                        + NumUtils.groupDigits(hm.maps[1].size()) + ", "
+                        + NumUtils.groupDigits(hm.maps[2].size()) + ", "
+                        + NumUtils.groupDigits(hm.maps[3].size()) + ", ...}");
                 logger.debug("Available memory (without running GC) = " + Misc.availableMemoryWithoutRunningGCAsString());
             }
         }

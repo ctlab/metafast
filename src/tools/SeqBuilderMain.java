@@ -2,7 +2,10 @@ package tools;
 
 import algo.SequencesFinders;
 import io.IOUtils;
+import org.apache.commons.lang.mutable.Mutable;
 import ru.ifmo.genetics.structures.map.ArrayLong2IntHashMap;
+import ru.ifmo.genetics.structures.map.BigLong2IntHashMap;
+import ru.ifmo.genetics.structures.map.MutableLongIntEntry;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
@@ -14,10 +17,7 @@ import ru.ifmo.genetics.utils.NumUtils;
 import structures.Sequence;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Deque;
-import java.util.List;
+import java.util.*;
 
 public class SeqBuilderMain extends Tool {
     public static final String NAME = "seq-builder";
@@ -77,7 +77,7 @@ public class SeqBuilderMain extends Tool {
             throw new IllegalArgumentException("-b and -bp can not be set both");
         }
 
-        ArrayLong2IntHashMap hm;
+        BigLong2IntHashMap hm;
         try {
             hm = IOUtils.loadKmers(inputFiles.get(), 0, availableProcessors.get(), this.logger);
         } catch (IOException e) {
@@ -88,14 +88,15 @@ public class SeqBuilderMain extends Tool {
 
         long totalKmers = 0;
         int[] stat = new int[STAT_LEN];
-        for (int i = 0; i < hm.hm.length; ++i) {
-            for (int value : hm.hm[i].values()) {
-                totalKmers += value;
-                if (value >= stat.length) {
-                    value = stat.length - 1;
-                }
-                ++stat[value];
+        Iterator<MutableLongIntEntry> it = hm.entryIterator();
+        while (it.hasNext()) {
+            MutableLongIntEntry entry = it.next();
+            int value = entry.getValue();
+            totalKmers += value;
+            if (value >= stat.length) {
+                value = stat.length - 1;
             }
+            ++stat[value];
         }
 
         try {

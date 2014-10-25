@@ -6,6 +6,7 @@ import ru.ifmo.genetics.dna.DnaTools;
 import ru.ifmo.genetics.dna.kmers.ShortKmer;
 import ru.ifmo.genetics.dna.kmers.ShortKmerIteratorFactory;
 import ru.ifmo.genetics.structures.map.ArrayLong2IntHashMap;
+import ru.ifmo.genetics.structures.map.BigLong2IntHashMap;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
@@ -69,7 +70,7 @@ public class AntibodyFinderMain extends Tool {
         String seq = loadConstantFragment();
         info("Constant fragment length = " + seq.length());
 
-        ArrayLong2IntHashMap readsHM;
+        BigLong2IntHashMap readsHM;
         try {
             readsHM = IOUtils.loadBINQReads(readsFiles.get(), LEN, LOAD_TASK_SIZE,
                     new ShortKmerIteratorFactory(), availableProcessors.get(), this.logger);
@@ -92,7 +93,7 @@ public class AntibodyFinderMain extends Tool {
 //            }
 
 
-            readsHM.add(kmer.toLong(), maximalBadFrequency.get() + 1);
+            readsHM.addAndBound(kmer.toLong(), maximalBadFrequency.get() + 1);
 //            deb += " " + kmer.toLong() + " " + readsHM.get(kmer.toLong());
             debug(deb);
         }
@@ -137,7 +138,7 @@ public class AntibodyFinderMain extends Tool {
             kmersPW.print(currentKmer.toString() + " ");
 
             uniqueKmers[kmerDepth]++;
-            totalKmers[kmerDepth] += readsHM.get(currentKmer.toLong());
+            totalKmers[kmerDepth] += readsHM.getWithZero(currentKmer.toLong());
 
             byte rightNuc = currentKmer.nucAt(LEN - 1);
             for (byte nuc = 0; nuc <= 3; nuc++) {

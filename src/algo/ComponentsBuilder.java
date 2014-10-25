@@ -26,6 +26,7 @@ public class ComponentsBuilder {
         List<ConnectedComponent> ans = new ArrayList<ConnectedComponent>();
 
         PrintWriter statPW = new PrintWriter(statFP);
+        statPW.println("comp.size\tcomp.weight\tfreqThreshold");
         for (int freqThreshold = 0; ; freqThreshold++) {
             List<ConnectedComponent> components = getComponents(hm, k, freqThreshold, availableProcessors);
             if (components.size() == 0) {
@@ -36,7 +37,7 @@ public class ComponentsBuilder {
                     banComponent(hm, comp);
                 } else if (comp.size() < b2) {
                     ans.add(comp);
-                    statPW.println(comp.size() + " " + comp.getWeight() + " " + freqThreshold);
+                    statPW.println(comp.size() + "\t" + comp.getWeight() + "\t" + freqThreshold);
                     banComponent(hm, comp);
                 }
             }

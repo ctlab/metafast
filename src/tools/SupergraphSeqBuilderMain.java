@@ -6,6 +6,8 @@ import ru.ifmo.genetics.dna.kmers.KmerIteratorFactory;
 import ru.ifmo.genetics.dna.kmers.ShortKmer;
 import ru.ifmo.genetics.dna.kmers.ShortKmerIteratorFactory;
 import ru.ifmo.genetics.structures.map.ArrayLong2IntHashMap;
+import ru.ifmo.genetics.structures.map.BigLong2IntHashMap;
+import ru.ifmo.genetics.structures.map.MutableLongIntEntry;
 import ru.ifmo.genetics.utils.Misc;
 import ru.ifmo.genetics.utils.NumUtils;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
@@ -16,6 +18,7 @@ import ru.ifmo.genetics.utils.tool.inputParameterBuilder.*;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 
 public class SupergraphSeqBuilderMain extends Tool {
     public static final String NAME = "supergraph-sequence-builder";
@@ -88,8 +91,8 @@ public class SupergraphSeqBuilderMain extends Tool {
 
         debug("MAXIMAL_SIZE = " + MAX_SIZE);
 
-        ArrayLong2IntHashMap superHM =
-                new ArrayLong2IntHashMap((int) (Math.log(availableProcessors.get()) / Math.log(2)) + 4);
+        BigLong2IntHashMap superHM = new BigLong2IntHashMap(
+                (int) (Math.log(availableProcessors.get()) / Math.log(2)) + 4, 8);
 
         for (File file : inputFiles.get()) {
             addToSupergraph(superHM, file);
@@ -102,8 +105,8 @@ public class SupergraphSeqBuilderMain extends Tool {
         }
     }
 
-    private void addToSupergraph(ArrayLong2IntHashMap superHM, File readsFile) throws ExecutionFailedException {
-        ArrayLong2IntHashMap hm = null;
+    private void addToSupergraph(BigLong2IntHashMap superHM, File readsFile) throws ExecutionFailedException {
+        BigLong2IntHashMap hm = null;
         try {
             hm = IOUtils.loadBINQReads(new File[]{readsFile}, this.k.get(), LOAD_TASK_SIZE,
                     kmerIteratorFactory.get(), availableProcessors.get(), this.logger);
@@ -115,16 +118,16 @@ public class SupergraphSeqBuilderMain extends Tool {
 
         long uniqueKmers = 0, uniqueAdded = 0, newKmers = 0;
 
-        for (int i = 0; i < hm.hm.length; ++i) {
-            for (long key : hm.hm[i].keySet()) {
-                uniqueKmers++;
-                int value = hm.hm[i].get(key);
-                if (value > freqThreshold) {
-                    uniqueAdded++;
-                    int old = superHM.add(key, 1);
-                    if (old == 0) {
-                        newKmers++;
-                    }
+        Iterator<MutableLongIntEntry> it = hm.entryIterator();
+        while (it.hasNext()) {
+            MutableLongIntEntry entry = it.next();
+            uniqueKmers++;
+            int value = entry.getValue();
+            if (value > freqThreshold) {
+                uniqueAdded++;
+                int old = superHM.addAndBound(entry.getKey(), 1);
+                if (old == 0) {
+                    newKmers++;
                 }
             }
         }
@@ -134,22 +137,22 @@ public class SupergraphSeqBuilderMain extends Tool {
                 ", new k-mers added = " + newKmers);
     }
 
-    private int getThreshold(ArrayLong2IntHashMap hm) {
+    private int getThreshold(BigLong2IntHashMap hm) {
         if (maximalBadFrequency.get() != null) {
             return maximalBadFrequency.get();
         }
 
         long totalKmers = 0;
         int[] stat = new int[STAT_LEN];
-        for (int i = 0; i < hm.hm.length; ++i) {
-            for (long key : hm.hm[i].keySet()) {
-                int b = hm.hm[i].get(key);
-                totalKmers += b;
-                if (b >= stat.length) {
-                    b = stat.length - 1;
-                }
-                ++stat[b];
+        Iterator<MutableLongIntEntry> it = hm.entryIterator();
+        while (it.hasNext()) {
+            MutableLongIntEntry entry = it.next();
+            int v = entry.getValue();
+            totalKmers += v;
+            if (v >= stat.length) {
+                v = stat.length - 1;
             }
+            ++stat[v];
         }
 
         if (bottomCutPercent.get() != null) {
@@ -181,7 +184,7 @@ public class SupergraphSeqBuilderMain extends Tool {
         return 0;
     }
 
-    public void calcSequences(ArrayLong2IntHashMap hm, String fastaFP) throws FileNotFoundException {
+    public void calcSequences(BigLong2IntHashMap hm, String fastaFP) throws FileNotFoundException {
         int freqThreshold = supergraphFreq.get();
         int lenThreshold = sequenceLen.get();
         int kValue = k.get();
@@ -198,59 +201,60 @@ public class SupergraphSeqBuilderMain extends Tool {
 
         PrintWriter fastaPW = new PrintWriter(fastaFP);
 
-        for (int i = 0; i < hm.hm.length; ++i) {
-            for (long key : hm.hm[i].keySet()) {
-                int value = hm.hm[i].get(key);
-                if (value <= freqThreshold) {
-                    continue;
-                }
-                ShortKmer kmer = new ShortKmer(key, kValue);
-
-                if (getLeftNucleotide(kmer, hm, freqThreshold) >= 0) {
-                    continue;
-                }
-
-                StringBuilder sequenceSB = new StringBuilder(kmer.toString());
-                long seqWeight = 0, minWeight = value, maxWeight = value;
-
-                while (true) {
-                    long kmerRepr = kmer.toLong();
-                    value = hm.get(kmerRepr);
-                    seqWeight += value;
-                    minWeight = Math.min(minWeight, value);
-                    maxWeight = Math.max(maxWeight, value);
-
-                    hm.add(kmerRepr, -(value + 1));
-
-                    byte rightNuc = getRightNucleotide(kmer, hm, freqThreshold);
-                    if (rightNuc < 0) {
-                        break;
-                    }
-                    sequenceSB.append(DnaTools.toChar(rightNuc));
-                    kmer.shiftRight(rightNuc);
-                }
-
-                if (sequenceSB.length() >= lenThreshold) {
-                    sequenceId++;
-                    String sequenceStr = sequenceSB.toString();
-
-                    sequenceLen.add(sequenceStr.length());
-                    sequenceWeight.add(seqWeight);
-
-                    totalKmersInSequences += seqWeight;
-                    kmersInSeq += sequenceStr.length() - kValue + 1;
-
-                    String seqInfo = String.format(">%d length=%d sum_weight=%d min_weight=%d max_weight=%d",
-                            sequenceId, sequenceStr.length(), seqWeight, minWeight, maxWeight);
-                    fastaPW.println(seqInfo);
-                    fastaPW.println(sequenceStr);
-
-                    if (sequenceId % 10000 == 0) {
-                        debug("sequenceId = " + sequenceId + ", last len = " + sequenceStr.length());
-                    }
-                }
-
+        Iterator<MutableLongIntEntry> it = hm.entryIterator();
+        while (it.hasNext()) {
+            MutableLongIntEntry entry = it.next();
+            long key = entry.getKey();
+            int value = entry.getValue();
+            if (value <= freqThreshold) {
+                continue;
             }
+            ShortKmer kmer = new ShortKmer(key, kValue);
+
+            if (getLeftNucleotide(kmer, hm, freqThreshold) >= 0) {
+                continue;
+            }
+
+            StringBuilder sequenceSB = new StringBuilder(kmer.toString());
+            long seqWeight = 0, minWeight = value, maxWeight = value;
+
+            while (true) {
+                long kmerRepr = kmer.toLong();
+                value = hm.getWithZero(kmerRepr);
+                seqWeight += value;
+                minWeight = Math.min(minWeight, value);
+                maxWeight = Math.max(maxWeight, value);
+
+                hm.addAndBound(kmerRepr, -(value + 1));
+
+                byte rightNuc = getRightNucleotide(kmer, hm, freqThreshold);
+                if (rightNuc < 0) {
+                    break;
+                }
+                sequenceSB.append(DnaTools.toChar(rightNuc));
+                kmer.shiftRight(rightNuc);
+            }
+
+            if (sequenceSB.length() >= lenThreshold) {
+                sequenceId++;
+                String sequenceStr = sequenceSB.toString();
+
+                sequenceLen.add(sequenceStr.length());
+                sequenceWeight.add(seqWeight);
+
+                totalKmersInSequences += seqWeight;
+                kmersInSeq += sequenceStr.length() - kValue + 1;
+
+                String seqInfo = String.format(">%d length=%d sum_weight=%d min_weight=%d max_weight=%d",
+                        sequenceId, sequenceStr.length(), seqWeight, minWeight, maxWeight);
+                fastaPW.println(seqInfo);
+                fastaPW.println(sequenceStr);
+
+                if (sequenceId % 10000 == 0) {
+                    debug("sequenceId = " + sequenceId + ", last len = " + sequenceStr.length());
+                }
+            }
+
         }
         info(sequenceId + " sequences found");
         info(kmersInSeq + " unique k-mers out of " + hm.size() + " in sequences");
@@ -262,30 +266,31 @@ public class SupergraphSeqBuilderMain extends Tool {
         fastaPW.close();
     }
 
-    private void banKmers(ArrayLong2IntHashMap hm, int freqThreshold, int k) {
+    private void banKmers(BigLong2IntHashMap hm, int freqThreshold, int k) {
         int BAN_VALUE = 1000000000;
         long totalKmers = 0, uniqueKmers = 0,
                 totalBanned = 0, uniqueBanned = 0,
                 totalUnderThreshold = 0, uniqueUnderThreshold = 0;
 
-        for (int i = 0; i < hm.hm.length; ++i) {
-            for (long key : hm.hm[i].keySet()) {
-                int value = hm.hm[i].get(key);
-                totalKmers += value;
-                uniqueKmers++;
-                if (value <= freqThreshold) {
-                    totalUnderThreshold += value;
-                    uniqueUnderThreshold++;
-                    continue;
-                }
+        Iterator<MutableLongIntEntry> it = hm.entryIterator();
+        while (it.hasNext()) {
+            MutableLongIntEntry entry = it.next();
+            long key = entry.getKey();
+            int value = entry.getValue();
+            totalKmers += value;
+            uniqueKmers++;
+            if (value <= freqThreshold) {
+                totalUnderThreshold += value;
+                uniqueUnderThreshold++;
+                continue;
+            }
 
-                ShortKmer kmer = new ShortKmer(key, k);
-                if (getLeftNucleotide(kmer, hm, freqThreshold) == -2 ||
-                        getRightNucleotide(kmer, hm, freqThreshold) == -2) {
-                    hm.add(key, BAN_VALUE);
-                    totalBanned += value;
-                    uniqueBanned++;
-                }
+            ShortKmer kmer = new ShortKmer(key, k);
+            if (getLeftNucleotide(kmer, hm, freqThreshold) == -2 ||
+                    getRightNucleotide(kmer, hm, freqThreshold) == -2) {
+                hm.addAndBound(key, BAN_VALUE);
+                totalBanned += value;
+                uniqueBanned++;
             }
         }
 
@@ -293,17 +298,18 @@ public class SupergraphSeqBuilderMain extends Tool {
         info("Total k-mers [<=] threshold = " + totalUnderThreshold + ", unique = " + uniqueUnderThreshold);
         info("Total k-mers banned = " + totalBanned + ", unique = " + uniqueBanned);
 
-        for (int i = 0; i < hm.hm.length; ++i) {
-            for (long key : hm.hm[i].keySet()) {
-                int value = hm.hm[i].get(key);
-                if (value >= BAN_VALUE) {
-                    hm.add(key, -(value + 1));
-                }
+        it = hm.entryIterator();
+        while (it.hasNext()) {
+            MutableLongIntEntry entry = it.next();
+            long key = entry.getKey();
+            int value = entry.getValue();
+            if (value >= BAN_VALUE) {
+                hm.addAndBound(key, -(value + 1));
             }
         }
     }
 
-    private static byte getLeftNucleotide(ShortKmer kmer, ArrayLong2IntHashMap hm, int freqThreshold) {
+    private static byte getLeftNucleotide(ShortKmer kmer, BigLong2IntHashMap hm, int freqThreshold) {
         byte rightNuc = kmer.nucAt(kmer.length() - 1);
         byte ansNuc = -1;
         for (byte nuc = 0; nuc <= 3; nuc++) {
@@ -319,7 +325,7 @@ public class SupergraphSeqBuilderMain extends Tool {
         return ansNuc;
     }
 
-    private static byte getRightNucleotide(ShortKmer kmer, ArrayLong2IntHashMap hm, int freqThreshold) {
+    private static byte getRightNucleotide(ShortKmer kmer, BigLong2IntHashMap hm, int freqThreshold) {
         byte leftNuc = kmer.nucAt(0);
         byte ansNuc = -1;
         for (byte nuc = 0; nuc <= 3; nuc++) {

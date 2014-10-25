@@ -7,9 +7,13 @@ import ru.ifmo.genetics.dna.Dna;
 import ru.ifmo.genetics.dna.DnaTools;
 import ru.ifmo.genetics.dna.kmers.ShortKmer;
 import ru.ifmo.genetics.structures.map.ArrayLong2IntHashMap;
+import ru.ifmo.genetics.structures.map.BigLong2IntHashMap;
+import ru.ifmo.genetics.structures.map.Long2IntHashMap;
+import ru.ifmo.genetics.structures.map.MutableLongIntEntry;
 import ru.ifmo.genetics.utils.KmerUtils;
 import structures.Sequence;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
 
@@ -18,16 +22,16 @@ import java.util.Queue;
  */
 public class AddSequencesShiftingRightTask implements Runnable {
 
-    final ArrayLong2IntHashMap hm;
-    final Long2IntOpenHashMap openHM;
+    final BigLong2IntHashMap hm;
+    final Long2IntHashMap openHM;
     final int k;
     int freqThreshold;
     int lenThreshold;
     final Queue<Sequence> sequences;
     final LongOpenHashSet used;
 
-    public AddSequencesShiftingRightTask(ArrayLong2IntHashMap hm,
-                                         Long2IntOpenHashMap openHM,
+    public AddSequencesShiftingRightTask(BigLong2IntHashMap hm,
+                                         Long2IntHashMap openHM,
                                          int k, int freqThreshold, int lenThreshold,
                                          Queue<Sequence> sequences, LongOpenHashSet used) {
         this.hm = hm;
@@ -41,13 +45,15 @@ public class AddSequencesShiftingRightTask implements Runnable {
 
     @Override
     public void run() {
-        for (Long2IntMap.Entry entry : openHM.long2IntEntrySet()) {
-            int value = entry.getIntValue();
+        Iterator<MutableLongIntEntry> it = openHM.entryIterator();
+        while (it.hasNext()) {
+            MutableLongIntEntry entry = it.next();
+            long key = entry.getKey();
+            int value = entry.getValue();
             if (value <= freqThreshold) {
                 continue;
             }
 
-            long key = entry.getLongKey();
             ShortKmer kmerF = new ShortKmer(key, k);
             ShortKmer[] kmers = new ShortKmer[]{kmerF, kmerF.rc()};
 
@@ -73,7 +79,7 @@ public class AddSequencesShiftingRightTask implements Runnable {
     }
 
     private void processSequence(ShortKmer startKmer) {
-        int value = hm.get(startKmer.toLong());
+        int value = hm.getWithZero(startKmer.toLong());
 
         StringBuilder sequenceSB = new StringBuilder(startKmer.toString());
         long seqWeight = value;
@@ -93,7 +99,7 @@ public class AddSequencesShiftingRightTask implements Runnable {
             }
 
             sequenceSB.append(DnaTools.toChar(rightNuc));
-            value = hm.get(kmer.toLong());
+            value = hm.getWithZero(kmer.toLong());
             seqWeight += value;
             minWeight = Math.min(minWeight, value);
             maxWeight = Math.max(maxWeight, value);

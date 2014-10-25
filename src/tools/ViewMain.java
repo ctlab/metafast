@@ -7,6 +7,8 @@ import ru.ifmo.genetics.dna.Dna;
 import ru.ifmo.genetics.dna.kmers.ShortKmer;
 import ru.ifmo.genetics.dna.kmers.ShortKmerIteratorFactory;
 import ru.ifmo.genetics.structures.map.ArrayLong2IntHashMap;
+import ru.ifmo.genetics.structures.map.BigLong2IntHashMap;
+import ru.ifmo.genetics.structures.map.MutableLongIntEntry;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
@@ -21,6 +23,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class ViewMain extends Tool {
@@ -76,7 +79,7 @@ public class ViewMain extends Tool {
         }
 
         if (kmersFile.get() != null) {
-            ArrayLong2IntHashMap kmersHM;
+            BigLong2IntHashMap kmersHM;
             try {
                 kmersHM = IOUtils.loadKmers(new File[]{kmersFile.get()},
                         0, availableProcessors.get(), this.logger);
@@ -86,10 +89,10 @@ public class ViewMain extends Tool {
             logger.info("Printing kmers...");
 
             out.println("Kmer\tCount");
-            for (Long2IntMap map : kmersHM.hm) {
-                for (Long2IntMap.Entry e : map.long2IntEntrySet()) {
-                    out.println(new ShortKmer(e.getLongKey(), k.get()) + "\t" + e.getIntValue());
-                }
+            Iterator<MutableLongIntEntry> it = kmersHM.entryIterator();
+            while (it.hasNext()) {
+                MutableLongIntEntry entry = it.next();
+                out.println(new ShortKmer(entry.getKey(), k.get()) + "\t" + entry.getValue());
             }
         }
 

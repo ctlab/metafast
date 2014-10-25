@@ -1,5 +1,7 @@
 package tools;
 
+import ru.ifmo.genetics.io.ReadersUtils;
+import ru.ifmo.genetics.structures.map.BigLong2IntHashMap;
 import ru.ifmo.genetics.utils.tool.values.InMemoryValue;
 import ru.ifmo.genetics.utils.tool.values.InValue;
 import structures.ConnectedComponent;
@@ -84,7 +86,7 @@ public class FeaturesCalculatorMain extends Tool {
 
         if (readsFiles.get() != null) {
             for (File readsFile : readsFiles.get()) {
-                ArrayLong2IntHashMap readsHM;
+                BigLong2IntHashMap readsHM;
                 try {
                     readsHM = IOUtils.loadReads(new File[]{readsFile}, k.get(), LOAD_TASK_SIZE,
                             new ShortKmerIteratorFactory(), availableProcessors.get(), this.logger);
@@ -93,15 +95,16 @@ public class FeaturesCalculatorMain extends Tool {
                 }
 
                 for (int i = 0; i < models.size(); i++) {
-                    String vectorFP = modelsDirs.get(i) + File.separator + readsFile.getName() + ".vec";
+                    File outFile = new File(modelsDirs.get(i),
+                            ReadersUtils.readDnaLazy(readsFile).name() + ".vec");
                     try {
-                        buildAndPrintVector(readsHM, models.get(i), vectorFP);
+                        buildAndPrintVector(readsHM, models.get(i), outFile);
                     } catch (FileNotFoundException e) {
                         e.printStackTrace();
                         return;
                     }
-                    info("Features for " + readsFile + " printed to " + vectorFP);
-                    featuresFiles[curFiles] = new File(vectorFP);
+                    info("Features for " + readsFile + " printed to " + outFile);
+                    featuresFiles[curFiles] = outFile;
                     curFiles++;
                 }
             }
@@ -109,7 +112,7 @@ public class FeaturesCalculatorMain extends Tool {
 
         if (kmersFiles.get() != null) {
             for (File kmersFile : kmersFiles.get()) {
-                ArrayLong2IntHashMap kmersHM;
+                BigLong2IntHashMap kmersHM;
                 try {
                     kmersHM = IOUtils.loadKmers(new File[]{kmersFile},
                             threshold.get(), availableProcessors.get(), this.logger);
@@ -118,14 +121,15 @@ public class FeaturesCalculatorMain extends Tool {
                 }
 
                 for (int i = 0; i < models.size(); i++) {
-                    String vectorFP = modelsDirs.get(i) + File.separator + kmersFile.getName() + ".vec";
+                    File outFile = new File(modelsDirs.get(i),
+                            ReadersUtils.readDnaLazy(kmersFile).name() + ".vec");
                     try {
-                        buildAndPrintVector(kmersHM, models.get(i), vectorFP);
+                        buildAndPrintVector(kmersHM, models.get(i), outFile);
                     } catch (FileNotFoundException e) {
                         e.printStackTrace();
                     }
-                    info("Features for " + kmersFile + " printed to " + vectorFP);
-                    featuresFiles[curFiles] = new File(vectorFP);
+                    info("Features for " + kmersFile + " printed to " + outFile);
+                    featuresFiles[curFiles] = outFile;
                     curFiles++;
                 }
             }
@@ -134,21 +138,21 @@ public class FeaturesCalculatorMain extends Tool {
         featuresFilesPr.set(featuresFiles);
     }
 
-    private static void buildAndPrintVector(ArrayLong2IntHashMap readsHM,
+    private static void buildAndPrintVector(BigLong2IntHashMap readsHM,
                                             List<ConnectedComponent> components,
-                                            String vectorFP) throws FileNotFoundException {
+                                            File outFile) throws FileNotFoundException {
         List<Long> vector = new ArrayList<Long>();
 
         for (ConnectedComponent component : components) {
             long kmersInComponent = 0;
             for (long kmer : component.kmers) {
-                int value = readsHM.get(kmer);
+                int value = readsHM.getWithZero(kmer);
                 kmersInComponent += value;
             }
             vector.add(kmersInComponent);
         }
 
-        PrintWriter vectorPW = new PrintWriter(vectorFP);
+        PrintWriter vectorPW = new PrintWriter(outFile);
         for (long x : vector) {
             vectorPW.println(x);
         }

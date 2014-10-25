@@ -4,6 +4,7 @@ import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileMVParameterBuilder;
+import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.IntParameterBuilder;
 import ru.ifmo.genetics.utils.tool.values.FilesFromOneFileYielder;
 import ru.ifmo.genetics.utils.tool.values.IfYielder;
@@ -42,6 +43,13 @@ public class DistanceMatrixBuilderMain extends Tool {
             .withShortOpt("l")
             .withDescription("minimum sequence length to be added to a component (in nucleotides)")
             .withDefaultValue(100)
+            .create());
+
+    public final Parameter<File> matrixFile = addParameter(new FileParameterBuilder("matrix-file")
+            .optional()
+            .withDefaultValue(workDir.append("matrices").append("dist_matrix_$DT.txt"))
+            .withDefaultComment("<workDir>/matrices/dist_matrix_<date>_<time>.txt")
+            .withDescription("resulting distance matrix file")
             .create());
 
 
@@ -98,7 +106,7 @@ public class DistanceMatrixBuilderMain extends Tool {
     public DistanceMatrixCalculatorMain distMatrixCalculator = new DistanceMatrixCalculatorMain();
     {
         setFix(distMatrixCalculator.featuresFiles, featuresCalculator.featuresFilesOut);
-        setFixDefault(distMatrixCalculator.separator);
+        setFix(distMatrixCalculator.matrixFile, matrixFile);
         addSubTool(distMatrixCalculator);
     }
 

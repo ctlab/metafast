@@ -20,6 +20,8 @@ import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 
 import org.apache.log4j.Logger;
+import ru.ifmo.genetics.structures.map.BigLong2IntHashMap;
+import ru.ifmo.genetics.structures.map.MutableLongIntEntry;
 import ru.ifmo.genetics.tools.ec.DnaQReadDispatcher;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.NumUtils;
@@ -48,7 +50,7 @@ public class IOUtils {
                     len += dna.length();
                 }
             }
-            logger.debug(cnt + " sequences added, summary len = " + len + " from " + file.getPath());
+            logger.debug(cnt + " sequences added, summary len = " + len + " from " + file.getName());
             totalSeq += cnt;
             totalLen += len;
         }
@@ -65,20 +67,20 @@ public class IOUtils {
         }
     }
 
-    public static long printKmers(ArrayLong2IntHashMap hm,
-                                  String path,
+    public static long printKmers(BigLong2IntHashMap hm,
+                                  File file,
                                   int threshold) throws IOException {
-        DataOutputStream stream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(new File(path))));
+        DataOutputStream stream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(file)));
         //DataOutputStream stream = new DataOutputStream(new FileOutputStream(new File(path)));
 
         long c = 0;
-        for (Long2IntMap map : hm.hm) {
-            for (Long2IntMap.Entry e : map.long2IntEntrySet()) {
-                if (e.getIntValue() > threshold) {
-                    stream.writeLong(e.getLongKey());
-                    stream.writeInt(e.getIntValue());
-                    c++;
-                }
+        Iterator<MutableLongIntEntry> it = hm.entryIterator();
+        while (it.hasNext()) {
+            MutableLongIntEntry entry = it.next();
+            if (entry.getValue() > threshold) {
+                stream.writeLong(entry.getKey());
+                stream.writeInt(entry.getValue());
+                c++;
             }
         }
 
@@ -86,18 +88,18 @@ public class IOUtils {
         return c;
     }
 
-    public static ArrayLong2IntHashMap loadKmers(File[] files,
+    public static BigLong2IntHashMap loadKmers(File[] files,
                                                  int freqThreshold,
                                                  int availableProcessors,
                                                  Logger logger) throws IOException {
-        ArrayLong2IntHashMap hm =
-                new ArrayLong2IntHashMap((int) (Math.log(availableProcessors) / Math.log(2)) + 4);
+        BigLong2IntHashMap hm = new BigLong2IntHashMap(
+                (int) (Math.log(availableProcessors) / Math.log(2)) + 4, 8);
         addKmers(files, hm, freqThreshold, logger);
         return hm;
     }
 
     public static void addKmers(File[] files,
-                                ArrayLong2IntHashMap hm,
+                                BigLong2IntHashMap hm,
                                 int freqThreshold,
                                 Logger logger) throws IOException {
         for (File file : files) {
@@ -113,7 +115,7 @@ public class IOUtils {
                 if (freq > freqThreshold) {
                     uniqueKmersAdded++;
                     totalKmersAdded += freq;
-                    hm.add(kmerRepr, freq);
+                    hm.addAndBound(kmerRepr, freq);
                 }
             }
 
@@ -127,18 +129,18 @@ public class IOUtils {
         }
     }
 
-    public static ArrayLong2IntHashMap loadKmers(File[] files,
+    public static BigLong2IntHashMap loadKmers(File[] files,
                                                  int freqThreshold,
                                                  int availableProcessors) throws InterruptedException {
 
-        ArrayLong2IntHashMap hm =
-                new ArrayLong2IntHashMap((int) (Math.log(availableProcessors) / Math.log(2)) + 4);
+        BigLong2IntHashMap hm = new BigLong2IntHashMap(
+                (int) (Math.log(availableProcessors) / Math.log(2)) + 4, 8);
         addKmers(files, hm, freqThreshold, availableProcessors);
         return hm;
     }
 
     public static void addKmers(File[] files,
-                                ArrayLong2IntHashMap hm,
+                                BigLong2IntHashMap hm,
                                 int freqThreshold,
                                 int availableProcessors) throws InterruptedException {
 
@@ -160,20 +162,20 @@ public class IOUtils {
         executor.shutdownAndAwaitTermination();
     }
 
-    public static ArrayLong2IntHashMap loadBINQReads(File[] files,
+    public static BigLong2IntHashMap loadBINQReads(File[] files,
                                                      int k,
                                                      int loadTaskSize,
                                                      KmerIteratorFactory<? extends Kmer> factory,
                                                      int availableProcessors,
                                                      Logger logger) throws IOException {
-        ArrayLong2IntHashMap hm =
-                new ArrayLong2IntHashMap((int) (Math.log(availableProcessors) / Math.log(2)) + 4);
+        BigLong2IntHashMap hm = new BigLong2IntHashMap(
+                (int) (Math.log(availableProcessors) / Math.log(2)) + 4, 8);
         addBINQReads(files, hm, k, loadTaskSize, factory, availableProcessors, logger);
         return hm;
     }
 
     public static void addBINQReads(File[] files,
-                                    ArrayLong2IntHashMap hm,
+                                    BigLong2IntHashMap hm,
                                     int k,
                                     int loadTaskSize,
                                     KmerIteratorFactory<? extends Kmer> factory,
@@ -205,23 +207,21 @@ public class IOUtils {
 //        logger.info("k-mers loaded");
     }
 
-    public static ArrayLong2IntHashMap loadReads(File[] files,
+    public static BigLong2IntHashMap loadReads(File[] files,
                                                  int k,
                                                  int loadTaskSize,
                                                  KmerIteratorFactory<? extends Kmer> factory,
                                                  int availableProcessors,
                                                  Logger logger) throws IOException, ExecutionFailedException {
-        ArrayLong2IntHashMap hm =
-                new ArrayLong2IntHashMap((int) (Math.log(availableProcessors) / Math.log(2)) + 4);
-
-        logger.debug("Created " + hm.hm.length + " hash maps in main map");
+        BigLong2IntHashMap hm = new BigLong2IntHashMap(
+                (int) (Math.log(availableProcessors) / Math.log(2)) + 4, 8);
 
         addReads(files, hm, k, loadTaskSize, factory, availableProcessors, logger);
         return hm;
     }
 
     public static void addReads(File[] files,
-                                ArrayLong2IntHashMap hm,
+                                BigLong2IntHashMap hm,
                                 int k,
                                 int loadTaskSize,
                                 KmerIteratorFactory<? extends Kmer> factory,

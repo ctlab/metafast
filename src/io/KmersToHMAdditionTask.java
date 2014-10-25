@@ -1,6 +1,7 @@
 package io;
 
 import ru.ifmo.genetics.structures.map.ArrayLong2IntHashMap;
+import ru.ifmo.genetics.structures.map.BigLong2IntHashMap;
 
 import java.io.*;
 
@@ -12,13 +13,13 @@ public class KmersToHMAdditionTask implements Runnable {
 
     final int BYTES_PER_KMER = 12;
 
-    ArrayLong2IntHashMap hm;
+    BigLong2IntHashMap hm;
     File kmersFile;
     long kmersToSkip;
     long kmersToRead;
     int maxBadFrequency;
 
-    public KmersToHMAdditionTask(ArrayLong2IntHashMap hm,
+    public KmersToHMAdditionTask(BigLong2IntHashMap hm,
                                  File kmersFile,
                                  long kmersToSkip,
                                  long kmersToRead,
@@ -41,7 +42,7 @@ public class KmersToHMAdditionTask implements Runnable {
                 long kmerRepr = inputStream.readLong();
                 int frequency = inputStream.readInt();
                 if (frequency > maxBadFrequency) {
-                    hm.add(kmerRepr, frequency);
+                    hm.addAndBound(kmerRepr, frequency);
                 }
             }
 

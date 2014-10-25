@@ -1,23 +1,24 @@
 package tools;
 
+import ru.ifmo.genetics.utils.FileUtils;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.BoolParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileMVParameterBuilder;
-import ru.ifmo.genetics.utils.tool.inputParameterBuilder.StringParameterBuilder;
+import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileParameterBuilder;
 
 import java.io.*;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
-/**
- * Created by ulyantsev on 29.05.14.
- *
- */
 public class DistanceMatrixCalculatorMain extends Tool {
     public static final String NAME = "dist-matrix-calculator";
     public static final String DESCRIPTION = "Calculates distance matrix using features values";
+
+    public static final String SEPARATOR = "\t";
 
 
     public final Parameter<File[]> featuresFiles = addParameter(new FileMVParameterBuilder("features")
@@ -25,18 +26,19 @@ public class DistanceMatrixCalculatorMain extends Tool {
             .withDescription("features values files (for same components)")
             .create());
 
-    public final Parameter<String> separator = addParameter(new StringParameterBuilder("separator")
-            .withShortOpt("s")
-            .withDescription("matrix values separator")
-            .withDefaultValue("\t")
-            .withDefaultComment("tab")
-            .create());
-
     public final Parameter<Boolean> withoutNames = addParameter(new BoolParameterBuilder("without-names")
             .withShortOpt("wn")
             .optional()
             .withDescription("do not print matrix row and column names (as given file names)")
             .create());
+
+    public final Parameter<File> matrixFile = addParameter(new FileParameterBuilder("matrix-file")
+            .optional()
+            .withDefaultValue(workDir.append("dist_matrix_$DT.txt"))
+            .withDefaultComment("<workDir>/dist_matrix_<date>_<time>.txt")
+            .withDescription("resulting distance matrix file")
+            .create());
+
 
     @Override
     protected void runImpl() throws ExecutionFailedException {
@@ -60,7 +62,8 @@ public class DistanceMatrixCalculatorMain extends Tool {
             }
         }
 
-        String matrixPath = workDir + File.separator + "dist_matrix.txt";
+        String timestamp = new SimpleDateFormat("yyyy.MM.dd_HH.mm.ss").format(new Date());
+        String matrixPath = matrixFile.get().getPath().replace("$DT", timestamp);
         try {
             printMatrix(distMatrix, matrixPath);
             info("Distance matrix printed to " + matrixPath);
@@ -70,12 +73,14 @@ public class DistanceMatrixCalculatorMain extends Tool {
     }
 
     private void printMatrix(double[][] matrix, String fp) throws FileNotFoundException {
-        PrintWriter matrixPW = new PrintWriter(fp);
+        File f = new File(fp);
+        FileUtils.makeSubDirsOnly(f);
+        PrintWriter matrixPW = new PrintWriter(f);
 
         if (!withoutNames.get()) {
             matrixPW.print("#");
             for (File featuresFile : featuresFiles.get()) {
-                matrixPW.print(separator.get());
+                matrixPW.print(SEPARATOR);
                 matrixPW.print(featuresFile.getName());
             }
             matrixPW.println();
@@ -83,11 +88,11 @@ public class DistanceMatrixCalculatorMain extends Tool {
 
         for (int i = 0; i < matrix.length; i++) {
             if (!withoutNames.get()) {
-                matrixPW.print(featuresFiles.get()[i].getName() + separator.get());
+                matrixPW.print(featuresFiles.get()[i].getName() + SEPARATOR);
             }
             for (int j = 0; j < matrix[i].length; j++) {
                 if (j > 0) {
-                    matrixPW.print(separator.get());
+                    matrixPW.print(SEPARATOR);
                 }
                 matrixPW.print(matrix[i][j]);
             }

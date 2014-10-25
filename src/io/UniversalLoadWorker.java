@@ -8,6 +8,7 @@ import ru.ifmo.genetics.dna.kmers.Kmer;
 import ru.ifmo.genetics.dna.kmers.KmerIteratorFactory;
 import ru.ifmo.genetics.dna.kmers.ShortKmer;
 import ru.ifmo.genetics.structures.map.ArrayLong2IntHashMap;
+import ru.ifmo.genetics.structures.map.BigLong2IntHashMap;
 
 import java.util.List;
 import java.util.Random;
@@ -19,7 +20,7 @@ public class UniversalLoadWorker implements Runnable {
     CountDownLatch latch;
     int LEN;
     long step;
-    ArrayLong2IntHashMap hm;
+    BigLong2IntHashMap hm;
     KmerIteratorFactory<? extends Kmer> factory;
 
     boolean interrupted = false;
@@ -27,7 +28,7 @@ public class UniversalLoadWorker implements Runnable {
     Logger logger;
 
     public UniversalLoadWorker(UniversalReadDispatcher dispatcher, CountDownLatch latch,
-                               int LEN, ArrayLong2IntHashMap hm,
+                               int LEN, BigLong2IntHashMap hm,
                                KmerIteratorFactory<? extends Kmer> factory) {
 
         this.dispatcher = dispatcher;
@@ -43,7 +44,7 @@ public class UniversalLoadWorker implements Runnable {
     void add(Iterable<Dna> dnas) {
         for (Dna dna : dnas) {
             for (ShortKmer kmer : ShortKmer.kmersOf(dna, LEN)) {
-                hm.add(kmer.toLong(), 1);
+                hm.addAndBound(kmer.toLong(), 1);
             }
         }
     }

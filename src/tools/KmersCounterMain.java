@@ -2,7 +2,10 @@ package tools;
 
 import io.IOUtils;
 import ru.ifmo.genetics.dna.kmers.ShortKmerIteratorFactory;
+import ru.ifmo.genetics.io.ReadersUtils;
 import ru.ifmo.genetics.structures.map.ArrayLong2IntHashMap;
+import ru.ifmo.genetics.structures.map.BigLong2IntHashMap;
+import ru.ifmo.genetics.utils.FileUtils;
 import ru.ifmo.genetics.utils.tool.*;
 import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
@@ -80,7 +83,7 @@ public class KmersCounterMain extends Tool {
     protected void runImpl() throws ExecutionFailedException {
         int LEN = k.get();
 
-        ArrayLong2IntHashMap hm;
+        BigLong2IntHashMap hm;
         logger.debug("Starting to load reads...");
         try {
             hm = IOUtils.loadReads(inputFiles.get(), LEN, LOAD_TASK_SIZE,
@@ -95,22 +98,23 @@ public class KmersCounterMain extends Tool {
             dir.mkdir();
         }
 
-        String fp = dir + File.separator + inputFiles.get()[0].getName();
-        fp += inputFiles.get().length > 1 ? "+" : "";
-        fp += ".kmers.bin";
+        File outFile = new File(dir,
+                ReadersUtils.readDnaLazy(inputFiles.get()[0]).name() +
+                        (inputFiles.get().length > 1 ? "+" : "") +
+                        ".kmers.bin"
+                );
 
-
-        debug("Starting to print k-mers to " + fp);
+        debug("Starting to print k-mers to " + outFile.getPath());
         long c = 0;
         try {
-            c = IOUtils.printKmers(hm, fp, maximalBadFrequency.get());
+            c = IOUtils.printKmers(hm, outFile, maximalBadFrequency.get());
         } catch (IOException e) {
             e.printStackTrace();
         }
         info(NumUtils.groupDigits(hm.size()) + " k-mers found, "
                 + NumUtils.groupDigits(c) + " (" + String.format("%.1f", c * 100.0 / hm.size()) + "%) of them is good (not erroneous)");
-        info("Good k-mers printed to " + fp);
-        resultingKmerFilesPr.set(new File(fp));
+        info("Good k-mers printed to " + outFile.getPath());
+        resultingKmerFilesPr.set(outFile);
     }
 
     @Override
