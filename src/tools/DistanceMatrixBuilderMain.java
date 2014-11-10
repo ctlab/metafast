@@ -18,9 +18,14 @@ public class DistanceMatrixBuilderMain extends Tool {
     public static final String DESCRIPTION = "Builds the distance matrix for input sequences/kmers";
 
 
+    static {
+        forceParameter.set(true);
+        launchOptions.remove(forceParameter);
+    }
+
     // input parameters
     public final Parameter<Integer> k = addParameter(new IntParameterBuilder("k")
-            .optional()
+            .important()
             .withShortOpt("k")
             .withDefaultValue(31)
             .withDescription("k-mer size (in nucleotides, maximum 31 due to realization details)")
@@ -33,20 +38,20 @@ public class DistanceMatrixBuilderMain extends Tool {
             .create());
 
     public final Parameter<Integer> maximalBadFrequency = addParameter(new IntParameterBuilder("maximal-bad-frequency")
-            .optional()
+            .important()
             .withShortOpt("b")
             .withDescription("maximal frequency for a k-mer to be assumed erroneous")
             .withDefaultValue(1)
             .create());
 
     public final Parameter<Integer> minLen = addParameter(new IntParameterBuilder("min-seq-len")
+            .important()
             .withShortOpt("l")
             .withDescription("minimum sequence length to be added to a component (in nucleotides)")
             .withDefaultValue(100)
             .create());
 
     public final Parameter<File> matrixFile = addParameter(new FileParameterBuilder("matrix-file")
-            .optional()
             .withDefaultValue(workDir.append("matrices").append("dist_matrix_$DT.txt"))
             .withDefaultComment("<workDir>/matrices/dist_matrix_<date>_<time>.txt")
             .withDescription("resulting distance matrix file")

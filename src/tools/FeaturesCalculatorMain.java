@@ -31,7 +31,7 @@ public class FeaturesCalculatorMain extends Tool {
 
     public final Parameter<File[]> componentsFiles = addParameter(new FileMVParameterBuilder("components-files")
             .mandatory()
-            .withShortOpt("m")
+            .withShortOpt("cm")
             .withDescription("files with connected components (one component is considered as one feature)")
             .create());
 
@@ -43,6 +43,7 @@ public class FeaturesCalculatorMain extends Tool {
     public final Parameter<File[]> kmersFiles = addParameter(new FileMVParameterBuilder("kmers")
             .withShortOpt("ka")
             .withDescription("additional k-mers files in binary (long+int) format")
+            .withDefaultValue(new File[]{})
             .create());
 
     public final Parameter<Integer> threshold = addParameter(new IntParameterBuilder("threshold")
@@ -59,6 +60,7 @@ public class FeaturesCalculatorMain extends Tool {
 
     @Override
     protected void runImpl() throws ExecutionFailedException {
+        Timer t = new Timer();
         List<List<ConnectedComponent>> models = new ArrayList<List<ConnectedComponent>>();
         List<String> modelsDirs = new ArrayList<String>();
 
@@ -110,7 +112,7 @@ public class FeaturesCalculatorMain extends Tool {
             }
         }
 
-        if (kmersFiles.get() != null) {
+        if (kmersFiles.get() != null && kmersFiles.get().length != 0) {
             for (File kmersFile : kmersFiles.get()) {
                 BigLong2IntHashMap kmersHM;
                 try {
@@ -136,6 +138,7 @@ public class FeaturesCalculatorMain extends Tool {
         }
 
         featuresFilesPr.set(featuresFiles);
+        debug("Features-calculator has finished! Time = " + t);
     }
 
     private static void buildAndPrintVector(BigLong2IntHashMap readsHM,

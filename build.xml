@@ -32,9 +32,12 @@
                debuglevel="lines,vars,source">
         </javac>
 
-        <java classpath="${bin.dir}:${itmo-assembler.path}:${args4j.path}"
-              classname="ToolsScanner">
-        </java>
+        <exec executable="java" failonerror="true">
+            <arg value="-ea"/>
+            <arg value="-cp"/>
+            <arg value="${bin.dir}:${itmo-assembler.path}:${args4j.path}"/>
+            <arg value="ToolsScanner"/>
+        </exec>
 
         <jar destfile="${jars.dir}/${metafast.jar}"
              basedir="${bin.dir}" duplicate="preserve">

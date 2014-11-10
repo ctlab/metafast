@@ -1,5 +1,6 @@
 package tools;
 
+import ru.ifmo.genetics.statistics.Timer;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
@@ -53,6 +54,7 @@ public class KmersCounterForManyFilesMain extends Tool {
 
     @Override
     protected void runImpl() throws ExecutionFailedException {
+        Timer t = new Timer();
         counters.clear();
 
         for (File f : inputFiles.get()) {
@@ -66,6 +68,7 @@ public class KmersCounterForManyFilesMain extends Tool {
             addStep(counter);
             counters.add(counter);
         }
+        debug("Kmer-counter-many has finished! Time = " + t);
     }
 
     @Override

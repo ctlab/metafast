@@ -1,4 +1,26 @@
+import ru.ifmo.genetics.utils.tool.Parameter;
+import ru.ifmo.genetics.utils.tool.Tool;
+import ru.ifmo.genetics.utils.tool.inputParameterBuilder.StringParameterBuilder;
+import tools.DistanceMatrixBuilderMain;
+
 public class Runner extends ru.ifmo.genetics.Runner {
+
+    public static final Parameter<String> toolParameter = new Parameter<String>(new StringParameterBuilder("tool")
+            .withShortOpt("t")
+            .withDescription("set certain tool to run")
+            .withDefaultComment(DistanceMatrixBuilderMain.NAME)
+            .create());
+    static {
+        Tool.launchOptions.remove(ru.ifmo.genetics.Runner.toolParameter);
+        Tool.launchOptions.add(2, toolParameter);
+    }
+
+    Runner() {
+        super();
+        defaultTool = findTool(DistanceMatrixBuilderMain.class);
+    }
+
+
     @Override
     protected void printHeader() {
         out.println("Fast metagenome analysis toolkit, version " + getVersion());
@@ -6,31 +28,27 @@ public class Runner extends ru.ifmo.genetics.Runner {
     }
 
     @Override
-    protected void printHelp() {
-        out.println("Usage: java [<JVM options>] -jar <path-to-jar>/metafast.jar [<Launch options>] [<Tool parameters>]");
-        out.println("");
-        out.println("This toolkit allows you to run different tools from it.");
-        out.println("To see available tools:              java -jar <path-to-jar>/metafast.jar -ts");
-        out.println("To see help for selected tool:       java -jar <path-to-jar>/metafast.jar -t <tool-name>");
-        out.println("To run selected tool:                java -jar <path-to-jar>/metafast.jar -t <tool-name> <tool-parameters>");
-        out.println("");
+    protected void printFirstHelp() {
+        out.println("Usage:     metafast [<Launch options>] [<Input parameters>]");
+        printLater.add("To see full documentation visit http://github.com/ulyantsev/metafast/wiki");
     }
 
     @Override
-    protected void checkOptionsBeforeRunning(String[] args) {
+    protected boolean checkOptionsBeforeRunning(String[] args) {
         boolean printVersion = containsOption(args, "--version");
-        boolean printHelp = (args.length == 0) ||
-                (containsOption(args, "-h", "--help") && !containsOption(args, "-t", "--tool"));
+        boolean printFirstHelp = (args.length == 0) ||
+                (containsOption(args, getOptKeys(Tool.helpParameter)) && !containsOption(args, getOptKeys(toolParameter)));
 
-        if (printVersion || printHelp) {
+        if (printVersion) {
             printHeader();
+            return true;
         }
-        if (printHelp) {
-            printHelp();
+        if (printFirstHelp) {
+            printHeader();
+            printFirstHelp();
+            return false;
         }
-        if (printVersion || printHelp) {
-            System.exit(0);
-        }
+        return false;
     }
 
 

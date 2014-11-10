@@ -6,6 +6,7 @@ import org.apache.commons.lang.mutable.Mutable;
 import ru.ifmo.genetics.structures.map.ArrayLong2IntHashMap;
 import ru.ifmo.genetics.structures.map.BigLong2IntHashMap;
 import ru.ifmo.genetics.structures.map.MutableLongIntEntry;
+import ru.ifmo.genetics.utils.Misc;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
@@ -85,6 +86,7 @@ public class SeqBuilderMain extends Tool {
             return;
         }
         debug(NumUtils.groupDigits(hm.size()) + " k-mers loaded");
+        debug("Used memory (without running GC) = " + Misc.usedMemoryWithoutRunningGCAsString());
 
         long totalKmers = 0;
         int[] stat = new int[STAT_LEN];
@@ -155,6 +157,7 @@ public class SeqBuilderMain extends Tool {
             return;
         }
         info(NumUtils.groupDigits(sequences.size()) + " sequences found");
+        debug("Used memory (without running GC) = " + Misc.usedMemoryWithoutRunningGCAsString());
 
         try {
             Sequence.printSequences(sequences, destination);

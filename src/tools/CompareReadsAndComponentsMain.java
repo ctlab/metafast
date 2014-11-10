@@ -26,7 +26,7 @@ public class CompareReadsAndComponentsMain extends Tool {
 
     public final Parameter<File> componentsFile = addParameter(new FileParameterBuilder("components-file")
             .mandatory()
-            .withShortOpt("m")
+            .withShortOpt("cm")
             .withDescription("file with connected components in binary format")
             .create());
 

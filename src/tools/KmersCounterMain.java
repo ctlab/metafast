@@ -6,6 +6,7 @@ import ru.ifmo.genetics.io.ReadersUtils;
 import ru.ifmo.genetics.structures.map.ArrayLong2IntHashMap;
 import ru.ifmo.genetics.structures.map.BigLong2IntHashMap;
 import ru.ifmo.genetics.utils.FileUtils;
+import ru.ifmo.genetics.utils.Misc;
 import ru.ifmo.genetics.utils.tool.*;
 import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
@@ -84,14 +85,15 @@ public class KmersCounterMain extends Tool {
         int LEN = k.get();
 
         BigLong2IntHashMap hm;
-        logger.debug("Starting to load reads...");
+        debug("Starting to load reads...");
         try {
             hm = IOUtils.loadReads(inputFiles.get(), LEN, LOAD_TASK_SIZE,
                     new ShortKmerIteratorFactory(), availableProcessors.get(), this.logger);
         } catch (IOException e) {
             throw new ExecutionFailedException("Couldn't load k-mers", e);
         }
-        logger.debug("Finished to load reads!");
+        debug("Finished to load reads!");
+        debug("Used memory (without running GC) = " + Misc.usedMemoryWithoutRunningGCAsString());
 
         File dir = outputDir.get();
         if (!dir.exists()) {

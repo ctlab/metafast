@@ -2,6 +2,7 @@ package tools;
 
 import algo.SequencesFinders;
 import io.IOUtils;
+import ru.ifmo.genetics.statistics.Timer;
 import ru.ifmo.genetics.structures.map.ArrayLong2IntHashMap;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
@@ -74,6 +75,7 @@ public class SeqBuilderForManyFilesMain extends Tool {
         if (maximalBadFrequency.get() != null && bottomCutPercent.get() != null) {
             throw new IllegalArgumentException("-b and -bp can not be set both");
         }
+        Timer t = new Timer();
 
         for (File f : inputFiles.get()) {
             SeqBuilderMain builder = new SeqBuilderMain();
@@ -88,6 +90,7 @@ public class SeqBuilderForManyFilesMain extends Tool {
             addStep(builder);
             builders.add(builder);
         }
+        debug("Seq-builder-many has finished! Time = " + t);
     }
 
     @Override

@@ -1,6 +1,7 @@
 package tools;
 
 import algo.ComponentsBuilder;
+import ru.ifmo.genetics.utils.Misc;
 import ru.ifmo.genetics.utils.tool.values.InValue;
 import structures.ConnectedComponent;
 import io.IOUtils;
@@ -31,12 +32,14 @@ public class ComponentCutterMain extends Tool {
             .create());
 
     public final Parameter<Integer> minComponentSize = addParameter(new IntParameterBuilder("min-component-size")
+            .important()
             .withShortOpt("b1")
             .withDescription("minimum component size in component-cutter (in k-mers)")
             .withDefaultValue(1000)
             .create());
 
     public final Parameter<Integer> maxComponentSize = addParameter(new IntParameterBuilder("max-component-size")
+            .important()
             .withShortOpt("b2")
             .withDescription("maximum component size in component-cutter (in k-mers)")
             .withDefaultValue(10000)
@@ -60,6 +63,7 @@ public class ComponentCutterMain extends Tool {
 
     @Override
     protected void runImpl() throws ExecutionFailedException {
+        Timer t = new Timer();
         ArrayLong2IntHashMap hm =
                 new ArrayLong2IntHashMap((int) (Math.log(availableProcessors.get()) / Math.log(2)) + 4);
         try {
@@ -68,6 +72,7 @@ public class ComponentCutterMain extends Tool {
             e.printStackTrace();
             return;
         }
+        debug("Used memory (without running GC) = " + Misc.usedMemoryWithoutRunningGCAsString());
 
         List<ConnectedComponent> components;
         try {
@@ -80,6 +85,7 @@ public class ComponentCutterMain extends Tool {
             return;
         }
         info(NumUtils.groupDigits(components.size()) + " components found");
+        debug("Used memory (without running GC) = " + Misc.usedMemoryWithoutRunningGCAsString());
 
         try {
             ConnectedComponent.saveComponents(components, componentsFile.get().getAbsolutePath());
@@ -87,6 +93,7 @@ public class ComponentCutterMain extends Tool {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        debug("Components-cutter has finished! Time = " + t);
     }
 
     @Override
