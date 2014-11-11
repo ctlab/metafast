@@ -16,8 +16,11 @@
     <property name="itmo-assembler.path" value="lib/itmo-assembler.jar"/>
     <property name="args4j.path" value="lib/args4j-2.0.21.jar"/>
 
-    <property name="metafast.main" value="Runner"/>
-    <property name="metafast.jar" value="metafast.jar"/>
+    <property name="project.main" value="Runner"/>
+    <property name="project.name" value="metafast"/>
+    <property name="project.jar" value="${jars.dir}/${project.name}.jar"/>
+    <property name="project.sh" value="${jars.dir}/${project.name}.sh"/>
+    <property name="project.bat" value="${jars.dir}/${project.name}.bat"/>
 
     
 
@@ -39,10 +42,10 @@
             <arg value="ToolsScanner"/>
         </exec>
 
-        <jar destfile="${jars.dir}/${metafast.jar}"
+        <jar destfile="${project.jar}"
              basedir="${bin.dir}" duplicate="preserve">
             <manifest>
-                <attribute name="Main-Class" value="${metafast.main}"/>
+                <attribute name="Main-Class" value="${project.main}"/>
             </manifest>
 
             <zipfileset src="${args4j.path}" excludes="META-INF/*.SF"/>
@@ -50,6 +53,15 @@
             <fileset file="TOOLS"/>
             <zipfileset src="${itmo-assembler.path}" excludes="META-INF/*.SF"/>
         </jar>
+
+        <concat destfile="${project.sh}" binary="true">
+            <filelist files="src/stub.sh,${project.jar}"/>
+        </concat>
+        <chmod file="${project.sh}" perm="a+x"/>
+
+        <concat destfile="${project.bat}" binary="true">
+            <filelist files="src/stub.bat,${project.jar}"/>
+        </concat>
 
         <delete dir="${bin.dir}"/>
     </target>
