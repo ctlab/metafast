@@ -33,23 +33,27 @@ public class ViewMain extends Tool {
 
     // input parameters
     public final Parameter<Integer> k = addParameter(new IntParameterBuilder("k")
+            .important()
             .withShortOpt("k")
             .withDefaultValue(31)
             .withDescription("k-mer size, used while saving object (NEED with ANY operation)")
             .create());
 
     public final Parameter<File> kmersFile = addParameter(new FileParameterBuilder("kmers-file")
+            .important()
             .withShortOpt("kf")
             .withDescription("binary file with kmers")
             .create());
 
     public final Parameter<File> componentsFile = addParameter(new FileParameterBuilder("components-file")
+            .important()
             .withShortOpt("cf")
             .withDescription("binary components file")
             .create());
 
 
     public final Parameter<File> outputFile = addParameter(new FileParameterBuilder("output-file")
+            .important()
             .withShortOpt("o")
             .withDescription("file to print to")
             .withDefaultValue((File) null)

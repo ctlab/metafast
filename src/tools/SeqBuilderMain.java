@@ -86,7 +86,7 @@ public class SeqBuilderMain extends Tool {
             return;
         }
         debug(NumUtils.groupDigits(hm.size()) + " k-mers loaded");
-        debug("Used memory (without running GC) = " + Misc.usedMemoryWithoutRunningGCAsString());
+        debug("Memory used = " + Misc.usedMemoryAsString());
 
         long totalKmers = 0;
         int[] stat = new int[STAT_LEN];
@@ -157,7 +157,7 @@ public class SeqBuilderMain extends Tool {
             return;
         }
         info(NumUtils.groupDigits(sequences.size()) + " sequences found");
-        debug("Used memory (without running GC) = " + Misc.usedMemoryWithoutRunningGCAsString());
+        debug("Memory used (without running GC) = " + Misc.usedMemoryWithoutRunningGCAsString());
 
         try {
             Sequence.printSequences(sequences, destination);

@@ -43,6 +43,11 @@ public class KmersCounterForManyFilesMain extends Tool {
             .withDefaultValue(workDir.append("kmers"))
             .create());
 
+    public final Parameter<File> statsDir = addParameter(new FileParameterBuilder("stats-dir")
+            .withDescription("Directory with statistics")
+            .withDefaultValue(workDir.append("stats"))
+            .create());
+
 
 
     private final InMemoryValue<File[]> resultingKmerFilesPr = new InMemoryValue<File[]>();
@@ -52,9 +57,11 @@ public class KmersCounterForManyFilesMain extends Tool {
 
     private List<KmersCounterMain> counters = new ArrayList<KmersCounterMain>();
 
+    private Timer t;
+
     @Override
     protected void runImpl() throws ExecutionFailedException {
-        Timer t = new Timer();
+        t = new Timer();
         counters.clear();
 
         for (File f : inputFiles.get()) {
@@ -64,11 +71,11 @@ public class KmersCounterForManyFilesMain extends Tool {
             counter.inputFiles.set(new File[]{f});
             counter.maximalBadFrequency.set(maximalBadFrequency);
             counter.outputDir.set(outputDir);
+            counter.statsDir.set(statsDir);
 
             addStep(counter);
             counters.add(counter);
         }
-        debug("Kmer-counter-many has finished! Time = " + t);
     }
 
     @Override
@@ -78,6 +85,7 @@ public class KmersCounterForManyFilesMain extends Tool {
             outFiles[i] = counters.get(i).resultingKmerFiles.get();
         }
         resultingKmerFilesPr.set(outFiles);
+        debug("Kmer-counter-many has finished! Time = " + t);
     }
 
     public static void main(String[] args) {

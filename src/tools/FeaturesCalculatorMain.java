@@ -1,13 +1,13 @@
 package tools;
 
 import ru.ifmo.genetics.io.ReadersUtils;
+import ru.ifmo.genetics.statistics.Timer;
 import ru.ifmo.genetics.structures.map.BigLong2IntHashMap;
 import ru.ifmo.genetics.utils.tool.values.InMemoryValue;
 import ru.ifmo.genetics.utils.tool.values.InValue;
 import structures.ConnectedComponent;
 import io.IOUtils;
 import ru.ifmo.genetics.dna.kmers.ShortKmerIteratorFactory;
-import ru.ifmo.genetics.structures.map.ArrayLong2IntHashMap;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
@@ -15,7 +15,8 @@ import ru.ifmo.genetics.utils.tool.inputParameterBuilder.*;
 import ru.ifmo.genetics.utils.FileUtils;
 
 import java.io.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class FeaturesCalculatorMain extends Tool {
     public static final String NAME = "features-calculator";

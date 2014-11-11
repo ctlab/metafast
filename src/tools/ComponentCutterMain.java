@@ -1,6 +1,7 @@
 package tools;
 
 import algo.ComponentsBuilder;
+import ru.ifmo.genetics.statistics.Timer;
 import ru.ifmo.genetics.utils.Misc;
 import ru.ifmo.genetics.utils.tool.values.InValue;
 import structures.ConnectedComponent;
@@ -13,7 +14,7 @@ import ru.ifmo.genetics.utils.tool.inputParameterBuilder.*;
 import ru.ifmo.genetics.utils.NumUtils;
 
 import java.io.*;
-import java.util.*;
+import java.util.List;
 
 public class ComponentCutterMain extends Tool {
     public static final String NAME = "component-cutter";
@@ -72,7 +73,7 @@ public class ComponentCutterMain extends Tool {
             e.printStackTrace();
             return;
         }
-        debug("Used memory (without running GC) = " + Misc.usedMemoryWithoutRunningGCAsString());
+        debug("Memory used = " + Misc.usedMemoryAsString());
 
         List<ConnectedComponent> components;
         try {
@@ -85,7 +86,7 @@ public class ComponentCutterMain extends Tool {
             return;
         }
         info(NumUtils.groupDigits(components.size()) + " components found");
-        debug("Used memory (without running GC) = " + Misc.usedMemoryWithoutRunningGCAsString());
+        debug("Memory used (without running GC) = " + Misc.usedMemoryWithoutRunningGCAsString());
 
         try {
             ConnectedComponent.saveComponents(components, componentsFile.get().getAbsolutePath());

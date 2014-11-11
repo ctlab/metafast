@@ -70,12 +70,14 @@ public class SeqBuilderForManyFilesMain extends Tool {
 
     private List<SeqBuilderMain> builders = new ArrayList<SeqBuilderMain>();
 
+    private Timer t;
+
     @Override
     protected void runImpl() throws ExecutionFailedException {
         if (maximalBadFrequency.get() != null && bottomCutPercent.get() != null) {
             throw new IllegalArgumentException("-b and -bp can not be set both");
         }
-        Timer t = new Timer();
+        t = new Timer();
 
         for (File f : inputFiles.get()) {
             SeqBuilderMain builder = new SeqBuilderMain();
@@ -90,7 +92,6 @@ public class SeqBuilderForManyFilesMain extends Tool {
             addStep(builder);
             builders.add(builder);
         }
-        debug("Seq-builder-many has finished! Time = " + t);
     }
 
     @Override
@@ -100,6 +101,7 @@ public class SeqBuilderForManyFilesMain extends Tool {
             outFiles[i] = builders.get(i).outputFileOut.get();
         }
         outputFilesPr.set(outFiles);
+        debug("Seq-builder-many has finished! Time = " + t);
     }
 
     public static void main(String[] args) {

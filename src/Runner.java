@@ -10,9 +10,11 @@ public class Runner extends ru.ifmo.genetics.Runner {
             .withDescription("set certain tool to run")
             .withDefaultComment(DistanceMatrixBuilderMain.NAME)
             .create());
+
     static {
         Tool.launchOptions.remove(ru.ifmo.genetics.Runner.toolParameter);
         Tool.launchOptions.add(2, toolParameter);
+        Tool.launchOptions.remove(ru.ifmo.genetics.Runner.guiParameter);
     }
 
     Runner() {

@@ -3,8 +3,12 @@ package tools;
 import io.IOUtils;
 import ru.ifmo.genetics.dna.kmers.ShortKmerIteratorFactory;
 import ru.ifmo.genetics.io.ReadersUtils;
+import ru.ifmo.genetics.statistics.QuantitativeStatistics;
+import ru.ifmo.genetics.statistics.QuickQuantitativeStatistics;
+import ru.ifmo.genetics.statistics.Timer;
 import ru.ifmo.genetics.structures.map.ArrayLong2IntHashMap;
 import ru.ifmo.genetics.structures.map.BigLong2IntHashMap;
+import ru.ifmo.genetics.structures.map.MutableLongIntEntry;
 import ru.ifmo.genetics.utils.FileUtils;
 import ru.ifmo.genetics.utils.Misc;
 import ru.ifmo.genetics.utils.tool.*;
@@ -19,8 +23,10 @@ import ru.ifmo.genetics.utils.tool.values.InValue;
 import ru.ifmo.genetics.utils.NumUtils;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class KmersCounterMain extends Tool {
@@ -54,6 +60,11 @@ public class KmersCounterMain extends Tool {
     public final Parameter<File> outputDir = addParameter(new FileParameterBuilder("output-dir")
             .withDescription("Output directory")
             .withDefaultValue(workDir.append("kmers"))
+            .create());
+
+    public final Parameter<File> statsDir = addParameter(new FileParameterBuilder("stats-dir")
+            .withDescription("Directory with statistics")
+            .withDefaultValue(workDir.append("stats"))
             .create());
 
 
@@ -93,18 +104,37 @@ public class KmersCounterMain extends Tool {
             throw new ExecutionFailedException("Couldn't load k-mers", e);
         }
         debug("Finished to load reads!");
-        debug("Used memory (without running GC) = " + Misc.usedMemoryWithoutRunningGCAsString());
+        debug("Memory used = " + Misc.usedMemoryAsString());
 
-        File dir = outputDir.get();
-        if (!dir.exists()) {
-            dir.mkdir();
+        File outDir = outputDir.get();
+        if (!outDir.exists()) {
+            outDir.mkdirs();
+        }
+        File stDir = statsDir.get();
+        if (!stDir.exists()) {
+            stDir.mkdirs();
         }
 
-        File outFile = new File(dir,
-                ReadersUtils.readDnaLazy(inputFiles.get()[0]).name() +
-                        (inputFiles.get().length > 1 ? "+" : "") +
-                        ".kmers.bin"
-                );
+        String name = ReadersUtils.readDnaLazy(inputFiles.get()[0]).name()
+                            + (inputFiles.get().length > 1 ? "+" : "");
+        File outFile = new File(outDir, name + ".kmers.bin");
+        File stFile = new File(stDir, name + ".stat.txt");
+
+        // calculating statistics
+        Timer t = new Timer();
+        QuickQuantitativeStatistics<Integer> stats = new QuickQuantitativeStatistics<Integer>();
+        Iterator<MutableLongIntEntry> it = hm.entryIterator();
+        while (it.hasNext()) {
+            MutableLongIntEntry entry = it.next();
+            stats.add(entry.getValue());
+        }
+        try {
+            stats.printToFile(stFile, "# k-mer frequency\tnumber of such k-mers");
+        } catch (FileNotFoundException e) {
+            throw new ExecutionFailedException("Can't print statistics to file " + stFile);
+        }
+        debug("Statistics calculated and printed in " + t);
+
 
         debug("Starting to print k-mers to " + outFile.getPath());
         long c = 0;
