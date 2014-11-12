@@ -65,6 +65,7 @@ public class ComponentCutterMain extends Tool {
     @Override
     protected void runImpl() throws ExecutionFailedException {
         Timer t = new Timer();
+        info("Loading sequences from files...");
         ArrayLong2IntHashMap hm =
                 new ArrayLong2IntHashMap((int) (Math.log(availableProcessors.get()) / Math.log(2)) + 4);
         try {
@@ -73,8 +74,9 @@ public class ComponentCutterMain extends Tool {
             e.printStackTrace();
             return;
         }
-        debug("Memory used = " + Misc.usedMemoryAsString());
+        debug("Memory used = " + Misc.usedMemoryAsString() + ", time = " + t);
 
+        info("Searching for components...");
         List<ConnectedComponent> components;
         try {
             String statFP = workDir + File.separator + "components-stat-" +

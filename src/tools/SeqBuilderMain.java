@@ -2,8 +2,7 @@ package tools;
 
 import algo.SequencesFinders;
 import io.IOUtils;
-import org.apache.commons.lang.mutable.Mutable;
-import ru.ifmo.genetics.structures.map.ArrayLong2IntHashMap;
+import ru.ifmo.genetics.statistics.*;
 import ru.ifmo.genetics.structures.map.BigLong2IntHashMap;
 import ru.ifmo.genetics.structures.map.MutableLongIntEntry;
 import ru.ifmo.genetics.utils.Misc;
@@ -18,7 +17,10 @@ import ru.ifmo.genetics.utils.NumUtils;
 import structures.Sequence;
 
 import java.io.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.Iterator;
 
 public class SeqBuilderMain extends Tool {
     public static final String NAME = "seq-builder";
@@ -36,8 +38,8 @@ public class SeqBuilderMain extends Tool {
             .create());
 
     public final Parameter<File[]> inputFiles = addParameter(new FileMVParameterBuilder("k-mers")
-            .withShortOpt("i")
             .mandatory()
+            .withShortOpt("i")
             .withDescription("list of input files with k-mers in binary format")
             .create());
 
@@ -73,10 +75,11 @@ public class SeqBuilderMain extends Tool {
 
     @Override
     protected void runImpl() throws ExecutionFailedException {
-
         if (maximalBadFrequency.get() != null && bottomCutPercent.get() != null) {
             throw new IllegalArgumentException("-b and -bp can not be set both");
         }
+
+        Timer t = new Timer();
 
         BigLong2IntHashMap hm;
         try {
@@ -85,8 +88,7 @@ public class SeqBuilderMain extends Tool {
             e.printStackTrace();
             return;
         }
-        debug(NumUtils.groupDigits(hm.size()) + " k-mers loaded");
-        debug("Memory used = " + Misc.usedMemoryAsString());
+        debug("Memory used = " + Misc.usedMemoryAsString() + ", time = " + t);
 
         long totalKmers = 0;
         int[] stat = new int[STAT_LEN];

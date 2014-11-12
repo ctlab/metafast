@@ -3,6 +3,7 @@ package tools;
 import ru.ifmo.genetics.io.ReadersUtils;
 import ru.ifmo.genetics.statistics.Timer;
 import ru.ifmo.genetics.structures.map.BigLong2IntHashMap;
+import ru.ifmo.genetics.utils.NumUtils;
 import ru.ifmo.genetics.utils.tool.values.InMemoryValue;
 import ru.ifmo.genetics.utils.tool.values.InValue;
 import structures.ConnectedComponent;
@@ -70,7 +71,7 @@ public class FeaturesCalculatorMain extends Tool {
                 List<ConnectedComponent> components =
                         ConnectedComponent.loadComponents(componentsFile.getAbsolutePath());
                 models.add(components);
-                info(components.size() + " components loaded from " + componentsFile);
+                info(NumUtils.groupDigits(components.size()) + " components loaded from " + componentsFile);
             } catch (IOException e) {
                 throw new ExecutionFailedException("Couldn't load components", e);
             }

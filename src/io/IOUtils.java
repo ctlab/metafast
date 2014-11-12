@@ -12,6 +12,7 @@ import ru.ifmo.genetics.executors.BlockingThreadPoolExecutor;
 import ru.ifmo.genetics.io.ReadersUtils;
 import ru.ifmo.genetics.io.sources.NamedSource;
 import ru.ifmo.genetics.io.sources.Source;
+import ru.ifmo.genetics.statistics.QuickQuantitativeStatistics;
 import ru.ifmo.genetics.structures.map.ArrayLong2IntHashMap;
 
 import java.io.*;
@@ -25,6 +26,7 @@ import ru.ifmo.genetics.structures.map.MutableLongIntEntry;
 import ru.ifmo.genetics.tools.ec.DnaQReadDispatcher;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.NumUtils;
+import ru.ifmo.genetics.utils.tool.Tool;
 
 public class IOUtils {
     static final int BYTES_PER_KMER = 12;
@@ -67,25 +69,31 @@ public class IOUtils {
         }
     }
 
-    public static long printKmers(BigLong2IntHashMap hm,
-                                  File file,
-                                  int threshold) throws IOException {
-        DataOutputStream stream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(file)));
-        //DataOutputStream stream = new DataOutputStream(new FileOutputStream(new File(path)));
+    public static long printKmers(BigLong2IntHashMap hm, int threshold,
+                                  File outFile, File stFile) throws IOException {
+        DataOutputStream stream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(outFile)));
 
-        long c = 0;
+        QuickQuantitativeStatistics<Integer> stats = new QuickQuantitativeStatistics<Integer>();
+        long good = 0;
+
         Iterator<MutableLongIntEntry> it = hm.entryIterator();
         while (it.hasNext()) {
             MutableLongIntEntry entry = it.next();
-            if (entry.getValue() > threshold) {
-                stream.writeLong(entry.getKey());
-                stream.writeInt(entry.getValue());
-                c++;
+            long key = entry.getKey();
+            int value = entry.getValue();
+
+            stats.add(value);
+
+            if (value > threshold) {
+                stream.writeLong(key);
+                stream.writeInt(value);
+                good++;
             }
         }
 
         stream.close();
-        return c;
+        stats.printToFile(stFile, "# k-mer frequency\tnumber of such k-mers");
+        return good;
     }
 
     public static BigLong2IntHashMap loadKmers(File[] files,
@@ -103,14 +111,19 @@ public class IOUtils {
                                 int freqThreshold,
                                 Logger logger) throws IOException {
         for (File file : files) {
-            DataInputStream inputStream = new DataInputStream(new BufferedInputStream(new FileInputStream(file)));
+            Tool.info(logger, "Loading k-mer from " + file + "...");
+
+            FileInputStream fis = new FileInputStream(file);
+            DataInputStream is = new DataInputStream(new BufferedInputStream(fis));
 
             long uniqueKmers = 0, uniqueKmersAdded = 0, totalKmers = 0, totalKmersAdded = 0;
-            while (inputStream.available() > 2) {
-                long kmerRepr = inputStream.readLong();
-                int freq = inputStream.readInt();
+            long c = fis.getChannel().size() / 12;
+            uniqueKmers = c;
+            for (; c > 0; c--) {
+                long kmerRepr = is.readLong();
+                int freq = is.readInt();
 
-                uniqueKmers++;
+//                uniqueKmers++;
                 totalKmers += freq;
                 if (freq > freqThreshold) {
                     uniqueKmersAdded++;
@@ -119,13 +132,16 @@ public class IOUtils {
                 }
             }
 
-            inputStream.close();
+            if (is.available() > 2) {
+                throw new RuntimeException("Size mismatch. Possibly wrong file format/file is corrupted.");
+            }
+            is.close();
 
-            logger.debug(file + " : " + NumUtils.groupDigits(uniqueKmersAdded) + " / "
+            Tool.debug(logger, file + " : " + NumUtils.groupDigits(uniqueKmersAdded) + " / "
                     + NumUtils.groupDigits(uniqueKmers) + " unique k-mers added/all");
-            logger.debug(file + " : " + NumUtils.groupDigits(totalKmersAdded) + " / " 
+            Tool.debug(logger, file + " : " + NumUtils.groupDigits(totalKmersAdded) + " / "
                     + NumUtils.groupDigits(totalKmers) + " total k-mers added/all");
-            logger.info(NumUtils.groupDigits(uniqueKmersAdded) + " k-mers loaded from " + file);
+            Tool.info(logger, NumUtils.groupDigits(uniqueKmersAdded) + " k-mers loaded from " + file);
         }
     }
 

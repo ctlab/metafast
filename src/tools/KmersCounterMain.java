@@ -95,16 +95,15 @@ public class KmersCounterMain extends Tool {
     protected void runImpl() throws ExecutionFailedException {
         int LEN = k.get();
 
+        Timer t = new Timer();
         BigLong2IntHashMap hm;
-        debug("Starting to load reads...");
         try {
             hm = IOUtils.loadReads(inputFiles.get(), LEN, LOAD_TASK_SIZE,
                     new ShortKmerIteratorFactory(), availableProcessors.get(), this.logger);
         } catch (IOException e) {
             throw new ExecutionFailedException("Couldn't load k-mers", e);
         }
-        debug("Finished to load reads!");
-        debug("Memory used = " + Misc.usedMemoryAsString());
+        debug("Memory used = " + Misc.usedMemoryAsString() + ", time = " + t);
 
         File outDir = outputDir.get();
         if (!outDir.exists()) {
@@ -120,26 +119,11 @@ public class KmersCounterMain extends Tool {
         File outFile = new File(outDir, name + ".kmers.bin");
         File stFile = new File(stDir, name + ".stat.txt");
 
-        // calculating statistics
-        Timer t = new Timer();
-        QuickQuantitativeStatistics<Integer> stats = new QuickQuantitativeStatistics<Integer>();
-        Iterator<MutableLongIntEntry> it = hm.entryIterator();
-        while (it.hasNext()) {
-            MutableLongIntEntry entry = it.next();
-            stats.add(entry.getValue());
-        }
-        try {
-            stats.printToFile(stFile, "# k-mer frequency\tnumber of such k-mers");
-        } catch (FileNotFoundException e) {
-            throw new ExecutionFailedException("Can't print statistics to file " + stFile);
-        }
-        debug("Statistics calculated and printed in " + t);
-
 
         debug("Starting to print k-mers to " + outFile.getPath());
         long c = 0;
         try {
-            c = IOUtils.printKmers(hm, outFile, maximalBadFrequency.get());
+            c = IOUtils.printKmers(hm, maximalBadFrequency.get(), outFile, stFile);
         } catch (IOException e) {
             e.printStackTrace();
         }
