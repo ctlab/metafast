@@ -3,8 +3,8 @@ package tools;
 import algo.SequencesFinders;
 import io.IOUtils;
 import ru.ifmo.genetics.statistics.*;
-import ru.ifmo.genetics.structures.map.BigLong2IntHashMap;
-import ru.ifmo.genetics.structures.map.MutableLongIntEntry;
+import ru.ifmo.genetics.structures.map.BigLong2ShortHashMap;
+import ru.ifmo.genetics.structures.map.MutableLongShortEntry;
 import ru.ifmo.genetics.utils.Misc;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
@@ -80,21 +80,15 @@ public class SeqBuilderMain extends Tool {
         }
 
         Timer t = new Timer();
-
-        BigLong2IntHashMap hm;
-        try {
-            hm = IOUtils.loadKmers(inputFiles.get(), 0, availableProcessors.get(), this.logger);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return;
-        }
+        BigLong2ShortHashMap hm =
+                IOUtils.loadKmers(inputFiles.get(), maximalBadFrequency.get(), availableProcessors.get(), logger);
         debug("Memory used = " + Misc.usedMemoryAsString() + ", time = " + t);
 
         long totalKmers = 0;
         int[] stat = new int[STAT_LEN];
-        Iterator<MutableLongIntEntry> it = hm.entryIterator();
+        Iterator<MutableLongShortEntry> it = hm.entryIterator();
         while (it.hasNext()) {
-            MutableLongIntEntry entry = it.next();
+            MutableLongShortEntry entry = it.next();
             int value = entry.getValue();
             totalKmers += value;
             if (value >= stat.length) {
@@ -149,7 +143,6 @@ public class SeqBuilderMain extends Tool {
         File destination = new File(fp);
         outputFilePr.set(destination);
 
-        //info("hm brackets = " + hm.hm.length);
         Deque<Sequence> sequences;
         try {
             sequences = SequencesFinders.thresholdStrategy(hm, availableProcessors.get(),

@@ -1,92 +1,52 @@
 package io;
 
-import it.unimi.dsi.fastutil.longs.Long2IntMap;
+import org.apache.log4j.Logger;
 import ru.ifmo.genetics.dna.Dna;
-import ru.ifmo.genetics.dna.DnaQ;
-import ru.ifmo.genetics.dna.DnaTools;
-import ru.ifmo.genetics.dna.kmers.Kmer;
-import ru.ifmo.genetics.dna.kmers.KmerIteratorFactory;
 import ru.ifmo.genetics.dna.kmers.ShortKmer;
-import ru.ifmo.genetics.dna.kmers.ShortKmerIteratorFactory;
-import ru.ifmo.genetics.executors.BlockingThreadPoolExecutor;
 import ru.ifmo.genetics.io.ReadersUtils;
 import ru.ifmo.genetics.io.sources.NamedSource;
 import ru.ifmo.genetics.io.sources.Source;
 import ru.ifmo.genetics.statistics.QuickQuantitativeStatistics;
 import ru.ifmo.genetics.structures.map.ArrayLong2IntHashMap;
+import ru.ifmo.genetics.structures.map.BigLong2LongHashMap;
+import ru.ifmo.genetics.structures.map.BigLong2ShortHashMap;
+import ru.ifmo.genetics.structures.map.MutableLongShortEntry;
+import ru.ifmo.genetics.utils.NumUtils;
+import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
+import ru.ifmo.genetics.utils.tool.Tool;
 
 import java.io.*;
 import java.util.Iterator;
-import java.util.Random;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
-import org.apache.log4j.Logger;
-import ru.ifmo.genetics.structures.map.BigLong2IntHashMap;
-import ru.ifmo.genetics.structures.map.MutableLongIntEntry;
-import ru.ifmo.genetics.tools.ec.DnaQReadDispatcher;
-import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
-import ru.ifmo.genetics.utils.NumUtils;
-import ru.ifmo.genetics.utils.tool.Tool;
-
 public class IOUtils {
-    static final int BYTES_PER_KMER = 12;
 
-    public static void addFASTASequences(File[] files,
-                                         ArrayLong2IntHashMap hm,
-                                         int k,
-                                         int minSeqLen,
-                                         Logger logger) throws IOException {
-        int totalSeq = 0;
-        long totalLen = 0;
-        for (File file : files) {
-            Source<Dna> source = ReadersUtils.readDnaLazy(file);
-            Iterator<Dna> in = source.iterator();
+    static final int READS_WORK_RANGE_SIZE = 1 << 15;   // 32 K reads
+    static final int KMERS_WORK_RANGE_SIZE = 16777220;   // ~16 Mb of data
 
-            int cnt = 0;
-            long len = 0;
-            while (in.hasNext()) {
-                Dna dna = in.next();
-                if (dna.length() >= minSeqLen) {
-                    addSequence(hm, dna, k);
-                    cnt++;
-                    len += dna.length();
-                }
-            }
-            logger.debug(cnt + " sequences added, summary len = " + len + " from " + file.getName());
-            totalSeq += cnt;
-            totalLen += len;
-        }
 
-        logger.debug("Total sequences count = " + totalSeq);
-        logger.debug("Total sequences length = " + totalLen);
-        logger.debug("k-mers HM size = " + hm.size());
-    }
 
-    private static void addSequence(ArrayLong2IntHashMap hm, Dna dna, int k) {
-        Iterator<ShortKmer> it = ShortKmer.kmersOf(dna, k).iterator();
-        while (it.hasNext()) {
-            hm.add(it.next().toLong(), 1);
-        }
-    }
 
-    public static long printKmers(BigLong2IntHashMap hm, int threshold,
+    public static long printKmers(BigLong2ShortHashMap hm, int threshold,
                                   File outFile, File stFile) throws IOException {
-        DataOutputStream stream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(outFile)));
+        DataOutputStream stream = new DataOutputStream(new BufferedOutputStream(
+                new FileOutputStream(outFile), 1 << 24));   // 16 Mb buffer
 
-        QuickQuantitativeStatistics<Integer> stats = new QuickQuantitativeStatistics<Integer>();
+        QuickQuantitativeStatistics<Short> stats = new QuickQuantitativeStatistics<Short>();
         long good = 0;
 
-        Iterator<MutableLongIntEntry> it = hm.entryIterator();
+        Iterator<MutableLongShortEntry> it = hm.entryIterator();
         while (it.hasNext()) {
-            MutableLongIntEntry entry = it.next();
+            MutableLongShortEntry entry = it.next();
             long key = entry.getKey();
-            int value = entry.getValue();
+            short value = entry.getValue();
 
             stats.add(value);
 
             if (value > threshold) {
                 stream.writeLong(key);
-                stream.writeInt(value);
+                stream.writeShort(value);
                 good++;
             }
         }
@@ -96,181 +56,249 @@ public class IOUtils {
         return good;
     }
 
-    public static BigLong2IntHashMap loadKmers(File[] files,
-                                                 int freqThreshold,
-                                                 int availableProcessors,
-                                                 Logger logger) throws IOException {
-        BigLong2IntHashMap hm = new BigLong2IntHashMap(
-                (int) (Math.log(availableProcessors) / Math.log(2)) + 4, 8);
-        addKmers(files, hm, freqThreshold, logger);
+
+
+    // ---------------------------- for loading kmers ----------------------------------
+
+    static class Kmers2HMWorker extends KmersLoadWorker {
+        Kmers2HMWorker(BigLong2ShortHashMap hm, int freqThreshold) {
+            this.hm = hm;
+            this.freqThreshold = freqThreshold;
+        }
+
+        final BigLong2ShortHashMap hm;
+        final int freqThreshold;
+        long kmers = 0, kmersAdded = 0;
+        long freqSum = 0, freqSumAdded = 0;
+
+        @Override
+        public void processKmer(long kmer, short freq) {
+            kmers++;
+            freqSum += freq;
+            if (freq > freqThreshold) {
+                hm.addAndBound(kmer, freq);
+                kmersAdded++;
+                freqSumAdded += freq;
+            }
+        }
+    }
+
+    public static BigLong2ShortHashMap loadKmers(File[] files, int freqThreshold, int availableProcessors, Logger logger)
+            throws ExecutionFailedException {
+
+        BigLong2ShortHashMap hm = new BigLong2ShortHashMap(
+                (int) (Math.log(availableProcessors) / Math.log(2)) + 4, 12);
+
+        Kmers2HMWorker[] workers = new Kmers2HMWorker[availableProcessors];
+        for (int i = 0; i < workers.length; ++i) {
+            workers[i] = new Kmers2HMWorker(hm, freqThreshold);
+        }
+
+        run(files, workers, hm, logger);
+
+        // calculating statistics...
+        long kmers = 0, kmersAdded = 0;
+        long freqSum = 0, freqSumAdded = 0;
+        for (Kmers2HMWorker worker : workers) {
+            kmers += worker.kmers;
+            kmersAdded += worker.kmersAdded;
+            freqSum += worker.freqSum;
+            freqSumAdded += worker.freqSumAdded;
+        }
+
+        Tool.debug(logger,
+                "Added/All kmers count = " + NumUtils.groupDigits(kmersAdded) + "/" + NumUtils.groupDigits(kmers)
+                        + " (" + String.format("%.1f", kmersAdded * 100.0 / kmers) + "%)");
+        Tool.debug(logger,
+                "Added/All kmers frequency sum = " + NumUtils.groupDigits(freqSumAdded) + "/" + NumUtils.groupDigits(freqSum)
+                        + " (" + String.format("%.1f", freqSumAdded * 100.0 / freqSum) + "%)");
+        logger.debug("k-mers HM size = " + NumUtils.groupDigits(hm.size()));
+
         return hm;
     }
 
-    public static void addKmers(File[] files,
-                                BigLong2IntHashMap hm,
-                                int freqThreshold,
-                                Logger logger) throws IOException {
-        for (File file : files) {
-            Tool.info(logger, "Loading k-mer from " + file + "...");
 
-            FileInputStream fis = new FileInputStream(file);
-            DataInputStream is = new DataInputStream(new BufferedInputStream(fis));
+    static class KmersPresenceWorker extends KmersLoadWorker {
+        KmersPresenceWorker(BigLong2LongHashMap hm) {
+            this.hm = hm;
+        }
+        final BigLong2LongHashMap hm;
+        @Override
+        public void processKmer(long kmer, short freq) {
+            if (hm.contains(kmer)) {
+                hm.addAndBound(kmer, freq);
+            }
+        }
+    }
 
-            long uniqueKmers = 0, uniqueKmersAdded = 0, totalKmers = 0, totalKmersAdded = 0;
-            long c = fis.getChannel().size() / 12;
-            uniqueKmers = c;
-            for (; c > 0; c--) {
-                long kmerRepr = is.readLong();
-                int freq = is.readInt();
+    public static void calculatePresenceForKmers(File[] files, BigLong2LongHashMap hm, int availableProcessors, Logger logger)
+            throws ExecutionFailedException {
+        BytesWorker[] workers = new BytesWorker[availableProcessors];
+        for (int i = 0; i < workers.length; ++i) {
+            workers[i] = new KmersPresenceWorker(hm);
+        }
+        run(files, workers, null, logger);
+    }
 
-//                uniqueKmers++;
-                totalKmers += freq;
-                if (freq > freqThreshold) {
-                    uniqueKmersAdded++;
-                    totalKmersAdded += freq;
-                    hm.addAndBound(kmerRepr, freq);
+
+    public static void run(File[] files, BytesWorker[] workers, BigLong2ShortHashMap hmForMonitoring, Logger logger)
+            throws ExecutionFailedException {
+        try {
+            for (File file : files) {
+                Tool.info(logger, "Loading file " + file + "...");
+
+                InputStream is = new FileInputStream(file);
+                BytesDispatcher dispatcher = new BytesDispatcher(is, KMERS_WORK_RANGE_SIZE, hmForMonitoring);
+                CountDownLatch latch = new CountDownLatch(workers.length);
+
+                for (int i = 0; i < workers.length; ++i) {
+                    workers[i].setDispatcher(dispatcher);
+                    workers[i].setLatch(latch);
+                    new Thread(workers[i]).start();
+                }
+
+                try {
+                    latch.await();
+                } catch (InterruptedException e) {
+                    Tool.warn(logger, "Main thread interrupted");
+                    for (BytesWorker worker : workers) {
+                        worker.interrupt();
+                    }
+                    throw new ExecutionFailedException("Thread was interrupted", e);
+                }
+                Tool.debug(logger, NumUtils.sizeInBytesAsString(dispatcher.bytesRead) + " of data processed from " + file);
+            }
+        } catch (IOException e) {
+            throw new ExecutionFailedException("Can't load k-mers file", e);
+        }
+    }
+
+
+    // ---------------------------- for loading reads ----------------------------------
+
+    static class ReadsLoadWorker extends ReadsWorker {
+        ReadsLoadWorker(BigLong2ShortHashMap hm, int k, int minDnaLen) {
+            this.hm = hm;
+            this.k = k;
+            this.minDnaLen = minDnaLen;
+        }
+
+        final BigLong2ShortHashMap hm;
+        final int k;
+        final int minDnaLen;
+        int totalSeq = 0, goodSeq = 0;
+        long totalLen = 0, goodLen = 0;
+
+        @Override
+        public void process(List<Dna> reads) {
+            for (Dna dna : reads) {
+                totalSeq++;
+                totalLen += dna.length();
+
+                if (dna.length() >= minDnaLen) {
+                    for (ShortKmer kmer : ShortKmer.kmersOf(dna, k)) {
+                        hm.addAndBound(kmer.toLong(), (short) 1);
+                    }
+                    goodSeq++;
+                    goodLen += dna.length();
                 }
             }
-
-            if (is.available() > 2) {
-                throw new RuntimeException("Size mismatch. Possibly wrong file format/file is corrupted.");
-            }
-            is.close();
-
-            Tool.debug(logger, file + " : " + NumUtils.groupDigits(uniqueKmersAdded) + " / "
-                    + NumUtils.groupDigits(uniqueKmers) + " unique k-mers added/all");
-            Tool.debug(logger, file + " : " + NumUtils.groupDigits(totalKmersAdded) + " / "
-                    + NumUtils.groupDigits(totalKmers) + " total k-mers added/all");
-            Tool.info(logger, NumUtils.groupDigits(uniqueKmersAdded) + " k-mers loaded from " + file);
         }
     }
 
-    public static BigLong2IntHashMap loadKmers(File[] files,
-                                                 int freqThreshold,
-                                                 int availableProcessors) throws InterruptedException {
+    public static BigLong2ShortHashMap loadReads(File[] files, int k, int minSeqLen,
+                                                 int availableProcessors, Logger logger)
+            throws ExecutionFailedException {
+        BigLong2ShortHashMap hm = new BigLong2ShortHashMap(
+                (int) (Math.log(availableProcessors) / Math.log(2)) + 4, 12);
 
-        BigLong2IntHashMap hm = new BigLong2IntHashMap(
-                (int) (Math.log(availableProcessors) / Math.log(2)) + 4, 8);
-        addKmers(files, hm, freqThreshold, availableProcessors);
-        return hm;
-    }
-
-    public static void addKmers(File[] files,
-                                BigLong2IntHashMap hm,
-                                int freqThreshold,
-                                int availableProcessors) throws InterruptedException {
-
-        BlockingThreadPoolExecutor executor = new BlockingThreadPoolExecutor(availableProcessors);
-
-        for (File file : files) {
-            long bytesInFile = file.length();
-            long kmersCount = bytesInFile / BYTES_PER_KMER;
-            long kmersPerThread = kmersCount / availableProcessors + 1;
-
-            long kmersSum = 0;
-            for (int i = 0; i < availableProcessors; i++) {
-                long kmersToAdd = Math.min(kmersPerThread, kmersCount - kmersSum);
-                executor.blockingExecute(new KmersToHMAdditionTask(hm, file, kmersSum, kmersToAdd, freqThreshold));
-                kmersSum += kmersToAdd;
-            }
-        }
-
-        executor.shutdownAndAwaitTermination();
-    }
-
-    public static BigLong2IntHashMap loadBINQReads(File[] files,
-                                                     int k,
-                                                     int loadTaskSize,
-                                                     KmerIteratorFactory<? extends Kmer> factory,
-                                                     int availableProcessors,
-                                                     Logger logger) throws IOException {
-        BigLong2IntHashMap hm = new BigLong2IntHashMap(
-                (int) (Math.log(availableProcessors) / Math.log(2)) + 4, 8);
-        addBINQReads(files, hm, k, loadTaskSize, factory, availableProcessors, logger);
-        return hm;
-    }
-
-    public static void addBINQReads(File[] files,
-                                    BigLong2IntHashMap hm,
-                                    int k,
-                                    int loadTaskSize,
-                                    KmerIteratorFactory<? extends Kmer> factory,
-                                    int availableProcessors,
-                                    Logger logger) throws IOException {
-        Source<DnaQ> source = ReadersUtils.readDnaQLazy(files);
-        Iterator<DnaQ> it = source.iterator();
-
-
-        DnaQReadDispatcher dispatcher = new DnaQReadDispatcher(source, loadTaskSize, null);
-        KmerLoadWorker[] workers = new KmerLoadWorker[availableProcessors];
-        CountDownLatch latch = new CountDownLatch(workers.length);
-
+        ReadsLoadWorker[] workers = new ReadsLoadWorker[availableProcessors];
         for (int i = 0; i < workers.length; ++i) {
-            workers[i] = new KmerLoadWorker(dispatcher, latch, new Random(42),
-                    k, hm, factory);
-            new Thread(workers[i]).start();
+            workers[i] = new ReadsLoadWorker(hm, k, minSeqLen);
         }
 
-        try {
-            latch.await();
-        } catch (InterruptedException e) {
-            logger.warn("Main thread interrupted");
-            for (KmerLoadWorker worker : workers) {
-                worker.interrupt();
-            }
+        run(files, workers, hm, logger);
+
+        // calculating statistics...
+        int totalSeq = 0, goodSeq = 0;
+        long totalLen = 0, goodLen = 0;
+        for (ReadsLoadWorker worker : workers) {
+            totalSeq += worker.totalSeq;
+            goodSeq += worker.goodSeq;
+            totalLen += worker.totalLen;
+            goodLen += worker.goodLen;
         }
-        logger.info(NumUtils.groupDigits(dispatcher.getReads()) + " reads added");
-//        logger.info("k-mers loaded");
-    }
+        Tool.debug(logger,
+                "Good/Total sequences count = " + NumUtils.groupDigits(goodSeq) + "/" + NumUtils.groupDigits(totalSeq)
+                + " (" + String.format("%.1f", goodSeq * 100.0 / totalSeq) + "%)");
+        Tool.debug(logger,
+                "Good/Total sequences length = " + NumUtils.groupDigits(goodLen) + "/" + NumUtils.groupDigits(totalLen)
+                        + " (" + String.format("%.1f", goodLen * 100.0 / totalLen) + "%)");
+        logger.debug("k-mers HM size = " + NumUtils.groupDigits(hm.size()));
 
-    public static BigLong2IntHashMap loadReads(File[] files,
-                                                 int k,
-                                                 int loadTaskSize,
-                                                 KmerIteratorFactory<? extends Kmer> factory,
-                                                 int availableProcessors,
-                                                 Logger logger) throws IOException, ExecutionFailedException {
-        BigLong2IntHashMap hm = new BigLong2IntHashMap(
-                (int) (Math.log(availableProcessors) / Math.log(2)) + 4, 8);
-
-        addReads(files, hm, k, loadTaskSize, factory, availableProcessors, logger);
         return hm;
     }
 
-    public static void addReads(File[] files,
-                                BigLong2IntHashMap hm,
-                                int k,
-                                int loadTaskSize,
-                                KmerIteratorFactory<? extends Kmer> factory,
-                                int availableProcessors,
-                                Logger logger) throws ExecutionFailedException {
+
+    static class ReadsPresenceWorker extends ReadsWorker {
+        ReadsPresenceWorker(BigLong2LongHashMap hm, int k) {
+            this.hm = hm;
+            this.k = k;
+        }
+
+        final BigLong2LongHashMap hm;
+        final int k;
+
+        @Override
+        public void process(List<Dna> reads) {
+            for (Dna dna : reads) {
+                for (ShortKmer kmer : ShortKmer.kmersOf(dna, k)) {
+                    if (hm.contains(kmer.toLong())) {
+                        hm.addAndBound(kmer.toLong(), 1);
+                    }
+                }
+            }
+        }
+    }
+
+    public static void calculatePresenceForReads(File[] files, int k, BigLong2LongHashMap hm, int availableProcessors, Logger logger)
+            throws ExecutionFailedException {
+        ReadsWorker[] workers = new ReadsWorker[availableProcessors];
+        for (int i = 0; i < workers.length; ++i) {
+            workers[i] = new ReadsPresenceWorker(hm, k);
+        }
+        run(files, workers, null, logger);
+    }
+
+
+
+    public static void run(File[] files, ReadsWorker[] workers, BigLong2ShortHashMap hmForMonitoring, Logger logger)
+            throws ExecutionFailedException {
         for (File file : files) {
-            logger.info("Processing file " + file + "...");
+            Tool.info(logger, "Loading file " + file + "...");
 
             NamedSource<Dna> reader = ReadersUtils.readDnaLazy(file);
 
-            UniversalReadDispatcher dispatcher = new UniversalReadDispatcher(reader, loadTaskSize, hm);
-            UniversalLoadWorker[] workers = new UniversalLoadWorker[availableProcessors];
+            ReadsDispatcher dispatcher = new ReadsDispatcher(reader, READS_WORK_RANGE_SIZE, hmForMonitoring);
             CountDownLatch latch = new CountDownLatch(workers.length);
 
-            logger.debug("Starting workers...");
             for (int i = 0; i < workers.length; ++i) {
-                workers[i] = new UniversalLoadWorker(dispatcher, latch, k, hm, factory);
+                workers[i].setDispatcher(dispatcher);
+                workers[i].setLatch(latch);
                 new Thread(workers[i]).start();
             }
 
-
             try {
-                logger.debug("Waiting workers...");
                 latch.await();
             } catch (InterruptedException e) {
-                logger.warn("Main thread interrupted");
-                for (UniversalLoadWorker worker : workers) {
+                Tool.warn(logger, "Main thread interrupted");
+                for (ReadsWorker worker : workers) {
                     worker.interrupt();
                 }
+                throw new ExecutionFailedException("Thread was interrupted", e);
             }
-            logger.info(NumUtils.groupDigits(dispatcher.reads) + " reads added from " + file);
+            Tool.info(logger, NumUtils.groupDigits(dispatcher.reads) + " reads added from " + file);
         }
-//        logger.info("k-mers loaded");
     }
 
 }

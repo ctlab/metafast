@@ -1,20 +1,13 @@
 package algo;
 
-import it.unimi.dsi.fastutil.longs.Long2IntMap;
-import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import ru.ifmo.genetics.dna.Dna;
 import ru.ifmo.genetics.dna.DnaTools;
 import ru.ifmo.genetics.dna.kmers.ShortKmer;
-import ru.ifmo.genetics.structures.map.ArrayLong2IntHashMap;
-import ru.ifmo.genetics.structures.map.BigLong2IntHashMap;
-import ru.ifmo.genetics.structures.map.Long2IntHashMap;
-import ru.ifmo.genetics.structures.map.MutableLongIntEntry;
-import ru.ifmo.genetics.utils.KmerUtils;
+import ru.ifmo.genetics.structures.map.*;
 import structures.Sequence;
 
 import java.util.Iterator;
-import java.util.List;
 import java.util.Queue;
 
 /**
@@ -22,16 +15,16 @@ import java.util.Queue;
  */
 public class AddSequencesShiftingRightTask implements Runnable {
 
-    final BigLong2IntHashMap hm;
-    final Long2IntHashMap openHM;
+    final BigLong2ShortHashMap hm;
+    final Long2ShortHashMap openHM;
     final int k;
     int freqThreshold;
     int lenThreshold;
     final Queue<Sequence> sequences;
     final LongOpenHashSet used;
 
-    public AddSequencesShiftingRightTask(BigLong2IntHashMap hm,
-                                         Long2IntHashMap openHM,
+    public AddSequencesShiftingRightTask(BigLong2ShortHashMap hm,
+                                         Long2ShortHashMap openHM,
                                          int k, int freqThreshold, int lenThreshold,
                                          Queue<Sequence> sequences, LongOpenHashSet used) {
         this.hm = hm;
@@ -45,11 +38,11 @@ public class AddSequencesShiftingRightTask implements Runnable {
 
     @Override
     public void run() {
-        Iterator<MutableLongIntEntry> it = openHM.entryIterator();
+        Iterator<MutableLongShortEntry> it = openHM.entryIterator();
         while (it.hasNext()) {
-            MutableLongIntEntry entry = it.next();
+            MutableLongShortEntry entry = it.next();
             long key = entry.getKey();
-            int value = entry.getValue();
+            short value = entry.getValue();
             if (value <= freqThreshold) {
                 continue;
             }

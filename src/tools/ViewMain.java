@@ -6,9 +6,7 @@ import ru.ifmo.genetics.ToolTemplate;
 import ru.ifmo.genetics.dna.Dna;
 import ru.ifmo.genetics.dna.kmers.ShortKmer;
 import ru.ifmo.genetics.dna.kmers.ShortKmerIteratorFactory;
-import ru.ifmo.genetics.structures.map.ArrayLong2IntHashMap;
-import ru.ifmo.genetics.structures.map.BigLong2IntHashMap;
-import ru.ifmo.genetics.structures.map.MutableLongIntEntry;
+import ru.ifmo.genetics.structures.map.*;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
@@ -83,19 +81,14 @@ public class ViewMain extends Tool {
         }
 
         if (kmersFile.get() != null) {
-            BigLong2IntHashMap kmersHM;
-            try {
-                kmersHM = IOUtils.loadKmers(new File[]{kmersFile.get()},
-                        0, availableProcessors.get(), this.logger);
-            } catch (IOException e) {
-                throw new ExecutionFailedException("Couldn't load k-mers from " + kmersFile, e);
-            }
-            logger.info("Printing kmers...");
+            BigLong2ShortHashMap kmersHM =
+                    IOUtils.loadKmers(new File[]{kmersFile.get()}, 0, availableProcessors.get(), logger);
 
+            logger.info("Printing kmers...");
             out.println("Kmer\tCount");
-            Iterator<MutableLongIntEntry> it = kmersHM.entryIterator();
+            Iterator<MutableLongShortEntry> it = kmersHM.entryIterator();
             while (it.hasNext()) {
-                MutableLongIntEntry entry = it.next();
+                MutableLongShortEntry entry = it.next();
                 out.println(new ShortKmer(entry.getKey(), k.get()) + "\t" + entry.getValue());
             }
         }
@@ -104,7 +97,7 @@ public class ViewMain extends Tool {
         if (componentsFile.get() != null) {
             List<ConnectedComponent> components;
             try {
-                components = ConnectedComponent.loadComponents(componentsFile.get().getPath());
+                components = ConnectedComponent.loadComponents(componentsFile.get());
                 info(components.size() + " components loaded from " + componentsFile.get());
             } catch (IOException e) {
                 throw new ExecutionFailedException("Couldn't load components", e);

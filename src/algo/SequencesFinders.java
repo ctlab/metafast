@@ -2,8 +2,7 @@ package algo;
 
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import ru.ifmo.genetics.executors.BlockingThreadPoolExecutor;
-import ru.ifmo.genetics.structures.map.ArrayLong2IntHashMap;
-import ru.ifmo.genetics.structures.map.BigLong2IntHashMap;
+import ru.ifmo.genetics.structures.map.BigLong2ShortHashMap;
 import structures.Sequence;
 
 import java.util.*;
@@ -11,7 +10,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 
 public class SequencesFinders {
 
-    public static Deque<Sequence> thresholdStrategy(BigLong2IntHashMap hm,
+    public static Deque<Sequence> thresholdStrategy(BigLong2ShortHashMap hm,
                                                    int availableProcessors,
                                                    int freqThreshold,
                                                    int lenThreshold,

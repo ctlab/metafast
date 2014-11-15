@@ -54,7 +54,7 @@ public class CompareReadsAndComponentsMain extends Tool {
     protected void runImpl() throws ExecutionFailedException {
         debug("Lets load components");
         try {
-            components = ConnectedComponent.loadComponents(componentsFile.get().getAbsolutePath());
+            components = ConnectedComponent.loadComponents(componentsFile.get());
         } catch (IOException e) {
             throw new ExecutionFailedException("Couldn't load components", e);
         }

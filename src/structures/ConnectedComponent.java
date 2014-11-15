@@ -48,8 +48,8 @@ public class ConnectedComponent {
         outputStream.close();
     }
 
-    public static List<ConnectedComponent> loadComponents(String fp) throws IOException {
-        DataInputStream inputStream = new DataInputStream(new BufferedInputStream(new FileInputStream(fp)));
+    public static List<ConnectedComponent> loadComponents(File file) throws IOException {
+        DataInputStream inputStream = new DataInputStream(new BufferedInputStream(new FileInputStream(file)));
         int componentsCnt = inputStream.readInt();
         List<ConnectedComponent> res = new ArrayList<ConnectedComponent>(componentsCnt);
 

@@ -2,6 +2,7 @@ package tools;
 
 import algo.ComponentsBuilder;
 import ru.ifmo.genetics.statistics.Timer;
+import ru.ifmo.genetics.structures.map.BigLong2ShortHashMap;
 import ru.ifmo.genetics.utils.Misc;
 import ru.ifmo.genetics.utils.tool.values.InValue;
 import structures.ConnectedComponent;
@@ -65,16 +66,11 @@ public class ComponentCutterMain extends Tool {
     @Override
     protected void runImpl() throws ExecutionFailedException {
         Timer t = new Timer();
-        info("Loading sequences from files...");
-        ArrayLong2IntHashMap hm =
-                new ArrayLong2IntHashMap((int) (Math.log(availableProcessors.get()) / Math.log(2)) + 4);
-        try {
-            IOUtils.addFASTASequences(sequencesFiles.get(), hm, k.get(), minLen.get(), this.logger);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return;
-        }
+        debug("Loading sequences from files...");
+        BigLong2ShortHashMap hm = IOUtils.loadReads(sequencesFiles.get(), k.get(), minLen.get(),
+                availableProcessors.get(), logger);
         debug("Memory used = " + Misc.usedMemoryAsString() + ", time = " + t);
+
 
         info("Searching for components...");
         List<ConnectedComponent> components;
@@ -82,7 +78,7 @@ public class ComponentCutterMain extends Tool {
             String statFP = workDir + File.separator + "components-stat-" +
                     minComponentSize.get() + "-" + maxComponentSize.get() + ".txt";
             components = ComponentsBuilder.splitStrategy(hm, k.get(), minComponentSize.get(),
-                    maxComponentSize.get(), statFP, this.logger, availableProcessors.get());
+                    maxComponentSize.get(), statFP, logger);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
             return;

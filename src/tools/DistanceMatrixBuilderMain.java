@@ -6,10 +6,7 @@ import ru.ifmo.genetics.utils.tool.Tool;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileMVParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.IntParameterBuilder;
-import ru.ifmo.genetics.utils.tool.values.FilesFromOneFileYielder;
-import ru.ifmo.genetics.utils.tool.values.IfYielder;
-import ru.ifmo.genetics.utils.tool.values.InValue;
-import ru.ifmo.genetics.utils.tool.values.SimpleFixingInValue;
+import ru.ifmo.genetics.utils.tool.values.*;
 
 import java.io.*;
 
@@ -64,17 +61,7 @@ public class DistanceMatrixBuilderMain extends Tool {
     {
         setFix(kmersCounter.k, k);
         setFix(kmersCounter.inputFiles, inputFiles);
-        setFix(kmersCounter.maximalBadFrequency,
-                new IfYielder<Integer>(new InValue<Boolean>() {
-                        @Override
-                        public Boolean get() {
-                            return maximalBadFrequency.get() >= 1;
-                        }
-                    },
-                    new SimpleFixingInValue<Integer>(1),
-                    maximalBadFrequency
-                )
-        );
+        setFix(kmersCounter.maximalBadFrequency, maximalBadFrequency);
         setFixDefault(kmersCounter.outputDir);
         addSubTool(kmersCounter);
     }
@@ -101,10 +88,10 @@ public class DistanceMatrixBuilderMain extends Tool {
     public FeaturesCalculatorMain featuresCalculator = new FeaturesCalculatorMain();
     {
         setFix(featuresCalculator.k, k);
-        setFix(featuresCalculator.componentsFiles, new FilesFromOneFileYielder(compCutter.componentsFileOut));
+        setFix(featuresCalculator.componentsFile, compCutter.componentsFileOut);
         setFix(featuresCalculator.readsFiles, inputFiles);
-        setFix(featuresCalculator.threshold, kmersCounter.maximalBadFrequency);
         setFixDefault(featuresCalculator.kmersFiles);
+        setFixDefault(featuresCalculator.threshold);
         addSubTool(featuresCalculator);
     }
 

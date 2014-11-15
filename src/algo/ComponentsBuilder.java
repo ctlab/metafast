@@ -4,110 +4,107 @@ import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.LongArrayFIFOQueue;
 import org.apache.log4j.Logger;
 import ru.ifmo.genetics.structures.map.ArrayLong2IntHashMap;
+import ru.ifmo.genetics.structures.map.BigLong2ShortHashMap;
+import ru.ifmo.genetics.structures.map.MutableLongShortEntry;
+import ru.ifmo.genetics.structures.set.BigLongHashSet;
 import structures.ConnectedComponent;
 
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
-/**
- * Created by ulyantsev on 06.05.14.
- *
- */
 public class ComponentsBuilder {
-    public static List<ConnectedComponent> splitStrategy(ArrayLong2IntHashMap hm,
+    public static List<ConnectedComponent> splitStrategy(BigLong2ShortHashMap hm,
                                                          int k,
-                                                         int b1,
-                                                         int b2,
+                                                         int b1, int b2,
                                                          String statFP,
-                                                         Logger logger,
-                                                         int availableProcessors) throws FileNotFoundException {
+                                                         Logger logger)
+            throws FileNotFoundException {
         List<ConnectedComponent> ans = new ArrayList<ConnectedComponent>();
+        BigLongHashSet processedKmers = new BigLongHashSet(hm.capacity());
 
         PrintWriter statPW = new PrintWriter(statFP);
-        statPW.println("comp.size\tcomp.weight\tfreqThreshold");
+        statPW.println("# component.size\tcomponent.weight\tfreqThreshold");
         for (int freqThreshold = 0; ; freqThreshold++) {
-            List<ConnectedComponent> components = getComponents(hm, k, freqThreshold, availableProcessors);
+            List<ConnectedComponent> components = getComponents(hm, k, freqThreshold, processedKmers);
             if (components.size() == 0) {
                 break;
             }
+            int added = 0;
             for (ConnectedComponent comp : components) {
                 if (comp.size() < b1) {
                     banComponent(hm, comp);
                 } else if (comp.size() < b2) {
                     ans.add(comp);
+                    added++;
                     statPW.println(comp.size() + "\t" + comp.getWeight() + "\t" + freqThreshold);
                     banComponent(hm, comp);
                 }
             }
-            logger.debug("Freq = " + freqThreshold + ", components count = " + ans.size());
+            logger.debug("FreqThreshold = " + freqThreshold + ", " +
+                    "components added = " + added + ", total components = " + ans.size());
         }
         statPW.close();
 
         return ans;
     }
 
-    private static void banComponent(ArrayLong2IntHashMap hm, ConnectedComponent component) {
+    private static void banComponent(BigLong2ShortHashMap hm, ConnectedComponent component) {
         for (long kmer : component.kmers) {
-            hm.add(kmer, -hm.get(kmer));
+            hm.put(kmer, (short) 0);
         }
     }
 
-    private static List<ConnectedComponent> getComponents(ArrayLong2IntHashMap hm,
-                                                   int k,
-                                                   int freqThreshold,
-                                                   int availableProcessors) {
+    private static List<ConnectedComponent> getComponents(BigLong2ShortHashMap hm,
+                                                   int k, int freqThreshold,
+                                                   BigLongHashSet processedKmers) {
         List<ConnectedComponent> ans = new ArrayList<ConnectedComponent>();
 
-        ArrayLong2IntHashMap processedKmers =
-                new ArrayLong2IntHashMap((int) (Math.log(availableProcessors) / Math.log(2)) + 4);
-        for (int i = 0; i < hm.hm.length; ++i) {
-            for (Long2IntMap.Entry entry : hm.hm[i].long2IntEntrySet()) {
-                long kmer = entry.getLongKey();
-                if (processedKmers.get(kmer) > 0) {
-                    continue;
-                }
+        processedKmers.reset();
 
-                int value = entry.getIntValue();
-                if (value > freqThreshold) {
-                    ConnectedComponent comp = getComponent(hm, k, kmer, freqThreshold, processedKmers);
-                    ans.add(comp);
-                }
+        Iterator<MutableLongShortEntry> it = hm.entryIterator();
+        while (it.hasNext()) {
+            MutableLongShortEntry entry = it.next();
+            long kmer = entry.getKey();
+            short value = entry.getValue();
+            if (value > freqThreshold && !processedKmers.contains(kmer)) {
+                ConnectedComponent comp = getComponent(hm, k, kmer, freqThreshold, processedKmers);
+                ans.add(comp);
             }
         }
 
         return ans;
     }
 
-    private static ConnectedComponent getComponent(ArrayLong2IntHashMap hm,
-                                                   int kValue,
-                                                   long kmer,
+    private static ConnectedComponent getComponent(BigLong2ShortHashMap hm,
+                                                   int k,
+                                                   long startKmer,
                                                    int freqThreshold,
-                                                   ArrayLong2IntHashMap processedKmers) {
-        if (hm.get(kmer) <= freqThreshold || processedKmers.get(kmer) > 0) {
-            return null;
-        }
-        ConnectedComponent ans = new ConnectedComponent();
+                                                   BigLongHashSet processedKmers) {
 
-        long weight = hm.get(kmer);
+        ConnectedComponent ans = new ConnectedComponent();
+        long weight = 0;
+
         LongArrayFIFOQueue queue = new LongArrayFIFOQueue();
 
-        queue.enqueue(kmer);
-        processedKmers.add(kmer, 1);
+        queue.enqueue(startKmer);
+        processedKmers.add(startKmer);
+        ans.add(startKmer);
+        weight += hm.get(startKmer);
 
         while (queue.size() > 0) {
-            long kmerRepr = queue.dequeue();
-            ans.add(kmerRepr);
+            long kmer = queue.dequeue();
 
-            for (long neighbour : KmerOperations.possibleNeighbours(kmerRepr, kValue)) {
-                int value = hm.get(neighbour);
-                if (value <= freqThreshold || processedKmers.get(neighbour) > 0) {
-                    continue;
+            for (long neighbour : KmerOperations.possibleNeighbours(kmer, k)) {
+                short value = hm.get(neighbour);
+                if (value > freqThreshold && !processedKmers.contains(neighbour)) {
+                    queue.enqueue(neighbour);
+                    processedKmers.add(neighbour);
+                    ans.add(neighbour);
+                    weight += value;
                 }
-                weight += value;
-                processedKmers.add(neighbour, 1);
-                queue.enqueue(neighbour);
             }
         }
 
