@@ -32,7 +32,7 @@ public class Runner extends ru.ifmo.genetics.Runner {
     @Override
     protected void printFirstHelp() {
         out.println("Usage:     metafast [<Launch options>] [<Input parameters>]");
-        printLater.add("To see full documentation visit http://github.com/ulyantsev/metafast/wiki");
+        printLater.add("To see full documentation visit http://github.com/ctlab/metafast/wiki");
     }
 
     @Override

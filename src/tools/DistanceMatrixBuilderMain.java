@@ -1,5 +1,6 @@
 package tools;
 
+import ru.ifmo.genetics.Runner;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
@@ -9,10 +10,11 @@ import ru.ifmo.genetics.utils.tool.inputParameterBuilder.IntParameterBuilder;
 import ru.ifmo.genetics.utils.tool.values.*;
 
 import java.io.*;
+import java.util.Arrays;
 
 public class DistanceMatrixBuilderMain extends Tool {
     public static final String NAME = "matrix-builder";
-    public static final String DESCRIPTION = "Builds the distance matrix for input sequences/kmers";
+    public static final String DESCRIPTION = "Builds the distance matrix for input sequences";
 
 
     static {
@@ -115,6 +117,16 @@ public class DistanceMatrixBuilderMain extends Tool {
 
     @Override
     protected void cleanImpl() {
+    }
+
+
+    @Override
+    public void mainImpl(String[] args) {
+        if (Runner.containsOption(args, Runner.getOptKeys(continueParameter)) ||
+                Runner.containsOption(args, Runner.getOptKeys(Tool.startParameter))) {
+            forceParameter.set(false);
+        }
+        super.mainImpl(args);
     }
 
     public static void main(String[] args) {
