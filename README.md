@@ -11,6 +11,12 @@ Authors:
 
 
 Last stable release can be downloaded from <http://github.com/ctlab/metafast/releases>.<br/>
+To run ***metafast*** *JRE* 1.6 or higher is requered.<br/>
+For *Linux* and *Mac OS*: download `metafast.sh` from releases web-page, run the command `chmod a+x metafast.sh`, run the metafast script itself from command line.<br/>
+For *Windows*: download `metafast.bat` and run it from command line.<br/>
+For other OS: download `metafast.jar` and run it via command `java -jar metafast.jar`.<br/>
+
+
 To see full documentation visit <http://github.com/ctlab/metafast/wiki>.
 
 
