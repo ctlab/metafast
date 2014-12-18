@@ -20,6 +20,15 @@ To run ***metafast*** *JRE* 1.6 or higher is requered.
 * For *Windows*: download `metafast.bat` and run it from the command line.
 * For other OS: download `metafast.jar` and run it via command `java -jar metafast.jar`.
 
+If you would like to build last version from repository (and check the version of built ***metafast***):
+~~~
+git clone https://github.com/ctlab/metafast.git
+cd metafast 
+ant
+./out/metafast.sh --version
+~~~
+
+
 ### Example
 
 Download [tinytest_A.fastq](http://github.com/ctlab/metafast/raw/master/test_data/tinytest_A.fastq) and [tinytest_B.fastq](https://github.com/ctlab/metafast/raw/master/test_data/tinytest_B.fastq) and run the command:
