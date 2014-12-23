@@ -104,14 +104,22 @@ public class DistanceMatrixBuilderMain extends Tool {
         addSubTool(distMatrixCalculator);
     }
 
+    public HeatMapMakerMain heatMapMaker = new HeatMapMakerMain();
+    {
+        setFix(heatMapMaker.matrixFile, distMatrixCalculator.matrixFile);
+        addSubTool(heatMapMaker);
+    }
+
 
     @Override
     protected void runImpl() throws ExecutionFailedException {
+        info("Found " + inputFiles.get().length + " libraries to process");
         addStep(kmersCounter);
         addStep(seqBuilder);
         addStep(compCutter);
         addStep(featuresCalculator);
         addStep(distMatrixCalculator);
+        addStep(heatMapMaker);
     }
 
 

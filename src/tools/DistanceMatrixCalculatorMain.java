@@ -70,6 +70,7 @@ public class DistanceMatrixCalculatorMain extends Tool {
         } catch (FileNotFoundException e) {
             throw new ExecutionFailedException("Failed to print matrix to " + matrixPath);
         }
+        matrixFile.set(new File(matrixPath));
     }
 
     private void printMatrix(double[][] matrix, String fp) throws FileNotFoundException {
