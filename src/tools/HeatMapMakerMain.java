@@ -16,7 +16,7 @@ import java.util.StringTokenizer;
 
 public class HeatMapMakerMain extends Tool {
     public static final String NAME = "heatmap-maker";
-    public static final String DESCRIPTION = "constructs and prints heatmap for distance matrix";
+    public static final String DESCRIPTION = "constructs heatmap with dendrogram for distance matrix";
 
 
     public final Parameter<File> matrixFile = addParameter(new FileParameterBuilder("matrix-file")
@@ -88,14 +88,14 @@ public class HeatMapMakerMain extends Tool {
             }
         }
         for (int i = fn; i < data.size(); i++) {
-            st = new StringTokenizer(data.get(i), DistanceMatrixCalculatorMain.SEPARATOR);
+            st = new StringTokenizer(data.get(i));
             if (st.hasMoreTokens()) {
                 throw new ExecutionFailedException("Can't parse matrix, too much rows");
             }
         }
 
         // converting to matrix and names
-        boolean withNames = true;
+        boolean withNames = false;
         int n = dataArray.length;
         if (dataArray[0][0].equals("#")) {  // with names
             withNames = true;

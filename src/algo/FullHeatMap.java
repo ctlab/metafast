@@ -348,14 +348,14 @@ public class FullHeatMap {
         BufferedImage heatMap = createHeatMapWithNames();
         graphics.drawImage(heatMap, dx_before_dendrogram + dx_for_dendrogram, 0, null);
 
-        BufferedImage dendrogram = createLeftDendrogram();
-        graphics.drawImage(dendrogram, 0, dy_for_names, null);
-
         if (n >= 2) {
-            BufferedImage color = createColorScale();
-            graphics.drawImage(color, dx_before_dendrogram + dx_for_dendrogram - 120,
-                    dy_for_names + gridSize + dy_before_color, null);
+            BufferedImage dendrogram = createLeftDendrogram();
+            graphics.drawImage(dendrogram, 0, dy_for_names, null);
         }
+
+        BufferedImage color = createColorScale();
+        graphics.drawImage(color, dx_before_dendrogram + dx_for_dendrogram - 120,
+                dy_for_names + gridSize + dy_before_color, null);
 
         return image;
     }

@@ -3,7 +3,7 @@ comparison-script                        tools.CompareReadsAndComponentsMain    
 component-cutter                         tools.ComponentCutterMain                                                        Build graph components from tangled graph
 dist-matrix-calculator                   tools.DistanceMatrixCalculatorMain                                               Calculates distance matrix using features values
 features-calculator                      tools.FeaturesCalculatorMain                                                     Calculates features values for input reads files
-heatmap-maker                            tools.HeatMapMakerMain                                                           constructs and prints heatmap for distance matrix
+heatmap-maker                            tools.HeatMapMakerMain                                                           constructs heatmap with dendrogram for distance matrix
 kmer-counter                             tools.KmersCounterMain                                                           Count k-mers in given reads with ArrayLong2IntHashMap
 kmer-counter-many                        tools.KmersCounterForManyFilesMain                                               Count k-mers for many files independently
 matrix-builder                           tools.DistanceMatrixBuilderMain                                                  Builds the distance matrix for input sequences
