@@ -47,12 +47,13 @@ public class SeqBuilderMain extends Tool {
             .optional()
             .withShortOpt("b")
             .withDescription("maximal frequency for a k-mer to be assumed erroneous")
+            .withDefaultValue(1)
             .create());
 
     public final Parameter<Integer> bottomCutPercent = addParameter(new IntParameterBuilder("bottom-cut-percent")
             .optional()
             .withShortOpt("bp")
-            .withDescription("k-mers percent to be assumed erroneous")
+            .withDescription("k-mers percent to be assumed erroneous (if set, maximal-bad-frequency value isn't used)")
             .create());
 
     public final Parameter<Integer> sequenceLen = addParameter(new IntParameterBuilder("sequence-len")
@@ -75,10 +76,6 @@ public class SeqBuilderMain extends Tool {
 
     @Override
     protected void runImpl() throws ExecutionFailedException {
-        if (maximalBadFrequency.get() != null && bottomCutPercent.get() != null) {
-            throw new IllegalArgumentException("-b and -bp can not be set both");
-        }
-
         Timer t = new Timer();
         BigLong2ShortHashMap hm =
                 IOUtils.loadKmers(inputFiles.get(), maximalBadFrequency.get(), availableProcessors.get(), logger);
@@ -104,6 +101,7 @@ public class SeqBuilderMain extends Tool {
         }
 
         if (bottomCutPercent.get() != null) {
+            info("Using bottom cut percent = " + bottomCutPercent.get());
             long kmersToCut = totalKmers * bottomCutPercent.get() / 100;
             debug("K-mers under given threshold = " + NumUtils.groupDigits(kmersToCut));
             long currentKmersCount = 0;
@@ -116,19 +114,20 @@ public class SeqBuilderMain extends Tool {
             }
         }
 
-        if (maximalBadFrequency.get() == null) {
-            int threshold = 1;
-            long currentSum = 0;
-            while (stat[threshold] * (long) threshold > stat[threshold + 1] * (long) (threshold + 1)) {
-                currentSum += stat[threshold];
-                if (currentSum * 2 > totalKmers) {
-                    debug("Threshold search stopped at 50 %");
-                    break;
-                }
-                threshold++;
-            }
-            maximalBadFrequency.set(threshold);
-        }
+        // currently not used
+//        if (maximalBadFrequency.get() == null) {
+//            int threshold = 1;
+//            long currentSum = 0;
+//            while (stat[threshold] * (long) threshold > stat[threshold + 1] * (long) (threshold + 1)) {
+//                currentSum += stat[threshold];
+//                if (currentSum * 2 > totalKmers) {
+//                    debug("Threshold search stopped at 50 %");
+//                    break;
+//                }
+//                threshold++;
+//            }
+//            maximalBadFrequency.set(threshold);
+//        }
 
         info("Using maximal bad frequency = " + maximalBadFrequency.get());
 

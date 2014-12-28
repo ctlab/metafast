@@ -28,7 +28,7 @@ public class ComponentsBuilder {
         PrintWriter statPW = new PrintWriter(statFP);
         statPW.println("# component.size\tcomponent.weight\tfreqThreshold");
         for (int freqThreshold = 0; ; freqThreshold++) {
-            List<ConnectedComponent> components = getComponents(hm, k, freqThreshold, processedKmers);
+            List<ConnectedComponent> components = getComponents(hm, k, freqThreshold, b2, processedKmers);
             if (components.size() == 0) {
                 break;
             }
@@ -58,7 +58,7 @@ public class ComponentsBuilder {
     }
 
     private static List<ConnectedComponent> getComponents(BigLong2ShortHashMap hm,
-                                                   int k, int freqThreshold,
+                                                   int k, int freqThreshold, int b2,
                                                    BigLongHashSet processedKmers) {
         List<ConnectedComponent> ans = new ArrayList<ConnectedComponent>();
 
@@ -70,7 +70,7 @@ public class ComponentsBuilder {
             long kmer = entry.getKey();
             short value = entry.getValue();
             if (value > freqThreshold && !processedKmers.contains(kmer)) {
-                ConnectedComponent comp = getComponent(hm, k, kmer, freqThreshold, processedKmers);
+                ConnectedComponent comp = getComponent(hm, k, kmer, freqThreshold, b2, processedKmers);
                 ans.add(comp);
             }
         }
@@ -81,7 +81,7 @@ public class ComponentsBuilder {
     private static ConnectedComponent getComponent(BigLong2ShortHashMap hm,
                                                    int k,
                                                    long startKmer,
-                                                   int freqThreshold,
+                                                   int freqThreshold, int b2,
                                                    BigLongHashSet processedKmers) {
 
         ConnectedComponent ans = new ConnectedComponent();
@@ -102,8 +102,10 @@ public class ComponentsBuilder {
                 if (value > freqThreshold && !processedKmers.contains(neighbour)) {
                     queue.enqueue(neighbour);
                     processedKmers.add(neighbour);
-                    ans.add(neighbour);
-                    weight += value;
+                    if (ans.size() < b2) {
+                        ans.add(neighbour);
+                        weight += value;
+                    }
                 }
             }
         }
