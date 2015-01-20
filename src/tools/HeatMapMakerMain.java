@@ -5,6 +5,7 @@ import ru.ifmo.genetics.utils.FileUtils;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
+import ru.ifmo.genetics.utils.tool.inputParameterBuilder.BoolParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileParameterBuilder;
 
 import javax.imageio.ImageIO;
@@ -25,6 +26,24 @@ public class HeatMapMakerMain extends Tool {
             .withDescription("file with distance matrix")
             .create());
 
+    public final Parameter<Boolean> withoutRenumbering = addParameter(new BoolParameterBuilder("without-renumbering")
+            .important()
+            .withShortOpt("wr")
+            .withDescription("do not renumber samples in the heatmap")
+            .create());
+
+    public final Parameter<File> heatmapFile = addParameter(new FileParameterBuilder("heatmap-file")
+            .optional()
+            .withDefaultComment("<dist-matrix-file>_heatmap.png")
+            .withDescription("resulting heatmap file")
+            .create());
+
+    public final Parameter<File> newMatrixFile = addParameter(new FileParameterBuilder("newMatrix-file")
+            .optional()
+            .withDefaultComment("<dist-matrix-file>_renumbered.txt")
+            .withDescription("resulting renumbered matrix file")
+            .create());
+
 
     private double[][] matrix;
     private String[] names;
@@ -38,18 +57,30 @@ public class HeatMapMakerMain extends Tool {
             throw new ExecutionFailedException("Can't read matrix file " + matrixFile.get(), e);
         }
 
-        String fileName = FileUtils.removeExtension(matrixFile.get().toString(), ".txt");
-        fileName += "_heatmap.png";
+        String filePrefix = FileUtils.removeExtension(matrixFile.get().toString(), ".txt");
+        String heatmapPath = (heatmapFile.get() != null) ? heatmapFile.get().getPath() :
+                filePrefix + "_heatmap.png";
 
         FullHeatMap maker = new FullHeatMap(matrix, names);
-        BufferedImage image = maker.createFullHeatMap();
+        BufferedImage image = maker.createFullHeatMap(!withoutRenumbering.get());
         try {
-            ImageIO.write(image, "png", new File(fileName));
+            ImageIO.write(image, "png", new File(heatmapPath));
         } catch (IOException e) {
-            throw new ExecutionFailedException("Can't save image to file " + fileName, e);
+            throw new ExecutionFailedException("Can't save image to file " + heatmapPath, e);
         }
+        info("Heatmap for matrix saved to " + heatmapPath);
 
-        info("Heatmap for matrix saved to " + fileName);
+        if (!withoutRenumbering.get()) {
+            // print renumbered matrix
+            String newMatrixPath = (newMatrixFile.get() != null) ? newMatrixFile.get().getPath() :
+                    filePrefix + "_renumbered.txt";
+            try {
+                DistanceMatrixCalculatorMain.printMatrix(matrix, newMatrixPath, names, maker.perm);
+            } catch (FileNotFoundException e) {
+                throw new ExecutionFailedException("Can't save renumbered matrix to file " + newMatrixPath, e);
+            }
+            info("Renumbered matrix saved to " + newMatrixPath);
+        }
     }
 
     private void parseMatrix(File f) throws IOException, ExecutionFailedException {

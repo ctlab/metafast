@@ -28,6 +28,7 @@ public class ComponentCutterMain extends Tool {
             .create());
 
     public final Parameter<Integer> minLen = addParameter(new IntParameterBuilder("min-seq-len")
+            .important()
             .withShortOpt("l")
             .withDescription("minimum sequence length to be added")
             .withDefaultValue(100)

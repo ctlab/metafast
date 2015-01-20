@@ -1,9 +1,9 @@
 package algo;
 
-import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.LongArrayFIFOQueue;
 import org.apache.log4j.Logger;
-import ru.ifmo.genetics.structures.map.ArrayLong2IntHashMap;
+import ru.ifmo.genetics.statistics.QuantitativeStatistics;
+import ru.ifmo.genetics.statistics.Timer;
 import ru.ifmo.genetics.structures.map.BigLong2ShortHashMap;
 import ru.ifmo.genetics.structures.map.MutableLongShortEntry;
 import ru.ifmo.genetics.structures.set.BigLongHashSet;
@@ -28,10 +28,12 @@ public class ComponentsBuilder {
         PrintWriter statPW = new PrintWriter(statFP);
         statPW.println("# component.size\tcomponent.weight\tfreqThreshold");
         for (int freqThreshold = 0; ; freqThreshold++) {
+            Timer t = new Timer();
             List<ConnectedComponent> components = getComponents(hm, k, freqThreshold, b2, processedKmers);
             if (components.size() == 0) {
                 break;
             }
+            logger.debug("Time to find components = " + t);
             int added = 0;
             for (ConnectedComponent comp : components) {
                 if (comp.size() < b1) {
@@ -78,6 +80,8 @@ public class ComponentsBuilder {
         return ans;
     }
 
+    private static LongArrayFIFOQueue queue = new LongArrayFIFOQueue(1 << 16);
+
     private static ConnectedComponent getComponent(BigLong2ShortHashMap hm,
                                                    int k,
                                                    long startKmer,
@@ -87,7 +91,7 @@ public class ComponentsBuilder {
         ConnectedComponent ans = new ConnectedComponent();
         long weight = 0;
 
-        LongArrayFIFOQueue queue = new LongArrayFIFOQueue();
+        queue.clear();
 
         queue.enqueue(startKmer);
         processedKmers.add(startKmer);

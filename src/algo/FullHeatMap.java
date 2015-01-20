@@ -6,7 +6,6 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
 /**
  * Constructing full heat map with dendrogram for n objects.
@@ -47,6 +46,8 @@ public class FullHeatMap {
     protected final double[][] distMatrix;
     protected final double low, high;
 
+    public final int[] perm;
+
 
 
     public FullHeatMap(double[][] distMatrix, String[] names) {
@@ -61,6 +62,10 @@ public class FullHeatMap {
         this.names = names;
         gridSize = n * cellSize + (n + 1) * borderLineSize;
         dx_for_dendrogram = getDendrogramSize(n);
+        perm = new int[n];
+        for (int i = 0; i < n; i++) {
+            perm[i] = i;
+        }
     }
 
 
@@ -106,7 +111,7 @@ public class FullHeatMap {
         // filling
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
-                graphics.setColor(getColor(distMatrix[j][i]));
+                graphics.setColor(getColor(distMatrix[perm[j]][perm[i]]));
                 graphics.fillRect(i * cellSize + (i + 1) * borderLineSize, j * cellSize + (j + 1) * borderLineSize,
                         cellSize, cellSize);
             }
@@ -136,10 +141,10 @@ public class FullHeatMap {
         newTransform.rotate(-Math.PI / 2, gridSize / 2.0, dy_for_names + gridSize / 2.0);
         for (int i = 0; i < n; i++) {
             int yc = dy_for_names + (i + 1) * (cellSize + borderLineSize) - cellSize / 3;
-            graphics.drawString(names[i], gridSize + 10, yc); // row name
+            graphics.drawString(names[perm[i]], gridSize + 10, yc); // row name
 
             graphics.setTransform(newTransform);
-            graphics.drawString(names[i], gridSize + 10, yc); // column name
+            graphics.drawString(names[perm[i]], gridSize + 10, yc); // column name
             graphics.setTransform(originalTransform);
         }
 
@@ -162,7 +167,8 @@ public class FullHeatMap {
     // ============================   Clustering objects   ============================
 
     class Node {
-        int n = -1;    // object number, or -1 - if not a leaf
+        int no = -1;    // object number, or -1 - if not a leaf
+        int leafs = 1;  // number of leafs
 
         Node left, right;
         double distance;
@@ -180,7 +186,7 @@ public class FullHeatMap {
         Node[] nodes = new Node[n];
         for (int i = 0; i < n; i++) {
             Node c = new Node();
-            c.n = i;
+            c.no = i;
             c.dx = 0;
             c.dy = (i + 1) * borderLineSize + i * cellSize + cellSize / 2;
             nodes[i] = c;
@@ -228,6 +234,7 @@ public class FullHeatMap {
             root.left = nodes[i];
             root.right = nodes[j];
             root.distance = minDist;
+            root.leafs = root.left.leafs + root.right.leafs;
 
             root.dy = (root.left.dy + root.right.dy) / 2;
             root.dx = (int) (minDist / high * dx_for_dendrogram);
@@ -251,6 +258,9 @@ public class FullHeatMap {
     }
 
     protected double distanceBetweenGroups(int[] g1, int g1n, int[] g2, int g2n) {
+        if (g1n == 0 || g2n == 0) {
+            return -1;
+        }
         double sum = 0;
         for (int i = 0; i < g1n; i++) {
             for (int j = 0; j < g2n; j++) {
@@ -264,8 +274,8 @@ public class FullHeatMap {
         if (n == null) {
             return 0;
         }
-        if (n.n >= 0) {
-            e[first] = n.n;
+        if (n.no >= 0) {
+            e[first] = n.no;
             return 1;
         }
         int c = getGroup(n.left,  e, first);
@@ -273,8 +283,21 @@ public class FullHeatMap {
         return c;
     }
 
+    protected void renumber(Node node, int first) {
+        if (node.no >= 0) {
+            // node is leaf
+            perm[first] = node.no;
+            node.dy = (first + 1) * borderLineSize + first * cellSize + cellSize / 2;
+            return;
+        }
 
-    public BufferedImage createLeftDendrogram() {
+        renumber(node.left, first);
+        renumber(node.right, first + node.left.leafs);
+        node.dy = (node.left.dy + node.right.dy) / 2;
+    }
+
+
+    public BufferedImage createLeftDendrogram(boolean shouldRenumber) {
         int width = dx_before_dendrogram + dx_for_dendrogram;
         int height = gridSize;
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
@@ -283,6 +306,10 @@ public class FullHeatMap {
         graphics.fillRect(0, 0, width, height);
 
         Node root = clusterObjects();
+        if (shouldRenumber) {
+            renumber(root, 0);
+        }
+
         graphics.setColor(Color.BLACK);
         graphics.setStroke(new BasicStroke(borderLineSize));
         drawClusterNode(root, graphics, width);
@@ -291,7 +318,7 @@ public class FullHeatMap {
     }
 
     void drawClusterNode(Node n, Graphics2D graphics, int width) {
-        if (n == null || n.n >= 0) {
+        if (n == null || n.no >= 0) {
             return;
         }
 
@@ -337,7 +364,7 @@ public class FullHeatMap {
         return image;
     }
 
-    public BufferedImage createFullHeatMap() {
+    public BufferedImage createFullHeatMap(boolean shouldRenumber) {
         int width = dx_before_dendrogram + dx_for_dendrogram + gridSize + dx_for_names;
         int height = dy_for_names + gridSize + dy_before_color + dy_scale + dy_after_color;
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
@@ -345,13 +372,13 @@ public class FullHeatMap {
         graphics.setBackground(Color.WHITE);
         graphics.fillRect(0, 0, width, height);
 
-        BufferedImage heatMap = createHeatMapWithNames();
-        graphics.drawImage(heatMap, dx_before_dendrogram + dx_for_dendrogram, 0, null);
-
         if (n >= 2) {
-            BufferedImage dendrogram = createLeftDendrogram();
+            BufferedImage dendrogram = createLeftDendrogram(shouldRenumber);
             graphics.drawImage(dendrogram, 0, dy_for_names, null);
         }
+
+        BufferedImage heatMap = createHeatMapWithNames();
+        graphics.drawImage(heatMap, dx_before_dendrogram + dx_for_dendrogram, 0, null);
 
         BufferedImage color = createColorScale();
         graphics.drawImage(color, dx_before_dendrogram + dx_for_dendrogram - 120,
@@ -362,11 +389,11 @@ public class FullHeatMap {
 
 
     public static void main(String[] args) throws IOException {
-        double[][] matrix = {{  0, 0.9,   1, 0.7, 1},
-                             {0.9,   0, 0.1, 0.5, 1},
-                             {  1, 0.1,   0, 0.5, 1},
-                             {0.7, 0.5, 0.5,   0, 1},
-                             {  1,   1,   1,   1, 0}};
+        double[][] matrix = {{  0, 0.9,   1, 0.9, 0.8},
+                             {0.9,   0, 0.5, 0.6, 0.1},
+                             {  1, 0.5,   0, 0.2, 0.6},
+                             {0.9, 0.6, 0.2,   0, 0.7},
+                             {0.8, 0.1, 0.6, 0.7, 0}};
         for (int i = 0; i < matrix.length; i++) {
             for (int j = 0; j < matrix.length; j++) {
                 for (int k = 0; k < matrix.length; k++) {
@@ -384,7 +411,7 @@ public class FullHeatMap {
                 "Cnot", "Do not know", "mmmm"};
 
         FullHeatMap hm = new FullHeatMap(matrix, names);
-        BufferedImage image = hm.createFullHeatMap();
+        BufferedImage image = hm.createFullHeatMap(true);
 
         ImageIO.write(image, "png", new File("test.png"));
     }

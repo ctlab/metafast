@@ -56,6 +56,12 @@ public class DistanceMatrixBuilderMain extends Tool {
             .withDescription("resulting distance matrix file")
             .create());
 
+    public final Parameter<File> heatmapFile = addParameter(new FileParameterBuilder("heatmap-file")
+            .optional()
+            .withDefaultComment("<workDir>/matrices/dist_matrix_<date>_<time>_heatmap.png")
+            .withDescription("resulting heatmap file")
+            .create());
+
 
 
     // running tools
@@ -107,6 +113,8 @@ public class DistanceMatrixBuilderMain extends Tool {
     public HeatMapMakerMain heatMapMaker = new HeatMapMakerMain();
     {
         setFix(heatMapMaker.matrixFile, distMatrixCalculator.matrixFile);
+        setFix(heatMapMaker.heatmapFile, heatmapFile);
+        setFix(heatMapMaker.newMatrixFile, distMatrixCalculator.matrixFile);    // rewrite matrix file
         addSubTool(heatMapMaker);
     }
 

@@ -64,8 +64,13 @@ public class DistanceMatrixCalculatorMain extends Tool {
 
         String timestamp = new SimpleDateFormat("yyyy.MM.dd_HH.mm.ss").format(new Date());
         String matrixPath = matrixFile.get().getPath().replace("$DT", timestamp);
+        String[] names = new String[featuresFiles.get().length];
+        for (int i = 0; i < names.length; i++) {
+            names[i] = featuresFiles.get()[i].getName();
+        }
+
         try {
-            printMatrix(distMatrix, matrixPath);
+            printMatrix(distMatrix, matrixPath, names, null);
             info("Distance matrix printed to " + matrixPath);
         } catch (FileNotFoundException e) {
             throw new ExecutionFailedException("Failed to print matrix to " + matrixPath);
@@ -73,34 +78,38 @@ public class DistanceMatrixCalculatorMain extends Tool {
         matrixFile.set(new File(matrixPath));
     }
 
-    private void printMatrix(double[][] matrix, String fp) throws FileNotFoundException {
+    public static void printMatrix(double[][] matrix, String fp, String[] names, int[] perm) throws FileNotFoundException {
         File f = new File(fp);
         FileUtils.makeSubDirsOnly(f);
-        PrintWriter matrixPW = new PrintWriter(f);
+        PrintWriter out = new PrintWriter(f);
 
-        if (!withoutNames.get()) {
-            matrixPW.print("#");
-            for (File featuresFile : featuresFiles.get()) {
-                matrixPW.print(SEPARATOR);
-                matrixPW.print(featuresFile.getName());
+        if (names != null) {
+            out.print("#");
+            for (int i = 0; i < names.length; i++) {
+                out.print(SEPARATOR);
+                out.print(names[(perm == null) ? i : perm[i]]);
             }
-            matrixPW.println();
+            out.println();
         }
 
         for (int i = 0; i < matrix.length; i++) {
-            if (!withoutNames.get()) {
-                matrixPW.print(featuresFiles.get()[i].getName() + SEPARATOR);
+            if (names != null) {
+                out.print(names[(perm == null) ? i : perm[i]] + SEPARATOR);
             }
             for (int j = 0; j < matrix[i].length; j++) {
                 if (j > 0) {
-                    matrixPW.print(SEPARATOR);
+                    out.print(SEPARATOR);
                 }
-                matrixPW.print(matrix[i][j]);
+                if (perm == null) {
+                    out.print(matrix[i][j]);
+                } else {
+                    out.print(matrix[perm[i]][perm[j]]);
+                }
             }
-            matrixPW.println();
+            out.println();
         }
 
-        matrixPW.close();
+        out.close();
     }
 
     private List<Long> readVector(File file) throws IOException {
