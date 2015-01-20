@@ -64,9 +64,12 @@ public class DistanceMatrixCalculatorMain extends Tool {
 
         String timestamp = new SimpleDateFormat("yyyy.MM.dd_HH.mm.ss").format(new Date());
         String matrixPath = matrixFile.get().getPath().replace("$DT", timestamp);
-        String[] names = new String[featuresFiles.get().length];
-        for (int i = 0; i < names.length; i++) {
-            names[i] = featuresFiles.get()[i].getName();
+        String[] names = null;
+        if (!withoutNames.get()) {
+            names = new String[featuresFiles.get().length];
+            for (int i = 0; i < names.length; i++) {
+                names[i] = featuresFiles.get()[i].getName();
+            }
         }
 
         try {
@@ -144,7 +147,6 @@ public class DistanceMatrixCalculatorMain extends Tool {
 
     @Override
     protected void cleanImpl() {
-
     }
 
     public static void main(String[] args) {

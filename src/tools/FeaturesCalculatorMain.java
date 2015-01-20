@@ -40,11 +40,12 @@ public class FeaturesCalculatorMain extends Tool {
     public final Parameter<File[]> readsFiles = addParameter(new FileMVParameterBuilder("reads")
             .withShortOpt("i")
             .withDescription("FASTQ, BINQ, FASTA reads")
+            .withDefaultValue(new File[]{})
             .create());
 
     public final Parameter<File[]> kmersFiles = addParameter(new FileMVParameterBuilder("kmers")
             .withShortOpt("ka")
-            .withDescription("additional k-mers files in binary (long+int) format")
+            .withDescription("k-mers files in binary (long+int) format")
             .withDefaultValue(new File[]{})
             .create());
 
@@ -120,7 +121,7 @@ public class FeaturesCalculatorMain extends Tool {
                 IOUtils.calculatePresenceForKmers(new File[]{kmersFile}, hm,
                         availableProcessors.get(), logger);
 
-                File outFile = new File(outDir, FileUtils.removeExtension(kmersFile.getName()) + ".vec");
+                File outFile = new File(outDir, FileUtils.removeExtension(kmersFile.getName(), ".kmers.bin") + ".vec");
                 buildAndPrintVector(components, hm, threshold.get(), outFile);
                 info("Features for file " + kmersFile + " printed to " + outFile);
                 featuresFiles[curFiles] = outFile;

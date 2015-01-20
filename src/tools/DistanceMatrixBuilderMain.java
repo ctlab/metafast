@@ -4,6 +4,7 @@ import ru.ifmo.genetics.Runner;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
+import ru.ifmo.genetics.utils.tool.inputParameterBuilder.BoolParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileMVParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.IntParameterBuilder;
@@ -48,6 +49,10 @@ public class DistanceMatrixBuilderMain extends Tool {
             .withShortOpt("l")
             .withDescription("minimum sequence length to be added to a component (in nucleotides)")
             .withDefaultValue(100)
+            .create());
+
+    public final Parameter<Boolean> useReadsForFeaturesCalculating = addParameter(new BoolParameterBuilder("use-reads-for-features-calculating")
+            .withDescription("use reads instead of kmers for features calculating")
             .create());
 
     public final Parameter<File> matrixFile = addParameter(new FileParameterBuilder("matrix-file")
@@ -97,8 +102,8 @@ public class DistanceMatrixBuilderMain extends Tool {
     {
         setFix(featuresCalculator.k, k);
         setFix(featuresCalculator.componentsFile, compCutter.componentsFileOut);
-        setFix(featuresCalculator.readsFiles, inputFiles);
-        setFixDefault(featuresCalculator.kmersFiles);
+        setFixDefault(featuresCalculator.readsFiles);
+        setFix(featuresCalculator.kmersFiles, kmersCounter.resultingKmerFiles);
         setFixDefault(featuresCalculator.threshold);
         addSubTool(featuresCalculator);
     }
@@ -122,6 +127,11 @@ public class DistanceMatrixBuilderMain extends Tool {
     @Override
     protected void runImpl() throws ExecutionFailedException {
         info("Found " + inputFiles.get().length + " libraries to process");
+        if (useReadsForFeaturesCalculating.get()) {
+            setFix(featuresCalculator.kmersFiles, new File[]{});
+            setFix(featuresCalculator.readsFiles, inputFiles);
+        }
+
         addStep(kmersCounter);
         addStep(seqBuilder);
         addStep(compCutter);
