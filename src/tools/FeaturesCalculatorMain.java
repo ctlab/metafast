@@ -6,6 +6,7 @@ import ru.ifmo.genetics.structures.map.BigLong2LongHashMap;
 import ru.ifmo.genetics.structures.map.BigLong2ShortHashMap;
 import ru.ifmo.genetics.utils.Misc;
 import ru.ifmo.genetics.utils.NumUtils;
+import ru.ifmo.genetics.utils.TextUtils;
 import ru.ifmo.genetics.utils.tool.values.InMemoryValue;
 import ru.ifmo.genetics.utils.tool.values.InValue;
 import structures.ConnectedComponent;
@@ -18,6 +19,7 @@ import ru.ifmo.genetics.utils.FileUtils;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class FeaturesCalculatorMain extends Tool {
@@ -82,10 +84,6 @@ public class FeaturesCalculatorMain extends Tool {
 
 
         // preparing
-        long kmers = 0;
-        for (ConnectedComponent component : components) {
-            kmers += component.size();
-        }
         BigLong2LongHashMap hm = new BigLong2LongHashMap(
                 (int) (Math.log(availableProcessors.get()) / Math.log(2)) + 4, 12);
         for (ConnectedComponent component : components) {
@@ -93,7 +91,9 @@ public class FeaturesCalculatorMain extends Tool {
                 hm.put(kmer, 0);
             }
         }
-        debug("Memory used (before processing files) = " + Misc.usedMemoryAsString() + ", time = " + t);
+        debug("Kmers in components = " + NumUtils.groupDigits(hm.size()));
+        final long[] vector = new long[components.size()];
+        debug("Memory used (before processing files) = " + Misc.usedMemoryAsString() + ", Time for preparing = " + t);
 
 
         int featuresFilesCount = (readsFiles.get() == null ? 0 : readsFiles.get().length)
@@ -108,7 +108,7 @@ public class FeaturesCalculatorMain extends Tool {
                         availableProcessors.get(), logger);
 
                 File outFile = new File(outDir, ReadersUtils.readDnaLazy(readsFile).name() + ".vec");
-                buildAndPrintVector(components, hm, threshold.get(), outFile);
+                buildAndPrintVector(components, hm, threshold.get(), vector, outFile);
                 info("Features for file " + readsFile.getName() + " printed to " + outFile);
                 featuresFiles[curFiles] = outFile;
                 curFiles++;
@@ -122,8 +122,8 @@ public class FeaturesCalculatorMain extends Tool {
                         availableProcessors.get(), logger);
 
                 File outFile = new File(outDir, FileUtils.removeExtension(kmersFile.getName(), ".kmers.bin") + ".vec");
-                buildAndPrintVector(components, hm, threshold.get(), outFile);
-                info("Features for file " + kmersFile + " printed to " + outFile);
+                buildAndPrintVector(components, hm, threshold.get(), vector, outFile);
+                info("Features for file " + kmersFile.getName() + " printed to " + outFile);
                 featuresFiles[curFiles] = outFile;
                 curFiles++;
             }
@@ -133,32 +133,57 @@ public class FeaturesCalculatorMain extends Tool {
         debug("Features-calculator has finished! Time = " + t);
     }
 
-    private static void buildAndPrintVector(List<ConnectedComponent> components,
-                                            BigLong2LongHashMap hm, int threshold, File outFile)
-            throws ExecutionFailedException {
-        List<Long> vector = new ArrayList<Long>();
+    private void buildAndPrintVector(final List<ConnectedComponent> components, final BigLong2LongHashMap hm,
+                                     final int threshold, final long[] vector, File outFile) throws ExecutionFailedException {
 
-        for (ConnectedComponent component : components) {
-            long kmersInComponent = 0;
-            for (long kmer : component.kmers) {
-                long value = hm.getWithZero(kmer);
-                if (value > threshold) {
-                    kmersInComponent += value;
+        try {
+            debug("Building vector...");
+
+            // calculating
+            Arrays.fill(vector, 0);
+            Thread[] workers = new Thread[availableProcessors.get()];
+            int compPerWorker = (components.size() / workers.length) + ((components.size() % workers.length == 0) ? 0 : 1);
+            for (int i = 0; i < workers.length; i++) {
+                final int from = i * compPerWorker;
+                final int to = Math.min(components.size(), (i + 1) * compPerWorker);
+                if (to > from) {
+                    workers[i] = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            for (int i = from; i < to; i++) {
+                                ConnectedComponent component = components.get(i);
+                                long kmers = 0;
+                                for (long kmer : component.kmers) {
+                                    long value = hm.getWithZero(kmer);
+                                    if (value > threshold) {
+                                        kmers += value;
+                                    }
+                                }
+                                vector[i] = kmers;
+                            }
+                        }
+                    });
+                    workers[i].start();
                 }
             }
-            vector.add(kmersInComponent);
-        }
+            for (Thread thread : workers) {
+                if (thread != null) {
+                    thread.join();
+                }
+            }
 
-        PrintWriter vectorPW = null;
-        try {
-            vectorPW = new PrintWriter(outFile);
-        } catch (FileNotFoundException e) {
-            throw new ExecutionFailedException("Can't create file " + outFile, e);
+            // writing to file
+            PrintWriter out = new PrintWriter(new BufferedWriter(
+                    new OutputStreamWriter(new FileOutputStream(outFile)), 1 << 20));   // 1 Mb buffer
+            for (long kmers : vector) {
+                out.println(kmers);
+            }
+            out.close();
+        } catch (IOException e) {
+            throw new ExecutionFailedException("Can't write vector to file " + outFile, e);
+        } catch (InterruptedException e) {
+            throw new ExecutionFailedException("Calculating thread was interrupted!", e);
         }
-        for (long x : vector) {
-            vectorPW.println(x);
-        }
-        vectorPW.close();
     }
 
     @Override
