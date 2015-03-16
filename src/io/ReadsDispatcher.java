@@ -26,7 +26,7 @@ public class ReadsDispatcher {
     public ReadsDispatcher(Source<Dna> reader, int workRangeSize, BigLong2ShortHashMap hmForMonitoring) {
         this.iterator = reader.iterator();
         this.workRangeSize = workRangeSize;
-        Tool.debug(logger, "Using " + workRangeSize + " reads as workRangeSize");
+//        Tool.debug(logger, "Using " + workRangeSize + " reads as workRangeSize");
         this.hm = hmForMonitoring;
     }
 

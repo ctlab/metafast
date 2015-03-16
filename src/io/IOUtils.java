@@ -27,6 +27,16 @@ public class IOUtils {
 
 
 
+    public static String withP(long cur, long all) {
+        return NumUtils.groupDigits(cur) + " (" + String.format("%.1f", cur * 100.0 / all) + "%)";
+    }
+    public static String withP(long cur, long all, String firstAddition, String secondAddition) {
+        return NumUtils.groupDigits(cur) + " " + firstAddition + " " +
+                "(" + String.format("%.1f", cur * 100.0 / all) + "% " + secondAddition + ")";
+    }
+
+
+
 
     public static long printKmers(BigLong2ShortHashMap hm, int threshold,
                                   File outFile, File stFile) throws IOException {
@@ -145,7 +155,7 @@ public class IOUtils {
             throws ExecutionFailedException {
         try {
             for (File file : files) {
-                Tool.info(logger, "Loading file " + file + "...");
+                Tool.info(logger, "Loading file " + file.getName() + "...");
 
                 InputStream is = new FileInputStream(file);
                 BytesDispatcher dispatcher = new BytesDispatcher(is, KMERS_WORK_RANGE_SIZE, hmForMonitoring);
@@ -166,7 +176,7 @@ public class IOUtils {
                     }
                     throw new ExecutionFailedException("Thread was interrupted", e);
                 }
-                Tool.debug(logger, NumUtils.sizeInBytesAsString(dispatcher.bytesRead) + " of data processed from " + file);
+                Tool.debug(logger, NumUtils.memoryAsString(dispatcher.bytesRead) + " of data processed");
             }
         } catch (IOException e) {
             throw new ExecutionFailedException("Can't load k-mers file", e);
@@ -210,7 +220,7 @@ public class IOUtils {
                                                  int availableProcessors, Logger logger)
             throws ExecutionFailedException {
         BigLong2ShortHashMap hm = new BigLong2ShortHashMap(
-                (int) (Math.log(availableProcessors) / Math.log(2)) + 4, 12);
+                (int) (Math.log(availableProcessors) / Math.log(2)) + 4, 12, true);
 
         ReadsLoadWorker[] workers = new ReadsLoadWorker[availableProcessors];
         for (int i = 0; i < workers.length; ++i) {
@@ -275,7 +285,7 @@ public class IOUtils {
     public static void run(File[] files, ReadsWorker[] workers, BigLong2ShortHashMap hmForMonitoring, Logger logger)
             throws ExecutionFailedException {
         for (File file : files) {
-            Tool.info(logger, "Loading file " + file + "...");
+            Tool.info(logger, "Loading file " + file.getName() + "...");
 
             NamedSource<Dna> reader = ReadersUtils.readDnaLazy(file);
 
@@ -297,7 +307,7 @@ public class IOUtils {
                 }
                 throw new ExecutionFailedException("Thread was interrupted", e);
             }
-            Tool.info(logger, NumUtils.groupDigits(dispatcher.reads) + " reads added from " + file);
+            Tool.info(logger, NumUtils.groupDigits(dispatcher.reads) + " reads added");
         }
     }
 

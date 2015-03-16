@@ -5,27 +5,22 @@ import ru.ifmo.genetics.dna.kmers.ShortKmer;
 
 import java.util.Arrays;
 
-/**
- * Vladimir Ulyantsev
- * Date: 20.01.14
- * Time: 18:38
- */
 public class KmerOperations {
     public static long[] possibleNeighbours(long kmerRepr, int k) {
         long[] ans = new long[8];
 
-        ShortKmer kmer = new ShortKmer(kmerRepr, k);
-        byte rightNuc = kmer.nucAt(k - 1);
-        byte leftNuc = kmer.nucAt(0);
+        ShortKmer goRight = new ShortKmer(kmerRepr, k);
+        goRight.shiftRight((byte) 0);
+        ans[0] = goRight.toLong();
+        ShortKmer goLeft = new ShortKmer(kmerRepr, k);
+        goLeft.shiftLeft((byte) 0);
+        ans[1] = goLeft.toLong();
 
-        for (byte nuc = 0; nuc <= 3; nuc++) {
-            kmer.shiftLeft(nuc);
-            ans[nuc * 2] = kmer.toLong();
-            kmer.shiftRight(rightNuc);
-
-            kmer.shiftRight(nuc);
-            ans[nuc * 2 + 1] = kmer.toLong();
-            kmer.shiftLeft(leftNuc);
+        for (byte nuc = 1; nuc <= 3; nuc++) {
+            goRight.updateAt(k - 1, nuc);
+            ans[nuc*2] = goRight.toLong();
+            goLeft.updateAt(0, nuc);
+            ans[nuc*2 + 1] = goLeft.toLong();
         }
         return ans;
     }

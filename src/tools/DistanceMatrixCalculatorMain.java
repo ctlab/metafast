@@ -1,6 +1,7 @@
 package tools;
 
 import ru.ifmo.genetics.utils.FileUtils;
+import ru.ifmo.genetics.utils.TextUtils;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
@@ -69,6 +70,7 @@ public class DistanceMatrixCalculatorMain extends Tool {
             names = new String[featuresFiles.get().length];
             for (int i = 0; i < names.length; i++) {
                 names[i] = featuresFiles.get()[i].getName();
+                names[i] = FileUtils.removeExtension(names[i], "vec");
             }
         }
 

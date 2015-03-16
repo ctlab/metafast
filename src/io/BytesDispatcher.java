@@ -26,7 +26,7 @@ public class BytesDispatcher {
     public BytesDispatcher(InputStream is, int workRangeSize, BigLong2ShortHashMap hmForMonitoring) {
         this.is = is;
         this.workRangeSize = workRangeSize;
-        Tool.debug(logger, "Using " + workRangeSize + " bytes as workRangeSize");
+//        Tool.debug(logger, "Using " + workRangeSize + " bytes as workRangeSize");
         hm = hmForMonitoring;
     }
 

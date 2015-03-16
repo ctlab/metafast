@@ -79,13 +79,12 @@ public class ComponentCutterMain extends Tool {
             String statFP = workDir + File.separator + "components-stat-" +
                     minComponentSize.get() + "-" + maxComponentSize.get() + ".txt";
             components = ComponentsBuilder.splitStrategy(hm, k.get(), minComponentSize.get(),
-                    maxComponentSize.get(), statFP, logger);
+                    maxComponentSize.get(), statFP, logger, availableProcessors.get());
         } catch (FileNotFoundException e) {
             e.printStackTrace();
             return;
         }
-        info(NumUtils.groupDigits(components.size()) + " components found");
-        debug("Memory used (without running GC) = " + Misc.usedMemoryWithoutRunningGCAsString());
+        info("Total " + NumUtils.groupDigits(components.size()) + " components were found");
 
         try {
             ConnectedComponent.saveComponents(components, componentsFile.get().getAbsolutePath());

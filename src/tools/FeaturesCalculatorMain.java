@@ -77,6 +77,11 @@ public class FeaturesCalculatorMain extends Tool {
             throw new ExecutionFailedException("Couldn't load components", e);
         }
 
+        if (components.size() == 0) {
+            error("No components were found!!! Can't continue the calculations.");
+            System.exit(0);
+        }
+
         String compName = FileUtils.removeExtension(componentsFile.get().getName(), ".bin");
         File outDir = new File(workDir.get(), "vectors");
         outDir.mkdirs();

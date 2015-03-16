@@ -108,8 +108,8 @@ public class ViewMain extends Tool {
 
             for (int i = 0; i < components.size(); i++) {
                 ConnectedComponent component = components.get(i);
-                out.println("Component " + (i + 1) + ", size = " + component.size() + " kmers, " +
-                        "weight = " + component.getWeight() +". Kmers:");
+                out.println("Component " + (i + 1) + ", size = " + component.size + " kmers, " +
+                        "weight = " + component.weight +". Kmers:");
 
                 for (long kmer : component.kmers) {
                     out.println(new ShortKmer(kmer, k.get()).toString());

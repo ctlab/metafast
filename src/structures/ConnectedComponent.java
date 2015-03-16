@@ -1,45 +1,57 @@
 package structures;
 
 import it.unimi.dsi.fastutil.longs.LongArrayList;
+import ru.ifmo.genetics.structures.map.BigLong2ShortHashMap;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class ConnectedComponent {
+public class ConnectedComponent implements Comparable<ConnectedComponent> {
 
+    public long size;
+    public long weight;
+    public int usedFreqThreshold;
+
+    /**
+     * Stores kmers if the component is small (less than b2 vertices).
+     */
     public List<Long> kmers;
 
-    private long weight;
+    /**
+     * Is used in ComponentsBuilder if the component is big.
+     */
+    public BigLong2ShortHashMap hm = null;
+
+
 
     public ConnectedComponent() {
         kmers = new LongArrayList();
+        size = 0;
+        weight = 0;
     }
 
-    public int size() {
-        return kmers.size();
-    }
 
+    public void add(long kmer, short w) {
+        kmers.add(kmer);
+        size++;
+        weight += w;
+    }
     public void add(long kmer) {
         kmers.add(kmer);
+        size++;
     }
 
-    public void setWeight(long weight) {
-        this.weight = weight;
-    }
 
-    public long getWeight() {
-        return weight;
-    }
 
     public static void saveComponents(Collection<ConnectedComponent> components, String fp) throws IOException {
         DataOutputStream outputStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(fp)));
         outputStream.writeInt(components.size());
 
         for (ConnectedComponent component : components) {
-            outputStream.writeInt(component.size());
-            outputStream.writeLong(component.getWeight());
+            outputStream.writeInt((int) component.size);
+            outputStream.writeLong(component.weight);
             for (long kmer : component.kmers) {
                 outputStream.writeLong(kmer);
             }
@@ -50,14 +62,14 @@ public class ConnectedComponent {
 
     public static List<ConnectedComponent> loadComponents(File file) throws IOException {
         DataInputStream inputStream = new DataInputStream(new BufferedInputStream(new FileInputStream(file)));
-        int componentsCnt = inputStream.readInt();
-        List<ConnectedComponent> res = new ArrayList<ConnectedComponent>(componentsCnt);
+        int cnt = inputStream.readInt();
+        List<ConnectedComponent> res = new ArrayList<ConnectedComponent>(cnt);
 
-        for (int i = 0; i < componentsCnt; i++) {
+        for (int i = 0; i < cnt; i++) {
             int componentSize = inputStream.readInt();
             ConnectedComponent component = new ConnectedComponent();
 
-            component.setWeight(inputStream.readLong());
+            component.weight = inputStream.readLong();
             for (int j = 0; j < componentSize; j++) {
                 component.add(inputStream.readLong());
             }
@@ -66,5 +78,19 @@ public class ConnectedComponent {
         inputStream.close();
 
         return res;
+    }
+
+
+    @Override
+    public int compareTo(ConnectedComponent o) {
+        int sign = usedFreqThreshold - o.usedFreqThreshold;
+        if (sign != 0) {
+            return sign;
+        }
+        sign = -Long.compare(weight, o.weight);
+        if (sign != 0) {
+            return sign;
+        }
+        return -Long.compare(size, o.size);
     }
 }
