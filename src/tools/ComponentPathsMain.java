@@ -27,6 +27,8 @@ public class ComponentPathsMain extends Tool {
     public static final String NAME = "component-paths";
     public static final String DESCRIPTION = "Extracts paths in the components";
 
+    public static final int MAX_PATHS_COUNT = (int) 1e6;
+
 
     public final Parameter<Integer> k = addParameter(new IntParameterBuilder("k")
             .mandatory()
@@ -154,6 +156,13 @@ public class ComponentPathsMain extends Tool {
             }
         }
 
+        for (int i = 0; i < n; i++) {
+            if (ans[i].size() == MAX_PATHS_COUNT) {
+                warn("Too many paths in component " + usedComps[i].no + ", " +
+                        "keeping only first " + MAX_PATHS_COUNT + " of them!");
+            }
+        }
+
         info("Sorting...");
         for (List<Sequence> ansI : ans) {
             Collections.sort(ansI, new Comparator<Sequence>() {
@@ -174,7 +183,7 @@ public class ComponentPathsMain extends Tool {
                 throw new RuntimeException("Can't write sequences to file " + file, e);
             }
         }
-        info("Paths for " + n + " components were saved in directory " + outputDir.get());
+        info("Paths for " + n + " component(s) were saved in directory " + outputDir.get());
     }
 
     private void checkAndAddPath(Dna dna, int first, int cur, List<Sequence> ans, ConnectedComponent comp) {
@@ -187,7 +196,9 @@ public class ComponentPathsMain extends Tool {
                     (int) Math.round(avgKmerWeight),
                     0,0 // minWeight and maxWeight are unknown
             );
-            ans.add(seq);
+            if (ans.size() < MAX_PATHS_COUNT) {
+                ans.add(seq);
+            }
         }
     }
 
