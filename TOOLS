@@ -1,6 +1,7 @@
 antibody-sequences-finder                tools.AntibodyFinderMain                                                         Antibody sequences finder in De Bruijn graph
 comparison-script                        tools.CompareReadsAndComponentsMain                                              Statistics
 component-cutter                         tools.ComponentCutterMain                                                        Build graph components from tangled graph
+component-paths                          tools.ComponentPathsMain                                                         Extracts paths in the components
 dist-matrix-calculator                   tools.DistanceMatrixCalculatorMain                                               Calculates distance matrix using features values
 features-calculator                      tools.FeaturesCalculatorMain                                                     Calculates features values for input reads files
 heatmap-maker                            tools.HeatMapMakerMain                                                           constructs heatmap with dendrogram for distance matrix

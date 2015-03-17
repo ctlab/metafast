@@ -12,6 +12,10 @@ public class ConnectedComponent implements Comparable<ConnectedComponent> {
 
     public long size;
     public long weight;
+
+
+    // frequently used (not always)
+    public int no;
     public int usedFreqThreshold;
 
     /**
@@ -74,6 +78,7 @@ public class ConnectedComponent implements Comparable<ConnectedComponent> {
                 component.add(inputStream.readLong());
             }
             res.add(component);
+            component.no = i+1;
         }
         inputStream.close();
 
