@@ -68,14 +68,9 @@ public class FeaturesCalculatorMain extends Tool {
         Timer t = new Timer();
 
         debug("Loading components...");
-        List<ConnectedComponent> components;
-
-        try {
-            components = ConnectedComponent.loadComponents(componentsFile.get());
-            info(NumUtils.groupDigits(components.size()) + " components loaded from " + componentsFile.get());
-        } catch (IOException e) {
-            throw new ExecutionFailedException("Couldn't load components", e);
-        }
+        List<ConnectedComponent> components =
+                ConnectedComponent.loadComponents(componentsFile.get());
+        info(NumUtils.groupDigits(components.size()) + " components loaded from " + componentsFile.get());
 
         if (components.size() == 0) {
             error("No components were found!!! Can't continue the calculations.");

@@ -95,13 +95,9 @@ public class ViewMain extends Tool {
 
 
         if (componentsFile.get() != null) {
-            List<ConnectedComponent> components;
-            try {
-                components = ConnectedComponent.loadComponents(componentsFile.get());
-                info(components.size() + " components loaded from " + componentsFile.get());
-            } catch (IOException e) {
-                throw new ExecutionFailedException("Couldn't load components", e);
-            }
+            List<ConnectedComponent> components =
+                    ConnectedComponent.loadComponents(componentsFile.get());
+            info(components.size() + " components loaded from " + componentsFile.get());
             logger.info("Printing components...");
 
             out.println(components.size() + " components:");

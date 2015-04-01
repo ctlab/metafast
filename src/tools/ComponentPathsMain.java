@@ -39,16 +39,18 @@ public class ComponentPathsMain extends Tool {
     public final Parameter<File> componentsFile = addParameter(new FileParameterBuilder("components-file")
             .mandatory()
             .withShortOpt("cf")
-            .withDescription("file with connected components")
+            .withDescription("binary file with connected components " +
+                    "(usually saved in workDir/component-cutter/components.bin)")
             .create());
 
     public final Parameter<File[]> sequenceFiles = addParameter(new FileMVParameterBuilder("seq")
             .mandatory()
-            .withDescription("FASTQ, BINQ, FASTA sequences (paths)")
+            .withDescription("files with paths (sequences) " +
+                    "(may use workDir/seq-builder-many/sequences/*.seq.fasta)")
             .create());
 
     public final Parameter<Integer[]> components = addParameter(new IntMVParameterBuilder("components")
-            .important()
+            .mandatory()
             .withShortOpt("cm")
             .withDescription("components' numbers to print paths to")
             .withDefaultValue(new Integer[]{})
@@ -57,7 +59,7 @@ public class ComponentPathsMain extends Tool {
     public final Parameter<Boolean> allComponents = addParameter(new BoolParameterBuilder("all-components")
             .important()
             .withShortOpt("a")
-            .withDescription("print paths for all components in component file")
+            .withDescription("print paths for all components in component file (--components option will be ignored)")
             .create());
 
 
@@ -81,21 +83,22 @@ public class ComponentPathsMain extends Tool {
     protected void runImpl() throws ExecutionFailedException {
         Timer t = new Timer();
 
+        if (!allComponents.get() && (components.get().length == 0)) {
+            error("No components to process!!! Do you forget to set --all-components or --components n1,n2,...?");
+            return;
+        }
+
         debug("Loading components...");
         List<ConnectedComponent> allComps;
 
-        try {
-            allComps = ConnectedComponent.loadComponents(componentsFile.get());
-            info(NumUtils.groupDigits(allComps.size()) + " components loaded from " + componentsFile.get());
-        } catch (IOException e) {
-            throw new ExecutionFailedException("Couldn't load components", e);
-        }
+        allComps = ConnectedComponent.loadComponents(componentsFile.get());
+        info(NumUtils.groupDigits(allComps.size()) + " components loaded from " + componentsFile.get());
 
 
         debug("Preparing...");
         int n = allComponents.get() ? allComps.size() : components.get().length;
         if (n == 0) {
-            error("No components to process!!! Did you forget to set --all-components or --components n1,n2,...?");
+            error("No components to process!!!");
             System.exit(0);
         }
         ConnectedComponent[] usedComps = new ConnectedComponent[n];

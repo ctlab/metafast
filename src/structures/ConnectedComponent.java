@@ -2,6 +2,7 @@ package structures;
 
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import ru.ifmo.genetics.structures.map.BigLong2ShortHashMap;
+import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -64,25 +65,33 @@ public class ConnectedComponent implements Comparable<ConnectedComponent> {
         outputStream.close();
     }
 
-    public static List<ConnectedComponent> loadComponents(File file) throws IOException {
-        DataInputStream inputStream = new DataInputStream(new BufferedInputStream(new FileInputStream(file)));
-        int cnt = inputStream.readInt();
-        List<ConnectedComponent> res = new ArrayList<ConnectedComponent>(cnt);
+    public static List<ConnectedComponent> loadComponents(File file) throws ExecutionFailedException {
+        try {
+            DataInputStream inputStream = new DataInputStream(new BufferedInputStream(new FileInputStream(file)));
+            int cnt = inputStream.readInt();
+            List<ConnectedComponent> res = new ArrayList<ConnectedComponent>(cnt);
 
-        for (int i = 0; i < cnt; i++) {
-            int componentSize = inputStream.readInt();
-            ConnectedComponent component = new ConnectedComponent();
+            for (int i = 0; i < cnt; i++) {
+                int componentSize = inputStream.readInt();
+                ConnectedComponent component = new ConnectedComponent();
 
-            component.weight = inputStream.readLong();
-            for (int j = 0; j < componentSize; j++) {
-                component.add(inputStream.readLong());
+                component.weight = inputStream.readLong();
+                for (int j = 0; j < componentSize; j++) {
+                    component.add(inputStream.readLong());
+                }
+                res.add(component);
+                component.no = i + 1;
             }
-            res.add(component);
-            component.no = i+1;
+            inputStream.close();
+            return res;
+        } catch (FileNotFoundException e) {
+            throw new ExecutionFailedException("Can't load components: file not found", e);
+        } catch (EOFException e) {
+            throw new ExecutionFailedException("Can't load components: file corrupted or format mismatch! " +
+                    "Do you set a wrong file?", e);
+        } catch (IOException e) {
+            throw new ExecutionFailedException("Can't load components: unknown IOException", e);
         }
-        inputStream.close();
-
-        return res;
     }
 
 
