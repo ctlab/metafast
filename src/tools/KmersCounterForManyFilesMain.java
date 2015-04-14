@@ -1,6 +1,7 @@
 package tools;
 
 import ru.ifmo.genetics.statistics.Timer;
+import ru.ifmo.genetics.utils.TextUtils;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
@@ -10,7 +11,7 @@ import ru.ifmo.genetics.utils.tool.inputParameterBuilder.IntParameterBuilder;
 import ru.ifmo.genetics.utils.tool.values.InMemoryValue;
 import ru.ifmo.genetics.utils.tool.values.InValue;
 
-import java.io.File;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,6 +48,8 @@ public class KmersCounterForManyFilesMain extends Tool {
             .withDescription("Directory with statistics")
             .withDefaultValue(workDir.append("stats"))
             .create());
+
+    public File[] outputDescFiles = null;
 
 
 
@@ -87,6 +90,25 @@ public class KmersCounterForManyFilesMain extends Tool {
         resultingKmerFilesPr.set(outFiles);
         debug("Kmer-counter-many has finished! Time = " + t);
     }
+
+    @Override
+    protected void postprocessing() {
+        if (outputDescFiles != null) {
+            for (File f : outputDescFiles) {
+                try {
+                    PrintWriter out = new PrintWriter(new FileWriter(f, true));
+                    out.println();
+                    out.println(statsDir.get());
+                    out.println("   Directory with kmer frequency statistics " +
+                            "(statistics files is in text format for every input reads file)");
+                    out.close();
+                } catch (IOException e) {
+                    // does not matter
+                }
+            }
+        }
+    }
+
 
     public static void main(String[] args) {
         new KmersCounterForManyFilesMain().mainImpl(args);

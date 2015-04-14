@@ -57,10 +57,14 @@ public class FeaturesCalculatorMain extends Tool {
             .withDefaultValue(0)
             .create());
 
+    public File[] outputDescFiles = null;
+
 
     // output values
     private final InMemoryValue<File[]> featuresFilesPr = new InMemoryValue<File[]>();
     public final InValue<File[]> featuresFilesOut = addOutput("features-files", featuresFilesPr, File[].class);
+    private final InMemoryValue<File> featuresDirPr = new InMemoryValue<File>();
+    public final InValue<File> featuresDirOut = addOutput("features-files", featuresDirPr, File.class);
 
 
     @Override
@@ -81,6 +85,7 @@ public class FeaturesCalculatorMain extends Tool {
         File outDir = new File(workDir.get(), "vectors");
         outDir.mkdirs();
         debug(outDir + " directory was created for components file " + componentsFile.get().getName());
+        featuresDirPr.set(outDir);
 
 
         // preparing
@@ -189,6 +194,24 @@ public class FeaturesCalculatorMain extends Tool {
     @Override
     protected void cleanImpl() {
     }
+
+    @Override
+    protected void postprocessing() {
+        if (outputDescFiles != null) {
+            for (File f : outputDescFiles) {
+                try {
+                    PrintWriter out = new PrintWriter(new FileWriter(f, true));
+                    out.println();
+                    out.println(featuresDirOut.get());
+                    out.println("   Directory with features values files for every library (in text format)");
+                    out.close();
+                } catch (IOException e) {
+                    // does not matter
+                }
+            }
+        }
+    }
+
 
     public static void main(String[] args) {
         new FeaturesCalculatorMain().mainImpl(args);

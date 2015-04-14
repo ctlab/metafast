@@ -14,9 +14,7 @@ import ru.ifmo.genetics.utils.tool.values.InMemoryValue;
 import ru.ifmo.genetics.utils.tool.values.InValue;
 import structures.Sequence;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -62,6 +60,8 @@ public class SeqBuilderForManyFilesMain extends Tool {
             .withDescription("Destination of resulting FASTA sequences")
             .create());
 
+    public File[] outputDescFiles = null;
+
 
     // output values
     private final InMemoryValue<File[]> outputFilesPr = new InMemoryValue<File[]>();
@@ -103,6 +103,24 @@ public class SeqBuilderForManyFilesMain extends Tool {
         outputFilesPr.set(outFiles);
         debug("Seq-builder-many has finished! Time = " + t);
     }
+
+    @Override
+    protected void postprocessing() {
+        if (outputDescFiles != null) {
+            for (File f : outputDescFiles) {
+                try {
+                    PrintWriter out = new PrintWriter(new FileWriter(f, true));
+                    out.println();
+                    out.println(outputDir.get());
+                    out.println("   Directory with FASTA files - paths from reads for every library");
+                    out.close();
+                } catch (IOException e) {
+                    // does not matter
+                }
+            }
+        }
+    }
+
 
     public static void main(String[] args) {
         new SeqBuilderForManyFilesMain().mainImpl(args);

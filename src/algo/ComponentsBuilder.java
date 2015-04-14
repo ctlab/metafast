@@ -143,9 +143,10 @@ public class ComponentsBuilder {
         // post processing...
         Collections.sort(ans);
         PrintWriter statPW = new PrintWriter(statFP);
-        statPW.println("# component.size\tcomponent.weight\tusedFreqThreshold");
-        for (ConnectedComponent comp : ans) {
-            statPW.println(comp.size + "\t" + comp.weight + "\t" + comp.usedFreqThreshold);
+        statPW.println("# component.no\tcomponent.size\tcomponent.weight\tusedFreqThreshold");
+        for (int i = 0; i < ans.size(); i++) {
+            ConnectedComponent comp = ans.get(i);
+            statPW.println((i + 1) + "\t" + comp.size + "\t" + comp.weight + "\t" + comp.usedFreqThreshold);
         }
         statPW.close();
     }

@@ -328,6 +328,7 @@ public class FullHeatMap {
 
         drawClusterNode(n.left, graphics, width);
         drawClusterNode(n.right, graphics, width);
+
     }
 
 

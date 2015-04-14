@@ -7,10 +7,13 @@ import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.BoolParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileParameterBuilder;
+import ru.ifmo.genetics.utils.tool.values.InMemoryValue;
+import ru.ifmo.genetics.utils.tool.values.InValue;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -32,48 +35,62 @@ public class HeatMapMakerMain extends Tool {
             .withDescription("do not renumber samples in the heatmap")
             .create());
 
-    public final Parameter<File> heatmapFile = addParameter(new FileParameterBuilder("heatmap-file")
-            .optional()
-            .withDefaultComment("<dist-matrix-file>_heatmap.png")
-            .withDescription("resulting heatmap file")
-            .create());
-
     public final Parameter<File> newMatrixFile = addParameter(new FileParameterBuilder("newMatrix-file")
             .optional()
             .withDefaultComment("<dist-matrix-file>_renumbered.txt")
             .withDescription("resulting renumbered matrix file")
             .create());
 
+    public final Parameter<File> heatmapFile = addParameter(new FileParameterBuilder("heatmap-file")
+            .optional()
+            .withDefaultComment("<dist-matrix-file>_heatmap.png")
+            .withDescription("resulting heatmap file")
+            .create());
+
+    public File[] outputDescFiles = null;
+
 
     private double[][] matrix;
     private String[] names;
 
 
+    // output parameters
+    private final InMemoryValue<File> heatmapFilePr = new InMemoryValue<File>();
+    public final InValue<File> heatmapFileOut = addOutput("heatmap-file", heatmapFilePr, File.class);
+    private final InMemoryValue<File> newMatrixFilePr = new InMemoryValue<File>();
+    public final InValue<File> newMatrixFileOut = addOutput("newMatrix-file-out", newMatrixFilePr, File.class);
+
+
+
     @Override
     protected void runImpl() throws ExecutionFailedException {
+        // parsing input matrix...
         try {
             parseMatrix(matrixFile.get());
         } catch (IOException e) {
             throw new ExecutionFailedException("Can't read matrix file " + matrixFile.get(), e);
         }
 
-        String filePrefix = FileUtils.removeExtension(matrixFile.get().toString(), ".txt");
-        String heatmapPath = (heatmapFile.get() != null) ? heatmapFile.get().getPath() :
-                filePrefix + "_heatmap.png";
 
+        // creating full heat map
         FullHeatMap maker = new FullHeatMap(matrix, names);
         BufferedImage image = maker.createFullHeatMap(!withoutRenumbering.get());
-        try {
-            ImageIO.write(image, "png", new File(heatmapPath));
-        } catch (IOException e) {
-            throw new ExecutionFailedException("Can't save image to file " + heatmapPath, e);
-        }
-        info("Heatmap for matrix saved to " + heatmapPath);
 
-        if (!withoutRenumbering.get()) {
-            // print renumbered matrix
-            String newMatrixPath = (newMatrixFile.get() != null) ? newMatrixFile.get().getPath() :
-                    filePrefix + "_renumbered.txt";
+
+
+        // saving results
+        String filePrefix = FileUtils.removeExtension(matrixFile.get().getPath(), ".txt");
+
+        String newMatrixPath = filePrefix + "_renumbered.txt";
+        if (newMatrixFile.get() != null) {
+            newMatrixPath = newMatrixFile.get().getPath();
+            newMatrixPath = newMatrixPath.replace("$DT", startTimestamp);
+        }
+        if (withoutRenumbering.get()) {
+            // OK
+            newMatrixPath = matrixFile.get().getPath();
+        } else {
+            // should renumber
             try {
                 DistanceMatrixCalculatorMain.printMatrix(matrix, newMatrixPath, names, maker.perm);
             } catch (FileNotFoundException e) {
@@ -81,7 +98,23 @@ public class HeatMapMakerMain extends Tool {
             }
             info("Renumbered matrix saved to " + newMatrixPath);
         }
+        newMatrixFilePr.set(new File(newMatrixPath));
+
+
+        String heatmapPath = FileUtils.removeExtension(newMatrixPath, ".txt") + "_heatmap.png";
+        if (heatmapFile.get() != null) {
+            heatmapPath = heatmapFile.get().getPath();
+            heatmapPath = heatmapPath.replace("$DT", startTimestamp);
+        }
+        try {
+            ImageIO.write(image, "png", new File(heatmapPath));
+        } catch (IOException e) {
+            throw new ExecutionFailedException("Can't save image to file " + heatmapPath, e);
+        }
+        info("Heatmap for matrix saved to " + heatmapPath);
+        heatmapFilePr.set(new File(heatmapPath));
     }
+
 
     private void parseMatrix(File f) throws IOException, ExecutionFailedException {
         debug("Parsing matrix from file " + f);
@@ -156,6 +189,30 @@ public class HeatMapMakerMain extends Tool {
         matrix = null;
         names = null;
     }
+
+    @Override
+    protected void postprocessing() {
+        if (outputDescFiles != null) {
+            for (File f : outputDescFiles) {
+                try {
+                    PrintWriter out = new PrintWriter(new FileWriter(f, true));
+                    if (!withoutRenumbering.get()) {
+                        out.println();
+                        out.println(newMatrixFileOut.get());
+                        out.println("   File with resulted distance matrix between samples with new order based on adjacency of the samples");
+                    }
+                    out.println();
+                    out.println(heatmapFileOut.get());
+                    out.println("   Image file with heatmap and dendrogram between samples");
+                    out.println();
+                    out.close();
+                } catch (IOException e) {
+                    // does not matter
+                }
+            }
+        }
+    }
+
 
     public HeatMapMakerMain() {
         super(NAME, DESCRIPTION);

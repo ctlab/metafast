@@ -4,10 +4,10 @@ import algo.ComponentsBuilder;
 import ru.ifmo.genetics.statistics.Timer;
 import ru.ifmo.genetics.structures.map.BigLong2ShortHashMap;
 import ru.ifmo.genetics.utils.Misc;
+import ru.ifmo.genetics.utils.tool.values.InMemoryValue;
 import ru.ifmo.genetics.utils.tool.values.InValue;
 import structures.ConnectedComponent;
 import io.IOUtils;
-import ru.ifmo.genetics.structures.map.ArrayLong2IntHashMap;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
@@ -59,9 +59,13 @@ public class ComponentCutterMain extends Tool {
             .withDefaultValue(workDir.append("components.bin"))
             .create());
 
+    public File[] outputDescFiles = null;
+
 
     // output values
     public final InValue<File> componentsFileOut = addOutput("components-file", componentsFile, File.class);
+    private final InMemoryValue<File> componentsStatPr = new InMemoryValue<File>();
+    public final InValue<File> componentsStatOut = addOutput("components-stat", componentsStatPr, File.class);
 
 
     @Override
@@ -80,6 +84,8 @@ public class ComponentCutterMain extends Tool {
                     minComponentSize.get() + "-" + maxComponentSize.get() + ".txt";
             components = ComponentsBuilder.splitStrategy(hm, k.get(), minComponentSize.get(),
                     maxComponentSize.get(), statFP, logger, availableProcessors.get());
+
+            componentsStatPr.set(new File(statFP));
         } catch (FileNotFoundException e) {
             e.printStackTrace();
             return;
@@ -98,6 +104,27 @@ public class ComponentCutterMain extends Tool {
     @Override
     protected void cleanImpl() {
     }
+
+    @Override
+    protected void postprocessing() {
+        if (outputDescFiles != null) {
+            for (File f : outputDescFiles) {
+                try {
+                    PrintWriter out = new PrintWriter(new FileWriter(f, true));
+                    out.println();
+                    out.println(componentsStatOut.get());
+                    out.println("   File with components' statistics (in text format)");
+                    out.println();
+                    out.println(componentsFileOut.get());
+                    out.println("   File with extracted components (in binary format)");
+                    out.close();
+                } catch (IOException e) {
+                    // does not matter
+                }
+            }
+        }
+    }
+
 
     public static void main(String[] args) {
         new ComponentCutterMain().mainImpl(args);

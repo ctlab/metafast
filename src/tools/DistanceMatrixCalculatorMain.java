@@ -8,6 +8,8 @@ import ru.ifmo.genetics.utils.tool.Tool;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.BoolParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileMVParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileParameterBuilder;
+import ru.ifmo.genetics.utils.tool.values.InMemoryValue;
+import ru.ifmo.genetics.utils.tool.values.InValue;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
@@ -35,10 +37,12 @@ public class DistanceMatrixCalculatorMain extends Tool {
 
     public final Parameter<File> matrixFile = addParameter(new FileParameterBuilder("matrix-file")
             .optional()
-            .withDefaultValue(workDir.append("dist_matrix_$DT.txt"))
-            .withDefaultComment("<workDir>/dist_matrix_<date>_<time>.txt")
+            .withDefaultValue(workDir.append("dist_matrix_$DT_original_order.txt"))
+            .withDefaultComment("<workDir>/dist_matrix_<date>_<time>_original_order.txt")
             .withDescription("resulting distance matrix file")
             .create());
+
+    public File[] outputDescFiles = null;
 
 
     @Override
@@ -63,8 +67,7 @@ public class DistanceMatrixCalculatorMain extends Tool {
             }
         }
 
-        String timestamp = new SimpleDateFormat("yyyy.MM.dd_HH.mm.ss").format(new Date());
-        String matrixPath = matrixFile.get().getPath().replace("$DT", timestamp);
+        String matrixPath = matrixFile.get().getPath().replace("$DT", startTimestamp);
         String[] names = null;
         if (!withoutNames.get()) {
             names = new String[featuresFiles.get().length];
@@ -150,6 +153,24 @@ public class DistanceMatrixCalculatorMain extends Tool {
     @Override
     protected void cleanImpl() {
     }
+
+    @Override
+    protected void postprocessing() {
+        if (outputDescFiles != null) {
+            for (File f : outputDescFiles) {
+                try {
+                    PrintWriter out = new PrintWriter(new FileWriter(f, true));
+                    out.println();
+                    out.println(matrixFile.get());
+                    out.println("   File with resulted distance matrix between samples keeping original order");
+                    out.close();
+                } catch (IOException e) {
+                    // does not matter
+                }
+            }
+        }
+    }
+
 
     public static void main(String[] args) {
         new SeqBuilderMain().mainImpl(args);

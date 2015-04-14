@@ -1,6 +1,7 @@
 package tools;
 
 import ru.ifmo.genetics.Runner;
+import ru.ifmo.genetics.utils.TextUtils;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
@@ -8,10 +9,9 @@ import ru.ifmo.genetics.utils.tool.inputParameterBuilder.BoolParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileMVParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.IntParameterBuilder;
-import ru.ifmo.genetics.utils.tool.values.*;
 
 import java.io.*;
-import java.util.Arrays;
+import java.text.SimpleDateFormat;
 
 public class DistanceMatrixBuilderMain extends Tool {
     public static final String NAME = "matrix-builder";
@@ -51,8 +51,8 @@ public class DistanceMatrixBuilderMain extends Tool {
             .withDefaultValue(100)
             .create());
 
-    public final Parameter<Boolean> useReadsForFeaturesCalculating = addParameter(new BoolParameterBuilder("use-reads-for-features-calculating")
-            .withDescription("use reads instead of kmers for features calculating")
+    public final Parameter<Boolean> useReadsForCalculatingFeatures = addParameter(new BoolParameterBuilder("use-reads-for-calculating-features")
+            .withDescription("use reads instead of kmers for calculating features (characteristic vectors)")
             .create());
 
     public final Parameter<File> matrixFile = addParameter(new FileParameterBuilder("matrix-file")
@@ -62,20 +62,25 @@ public class DistanceMatrixBuilderMain extends Tool {
             .create());
 
     public final Parameter<File> heatmapFile = addParameter(new FileParameterBuilder("heatmap-file")
-            .optional()
+            .withDefaultValue(workDir.append("matrices").append("dist_matrix_$DT_heatmap.png"))
             .withDefaultComment("<workDir>/matrices/dist_matrix_<date>_<time>_heatmap.png")
             .withDescription("resulting heatmap file")
             .create());
 
+    public final File[] outputDescFiles = new File[]{
+                    new File("output_description.txt"),
+                    workDir.append("output_description.txt").get()};
 
 
-    // running tools
+
+    // adding sub tools
     public KmersCounterForManyFilesMain kmersCounter = new KmersCounterForManyFilesMain();
     {
         setFix(kmersCounter.k, k);
         setFix(kmersCounter.inputFiles, inputFiles);
         setFix(kmersCounter.maximalBadFrequency, maximalBadFrequency);
         setFixDefault(kmersCounter.outputDir);
+        kmersCounter.outputDescFiles = outputDescFiles;
         addSubTool(kmersCounter);
     }
 
@@ -86,6 +91,7 @@ public class DistanceMatrixBuilderMain extends Tool {
         setFix(seqBuilder.maximalBadFrequency, maximalBadFrequency);
         setFix(seqBuilder.sequenceLen, minLen);
         setFixDefault(seqBuilder.outputDir);
+        seqBuilder.outputDescFiles = outputDescFiles;
         addSubTool(seqBuilder);
     }
 
@@ -95,6 +101,7 @@ public class DistanceMatrixBuilderMain extends Tool {
         setFix(compCutter.sequencesFiles, seqBuilder.outputFilesOut);
         setFix(compCutter.minLen, minLen);
         setFixDefault(compCutter.componentsFile);
+        compCutter.outputDescFiles = outputDescFiles;
         addSubTool(compCutter);
     }
 
@@ -105,39 +112,71 @@ public class DistanceMatrixBuilderMain extends Tool {
         setFixDefault(featuresCalculator.readsFiles);
         setFix(featuresCalculator.kmersFiles, kmersCounter.resultingKmerFiles);
         setFixDefault(featuresCalculator.threshold);
+        featuresCalculator.outputDescFiles = outputDescFiles;
         addSubTool(featuresCalculator);
     }
 
     public DistanceMatrixCalculatorMain distMatrixCalculator = new DistanceMatrixCalculatorMain();
     {
         setFix(distMatrixCalculator.featuresFiles, featuresCalculator.featuresFilesOut);
-        setFix(distMatrixCalculator.matrixFile, matrixFile);
+        setFix(distMatrixCalculator.matrixFile,
+                workDir.append("matrices").append("dist_matrix_$DT_original_order.txt"));
+        distMatrixCalculator.outputDescFiles = outputDescFiles;
         addSubTool(distMatrixCalculator);
     }
 
     public HeatMapMakerMain heatMapMaker = new HeatMapMakerMain();
     {
         setFix(heatMapMaker.matrixFile, distMatrixCalculator.matrixFile);
+        setFix(heatMapMaker.newMatrixFile, matrixFile);
         setFix(heatMapMaker.heatmapFile, heatmapFile);
-        setFix(heatMapMaker.newMatrixFile, distMatrixCalculator.matrixFile);    // rewrite matrix file
+        heatMapMaker.outputDescFiles = outputDescFiles;
         addSubTool(heatMapMaker);
     }
 
 
     @Override
     protected void runImpl() throws ExecutionFailedException {
+        // preparing
         info("Found " + inputFiles.get().length + " libraries to process");
-        if (useReadsForFeaturesCalculating.get()) {
+        if (useReadsForCalculatingFeatures.get()) {
             setFix(featuresCalculator.kmersFiles, new File[]{});
             setFix(featuresCalculator.readsFiles, inputFiles);
         }
+        createOutputDescFiles();
 
+        // running steps
         addStep(kmersCounter);
         addStep(seqBuilder);
         addStep(compCutter);
         addStep(featuresCalculator);
         addStep(distMatrixCalculator);
         addStep(heatMapMaker);
+    }
+
+    private void createOutputDescFiles() {
+        for (File f : outputDescFiles) {
+            try {
+                PrintWriter out = new PrintWriter(f);
+                out.println("# Output files' description " +
+                        "for run started at " +
+                        new SimpleDateFormat("dd-MMM-yyyy (EEE) HH:mm:ss").format(startDate));
+                out.println();
+                for (File ff : getLogFiles()) {
+                    out.println(ff);
+                }
+                out.println("   Files with running log");
+
+                out.println();
+                for (File ff : outputDescFiles) {
+                    out.println(ff);
+                }
+                out.println("   Files with output files' description");
+                out.close();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
 
