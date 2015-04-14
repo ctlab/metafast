@@ -1,24 +1,23 @@
 package tools;
 
+import io.IOUtils;
 import ru.ifmo.genetics.io.ReadersUtils;
 import ru.ifmo.genetics.statistics.Timer;
 import ru.ifmo.genetics.structures.map.BigLong2LongHashMap;
-import ru.ifmo.genetics.structures.map.BigLong2ShortHashMap;
+import ru.ifmo.genetics.utils.FileUtils;
 import ru.ifmo.genetics.utils.Misc;
 import ru.ifmo.genetics.utils.NumUtils;
-import ru.ifmo.genetics.utils.TextUtils;
-import ru.ifmo.genetics.utils.tool.values.InMemoryValue;
-import ru.ifmo.genetics.utils.tool.values.InValue;
-import structures.ConnectedComponent;
-import io.IOUtils;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
-import ru.ifmo.genetics.utils.tool.inputParameterBuilder.*;
-import ru.ifmo.genetics.utils.FileUtils;
+import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileMVParameterBuilder;
+import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileParameterBuilder;
+import ru.ifmo.genetics.utils.tool.inputParameterBuilder.IntParameterBuilder;
+import ru.ifmo.genetics.utils.tool.values.InMemoryValue;
+import ru.ifmo.genetics.utils.tool.values.InValue;
+import structures.ConnectedComponent;
 
 import java.io.*;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -64,7 +63,7 @@ public class FeaturesCalculatorMain extends Tool {
     private final InMemoryValue<File[]> featuresFilesPr = new InMemoryValue<File[]>();
     public final InValue<File[]> featuresFilesOut = addOutput("features-files", featuresFilesPr, File[].class);
     private final InMemoryValue<File> featuresDirPr = new InMemoryValue<File>();
-    public final InValue<File> featuresDirOut = addOutput("features-files", featuresDirPr, File.class);
+    public final InValue<File> featuresDirOut = addOutput("features-dir", featuresDirPr, File.class);
 
 
     @Override

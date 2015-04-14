@@ -38,12 +38,12 @@ To run ***metafast*** use the following syntax:
 * `metafast.bat [<Launch options>] [<Input parameters>]`
 * `java -jar metafast.jar [<Launch options>] [<Input parameters>]`
 
-To view possible launch options and input parameters run `metafast.sh --help` or `metafast.sh --help-all`.
+To view help for launch options and input parameters run `metafast.sh --help` or `metafast.sh --help-all`.
 
 By running ***metafast*** a working directory is created (by default `./workDir/`). 
 All intermidiate files, log file and final results are saved in it. 
 
-File `output_description.txt` is created after every run in current and working directories. 
+File `output_description.txt` is created after every run in the current and working directories. 
 It contains the description of every output file produced by the ***metafast***.
 
 Metafast script also allows you to run subtools of whole process or different tools, that was included in the package. 
@@ -66,7 +66,9 @@ tinytest_B.vec	0.09090909090909091	0.0
 
 The element `matrix[i][j]` is a distance between *sample i* and *sample j*.
 
-K-mers frequency statistics is saved in `workDir/kmer-counter-many/stats/<in-file>.stat.txt`.
+K-mers frequency statistics is saved in `workDir/kmer-counter-many/stats/<in-file>.stat.txt`;
+resulted image with heatmap and dendrogram is saved in `workDir/matrices/dist_matrix_<date>_<time>_heatmap.png`:
+![Test heatmap](test_data/test_heatmap.png)
 
 
 ### Full documentation
@@ -76,7 +78,7 @@ To see the full documentation visit <https://github.com/ctlab/metafast/wiki>.
 
 ### Contact
 
-Sergey Kazakov - researcher at Computer Technologies Laboratory, ITMO University
+Sergey Kazakov - researcher at Computer Technologies Laboratory, ITMO University.<br/>
 Email: <a href="mailto:svkazakov@rain.ifmo.ru">svkazakov@rain.ifmo.ru</a>.
 
 

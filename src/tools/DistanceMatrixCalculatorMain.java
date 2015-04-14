@@ -1,20 +1,15 @@
 package tools;
 
 import ru.ifmo.genetics.utils.FileUtils;
-import ru.ifmo.genetics.utils.TextUtils;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.BoolParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileMVParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileParameterBuilder;
-import ru.ifmo.genetics.utils.tool.values.InMemoryValue;
-import ru.ifmo.genetics.utils.tool.values.InValue;
 
 import java.io.*;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 public class DistanceMatrixCalculatorMain extends Tool {
