@@ -68,7 +68,7 @@ The element `matrix[i][j]` is a distance between *sample i* and *sample j*.
 
 K-mers frequency statistics is saved in `workDir/kmer-counter-many/stats/<in-file>.stat.txt`;
 resulted image with heatmap and dendrogram is saved in `workDir/matrices/dist_matrix_<date>_<time>_heatmap.png`:<br/>
-<img src="test_data/test_heatmap.png" alt="Test heatmap" width="300" align="middle">
+<img src="test_data/test_heatmap.png" alt="Test heatmap" width="500">
 
 
 ### Full documentation
