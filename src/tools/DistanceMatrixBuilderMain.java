@@ -166,13 +166,13 @@ public class DistanceMatrixBuilderMain extends Tool {
                 for (File ff : getLogFiles()) {
                     out.println(ff);
                 }
-                out.println("   Files with running log");
+                out.println("   Identical files with run log");
 
                 out.println();
                 for (File ff : outputDescFiles) {
                     out.println(ff);
                 }
-                out.println("   Files with output files' description");
+                out.println("   Identical files with output files' description");
                 out.close();
             } catch (FileNotFoundException e) {
                 e.printStackTrace();

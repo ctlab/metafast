@@ -59,16 +59,16 @@ Download [tinytest_A.fastq](https://github.com/ctlab/metafast/raw/master/test_da
 
 After it has finished, a distance matrix can be found in `workDir/matrices/dist_matrix_<date>_<time>.txt`:
 ~~~
-#	tinytest_A.vec	tinytest_B.vec
-tinytest_A.vec	0.0	0.09090909090909091
-tinytest_B.vec	0.09090909090909091	0.0
+#	tinytest_A	tinytest_B
+tinytest_A	0.0	0.09090909090909091
+tinytest_B	0.09090909090909091	0.0
 ~~~
 
 The element `matrix[i][j]` is a distance between *sample i* and *sample j*.
 
 K-mers frequency statistics is saved in `workDir/kmer-counter-many/stats/<in-file>.stat.txt`;
-resulted image with heatmap and dendrogram is saved in `workDir/matrices/dist_matrix_<date>_<time>_heatmap.png`:<br/>
-<img src="test_data/test_heatmap.png" alt="Test heatmap" width="500">
+image file with heatmap and dendrogram is saved in `workDir/matrices/dist_matrix_<date>_<time>_heatmap.png`:<br/>
+<img src="test_data/test_heatmap.png" alt="Test heatmap" width="450">
 
 
 ### Full documentation
