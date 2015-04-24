@@ -144,6 +144,7 @@ public class DistanceMatrixBuilderMain extends Tool {
             setFix(featuresCalculator.kmersFiles, new File[]{});
             setFix(featuresCalculator.readsFiles, inputFiles);
         }
+        outputDescFiles[1] = workDir.append("output_description.txt").get();    // updating workdir
         createOutputDescFiles();
 
         // running steps
@@ -159,8 +160,7 @@ public class DistanceMatrixBuilderMain extends Tool {
         for (File f : outputDescFiles) {
             try {
                 PrintWriter out = new PrintWriter(f);
-                out.println("# Output files' description " +
-                        "for run started at " +
+                out.println("# Output files' description for run started at " +
                         new SimpleDateFormat("dd-MMM-yyyy (EEE) HH:mm:ss").format(startDate));
                 out.println();
                 for (File ff : getLogFiles()) {
@@ -175,7 +175,8 @@ public class DistanceMatrixBuilderMain extends Tool {
                 out.println("   Identical files with output files' description");
                 out.close();
             } catch (FileNotFoundException e) {
-                e.printStackTrace();
+                warn("Can't create file " + f + ", skipping");
+                debug(e.getClass().getName() + ": " + e.getMessage());
             }
         }
     }
