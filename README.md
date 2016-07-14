@@ -1,18 +1,20 @@
 # MetaFast
 
-<img src="logo.jpg" alt="MetaFast" style="float:right">
+<img src="logo.jpg" alt="MetaFast" width="400" style="float: right;">
 
 **MetaFast** (METAgenome FAST analysis toolkit) is a toolkit for calculating a number of statistics of 
 metagenome sequences and building the distance matrix between them.
 
 Authors:
-* **Software:** *Sergey Kazakov* and *Vladimir Ulyantsev*, 
+* **Software:** *Sergey Kazakov* and *Vladimir Ulyantsev*, <br/>
 ITMO University, Saint-Petersburg, Russia.
-* **Testing:** *Veronika Dubinkina* and *Alexandr Tyakht*, SRI of Physical-Chemical Medicine, Moscow, Russia.
-* **Idea, supervisor:** *Dmitry Alexeev*, SRI of Physical-Chemical Medicine, Moscow, Russia.
+* **Testing:** *Veronika Dubinkina* and *Alexandr Tyakht*, <br/>
+SRI of Physical-Chemical Medicine, Moscow, Russia.
+* **Idea, supervisor:** *Dmitry Alexeev*, <br/>
+SRI of Physical-Chemical Medicine, Moscow, Russia.
 
 
-**MetaFast** documentation is available on the <a href="https://github.com/ctlab/metafast/wiki" target="_blank">MetaFast GitHub wiki</a>.<br/>  
+**MetaFast** documentation is available on the <a href="https://github.com/ctlab/metafast/wiki" target="_blank">MetaFast GitHub wiki</a>.<br/>
 Here is a short version of it.
 
 
@@ -20,7 +22,7 @@ Here is a short version of it.
 ## Content
 
 * [Installation](https://github.com/ctlab/metafast#installation)
-* [Running instructions](https://github.com/ctlab/metafast#running-metafast)
+* [Running instructions](https://github.com/ctlab/metafast#running-instructions)
 * [Example](https://github.com/ctlab/metafast#example)
 * [Citation](https://github.com/ctlab/metafast#citation)
 * [Contact](https://github.com/ctlab/metafast#contact)
@@ -33,7 +35,7 @@ Here is a short version of it.
 
 To run MetaFast you need to have JRE 1.6 or higher installed and only one script (`metafast.sh`, `metafast.bat` or `metafast.jar`).
 
-You can download it from the last stable release in the GitHub <a href="https://github.com/ctlab/metafast/releases" target="_blank">'Releases' section</a>.
+You can download it from the last stable release in the GitHub <a href="https://github.com/ctlab/metafast/releases">'Releases' section</a>.
 
 * For *Linux* and *Mac OS*: download `metafast.sh`, run the command `chmod a+x metafast.sh`, then run `./metafast.sh` from the command line.
 * For *Windows*: download `metafast.bat` and run it from the command line.
@@ -64,7 +66,7 @@ All intermidiate files, log file and final results are saved in it.
 File `output_description.txt` is created after every run in the current and working directories. 
 It contains the description of every output file produced by the MetaFast.
 
-Metafast run script also allows you to run subtools of whole process or different tools, that was included in the package. 
+Metafast run script also allows you to run subtools of whole process or different tools, that was included into the package. 
 To see the list of available additional tools, run `metafast.sh --tools`.
 
 
@@ -85,7 +87,7 @@ tinytest_B	0.09090909090909091	0.0
 
 The element `matrix[i][j]` is a distance between *sample i* and *sample j*.
 
-K-mers frequency statistics is saved in `workDir/kmer-counter-many/stats/<in-file>.stat.txt`;<br/>  
+K-mers frequency statistics is saved in `workDir/kmer-counter-many/stats/<in-file>.stat.txt`;<br/>
 image file with heatmap and dendrogram is saved in `workDir/matrices/dist_matrix_<date>_<time>_heatmap.png`:<br/>
 <img src="test_data/test_heatmap.png" alt="Test heatmap" width="450">
 
@@ -102,8 +104,8 @@ Bioinformatics, btw312.
 
 ## Contact
 
-Please report any problems directly to the github issue tracker. 
-Also, you can send your feedback to <a href="mailto:svkazakov@rain.ifmo.ru">svkazakov@rain.ifmo.ru</a>.
+Please report any problems directly to the github [issue tracker](https://github.com/ctlab/metafast/issues).<br/>
+Also, you can send your feedback to [svkazakov@rain.ifmo.ru](mailto:svkazakov@rain.ifmo.ru).
 
 
 ## License
