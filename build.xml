@@ -5,7 +5,23 @@
         <arg value="--short"/>
         <arg value="HEAD"/>
     </exec>
-    <property name="version" value="${VERSION} (revision ${revision})"/>
+    <exec executable="git" outputproperty="changes">
+        <arg value="status"/>
+        <arg value="-s"/>
+        <arg value="-uno"/>
+    </exec>
+    <tstamp>
+        <format property="TODAY" pattern="dd-MMM-yyyy" locale="en"/>
+    </tstamp>
+    <tstamp>
+        <format property="TODAY_TS" pattern="dd-MMM-yyyy HH:mm" locale="en"/>
+    </tstamp>
+
+    <condition property="version" 
+            value="${VERSION} (revision ${revision}, ${TODAY})"
+            else ="${VERSION} (revision ${revision}+ changes, ${TODAY_TS})" >
+        <equals arg1="${changes}" arg2=""/>
+    </condition>
     <echo message="${version}" file="VERSION"/>
     <echo message="Version: ${version}"/>
     
