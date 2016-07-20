@@ -1,6 +1,6 @@
 # MetaFast
 
-<img align="right" src="logo.jpg" alt="MetaFast" width="500">
+<img align="right" src="logo.jpg" alt="MetaFast" width="450">
 
 **MetaFast** (METAgenome FAST analysis toolkit) is a toolkit for calculating a number of statistics of 
 metagenome sequences and building the distance matrix between them.
@@ -14,20 +14,20 @@ SRI of Physical-Chemical Medicine, Moscow, Russia.
 SRI of Physical-Chemical Medicine, Moscow, Russia.
 
 
-**MetaFast** documentation is available on the <a href="https://github.com/ctlab/metafast/wiki" target="_blank">MetaFast GitHub wiki</a>.<br/>
+**MetaFast** documentation is available on the [MetaFast GitHub wiki](https://github.com/ctlab/metafast/wiki).<br/>
 Here is a short version of it.
 
 
 
 ## Content
 
-* [Installation](https://github.com/ctlab/metafast#installation)
-* [Running instructions](https://github.com/ctlab/metafast#running-instructions)
-* [Example](https://github.com/ctlab/metafast#example)
-* [Citation](https://github.com/ctlab/metafast#citation)
-* [Contact](https://github.com/ctlab/metafast#contact)
-* [License](https://github.com/ctlab/metafast#license)
-* [See also](https://github.com/ctlab/metafast#see-also)
+* [Installation](#installation)
+* [Running instructions](#running-instructions)
+* [Example](#example)
+* [Citation](#citation)
+* [Contact](#contact)
+* [License](#license)
+* [See also](#see-also)
 
 
 
@@ -35,7 +35,7 @@ Here is a short version of it.
 
 To run MetaFast you need to have JRE 1.6 or higher installed and only one script (`metafast.sh`, `metafast.bat` or `metafast.jar`).
 
-You can download it from the last stable release in the GitHub <a href="https://github.com/ctlab/metafast/releases">'Releases' section</a>.
+You can download it from the last stable release in the GitHub ['Releases' section](https://github.com/ctlab/metafast/releases).
 
 * For *Linux* and *Mac OS*: download `metafast.sh`, run the command `chmod a+x metafast.sh`, then run `./metafast.sh` from the command line.
 * For *Windows*: download `metafast.bat` and run it from the command line.
