@@ -107,22 +107,14 @@ public class ComponentCutterMain extends Tool {
 
     @Override
     protected void postprocessing() {
-        if (outputDescFiles != null) {
-            for (File f : outputDescFiles) {
-                try {
-                    PrintWriter out = new PrintWriter(new FileWriter(f, true));
-                    out.println();
-                    out.println(componentsStatOut.get());
-                    out.println("   File with components' statistics (in text format)");
-                    out.println();
-                    out.println(componentsFileOut.get());
-                    out.println("   File with extracted components (in binary format)");
-                    out.close();
-                } catch (IOException e) {
-                    // does not matter
-                }
-            }
-        }
+        IOUtils.tryToAppendDescription(outputDescFiles,
+                componentsStatOut.get(),
+                "File with components' statistics (in text format)"
+        );
+        IOUtils.tryToAppendDescription(outputDescFiles,
+                componentsFileOut.get(),
+                "File with extracted components (in binary format)"
+        );
     }
 
 

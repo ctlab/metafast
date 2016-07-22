@@ -1,6 +1,7 @@
 package tools;
 
 import ru.ifmo.genetics.Runner;
+import ru.ifmo.genetics.statistics.Timer;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
@@ -136,10 +137,18 @@ public class DistanceMatrixBuilderMain extends Tool {
     }
 
 
+    private Timer t;
+
     @Override
     protected void runImpl() throws ExecutionFailedException {
         // preparing
+        t = new Timer();
+
         info("Found " + inputFiles.get().length + " libraries to process");
+        if (inputFiles.get().length == 0) {
+            throw new ExecutionFailedException("No libraries to process!!! Can't continue the calculations.");
+        }
+
         if (useReadsForCalculatingFeatures.get()) {
             setFix(featuresCalculator.kmersFiles, new File[]{});
             setFix(featuresCalculator.readsFiles, inputFiles);
@@ -184,6 +193,7 @@ public class DistanceMatrixBuilderMain extends Tool {
 
     @Override
     protected void cleanImpl() {
+        debug("Matrix-builder has finished! Time = " + t);
     }
 
 

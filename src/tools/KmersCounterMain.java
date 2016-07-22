@@ -64,6 +64,16 @@ public class KmersCounterMain extends Tool {
 
     @Override
     protected void runImpl() throws ExecutionFailedException {
+        if (k.get() <= 0) {
+            error("The size of k-mer must be at least 1.");
+            System.exit(1);
+        }
+        if (k.get() > 31) {
+            error("The size of k-mer must be no more than 31.");
+            System.exit(1);
+        }
+
+
         Timer t = new Timer();
         BigLong2ShortHashMap hm = IOUtils.loadReads(inputFiles.get(), k.get(), 0,
                 availableProcessors.get(),  logger);

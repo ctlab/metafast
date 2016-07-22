@@ -77,7 +77,7 @@ public class FeaturesCalculatorMain extends Tool {
 
         if (components.size() == 0) {
             error("No components were found!!! Can't continue the calculations.");
-            System.exit(0);
+            System.exit(1);
         }
 
         String compName = FileUtils.removeExtension(componentsFile.get().getName(), ".bin");
@@ -196,19 +196,10 @@ public class FeaturesCalculatorMain extends Tool {
 
     @Override
     protected void postprocessing() {
-        if (outputDescFiles != null) {
-            for (File f : outputDescFiles) {
-                try {
-                    PrintWriter out = new PrintWriter(new FileWriter(f, true));
-                    out.println();
-                    out.println(featuresDirOut.get());
-                    out.println("   Directory with features values files for every library (in text format)");
-                    out.close();
-                } catch (IOException e) {
-                    // does not matter
-                }
-            }
-        }
+        IOUtils.tryToAppendDescription(outputDescFiles,
+                featuresDirOut.get(),
+                "Directory with features values files for every library (in text format)"
+        );
     }
 
 

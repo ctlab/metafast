@@ -58,7 +58,7 @@ public class ComponentsBuilder {
 
 
     private void run(BigLong2ShortHashMap hm) throws FileNotFoundException {
-        logger.info("First iteration...");
+        Tool.info(logger, "First iteration...");
         Timer t = new Timer();
 
         long hmSize = hm.size();
@@ -86,32 +86,32 @@ public class ComponentsBuilder {
         }
 
         int ansFirst = ans.size();
-        logger.info("Found " + NumUtils.groupDigits(ok) + " good components, " +
+        Tool.info(logger, "Found " + NumUtils.groupDigits(ok) + " good components, " +
                 "and " + NumUtils.groupDigits(big) + " big ones");
-        logger.info("First iteration was finished in " + t);
+        Tool.info(logger, "First iteration was finished in " + t);
 
-        logger.debug("Total components found = " + NumUtils.groupDigits(newComps.size()) + ", " +
+        Tool.debug(logger, "Total components found = " + NumUtils.groupDigits(newComps.size()) + ", " +
                 "kmers = " + NumUtils.groupDigits(hmSize));
-        logger.debug("Components count: small = " + withP(small, newComps.size()) + ", " +
+        Tool.debug(logger, "Components count: small = " + withP(small, newComps.size()) + ", " +
                 "ok = " + withP(ok, newComps.size()) + ", " +
                 "big = " + withP(big, newComps.size()));
-        logger.debug("Components kmers: small = " + withP(smallK, hmSize) + ", " +
+        Tool.debug(logger, "Components kmers: small = " + withP(smallK, hmSize) + ", " +
                 "ok = " + withP(okK, hmSize) + ", " +
                 "big = " + withP(hmSize - smallK - okK, hmSize));
-        logger.debug("FreqThreshold = " + freqThreshold + ", " +
+        Tool.debug(logger, "FreqThreshold = " + freqThreshold + ", " +
                 "components added = " + ok + ", total components added = " + ans.size());
 
-        logger.debug("Memory used: without GC = " + Misc.usedMemoryWithoutRunningGCAsString() + ", " +
+        Tool.debug(logger, "Memory used: without GC = " + Misc.usedMemoryWithoutRunningGCAsString() + ", " +
                 "after it = " + Misc.usedMemoryAsString());
 
         hm = null;  // for cleaning
         newComps = null;
 
-        logger.debug("Memory used after cleaning = " + Misc.usedMemoryAsString() + ", final time = " + t);
+        Tool.debug(logger, "Memory used after cleaning = " + Misc.usedMemoryAsString() + ", final time = " + t);
 
 
         if (big != 0) {
-            logger.info("Following iterations...");
+            Tool.info(logger, "Following iterations...");
             t.start();
 
             for (ConnectedComponent comp : toProcess) {
@@ -120,9 +120,9 @@ public class ComponentsBuilder {
             toProcess = null;
 
             ConnectedComponent biggest = ((Task) executor.tasks.peek()).component;
-            logger.debug("Biggest component has " +
+            Tool.debug(logger, "Biggest component has " +
                     withP(biggest.size, hmSize, "kmers", "of initial hm size"));
-            logger.debug("Saved to new hm from it = " +
+            Tool.debug(logger, "Saved to new hm from it = " +
                     withP(biggest.hm.size(), biggest.size, "kmers", "of its size"));
             biggest = null;
 
@@ -132,10 +132,10 @@ public class ComponentsBuilder {
             executor.shutdownAndAwaitTermination();
 
 
-            logger.info("Found " + NumUtils.groupDigits(ans.size() - ansFirst) + " good components " +
+            Tool.info(logger, "Found " + NumUtils.groupDigits(ans.size() - ansFirst) + " good components " +
                     "extracted from big components");
-            logger.info("All the following iterations were finished in " + t);
-            logger.debug("Memory used: without GC = " + Misc.usedMemoryWithoutRunningGCAsString() + ", " +
+            Tool.info(logger, "All the following iterations were finished in " + t);
+            Tool.debug(logger, "Memory used: without GC = " + Misc.usedMemoryWithoutRunningGCAsString() + ", " +
                     "after it = " + Misc.usedMemoryAsString());
         }
 

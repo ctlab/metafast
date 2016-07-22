@@ -32,6 +32,8 @@ public class FullHeatMap {
 
     public Color lowColor = Color.WHITE;
     public Color highColor = new Color(12, 61, 138);
+    public boolean drawInnerLines = true;
+    public Color innerLinesColor = Color.GRAY;
 
     final Font font = new Font(Font.SANS_SERIF, Font.BOLD, 16);
 
@@ -49,12 +51,15 @@ public class FullHeatMap {
     public final int[] perm;
 
 
-
     public FullHeatMap(double[][] distMatrix, String[] names) {
-        this(distMatrix, 0, 1, names);
+        this(distMatrix, 0, 1, names, false);
     }
 
-    public FullHeatMap(double[][] distMatrix, double low, double high, String[] names) {
+    public FullHeatMap(double[][] distMatrix, String[] names, boolean invertColors) {
+        this(distMatrix, 0, 1, names, invertColors);
+    }
+
+    public FullHeatMap(double[][] distMatrix, double low, double high, String[] names, boolean invertColors) {
         n = distMatrix.length;
         this.distMatrix = distMatrix;
         this.low = low;
@@ -65,6 +70,12 @@ public class FullHeatMap {
         perm = new int[n];
         for (int i = 0; i < n; i++) {
             perm[i] = i;
+        }
+        if (invertColors) {
+            Color tmp = highColor;
+            highColor = lowColor;
+            lowColor = tmp;
+            innerLinesColor = Color.LIGHT_GRAY;
         }
     }
 
@@ -102,10 +113,20 @@ public class FullHeatMap {
         // drawing grid
         graphics.setColor(Color.GRAY);
         graphics.setStroke(new BasicStroke(borderLineSize));
-        for (int i = 0; i <= n; i++) {
-            int coord = i * (cellSize + borderLineSize) + borderLineSize/2;
-            graphics.drawLine(0, coord, gridSize - 1, coord);
-            graphics.drawLine(coord, 0, coord, gridSize - 1);
+        int left = borderLineSize / 2;
+        int right = n * (cellSize + borderLineSize) + borderLineSize / 2;
+        // drawing border
+        graphics.drawLine(0, left, gridSize - 1, left);
+        graphics.drawLine(left, 0, left, gridSize - 1);
+        graphics.drawLine(0, right, gridSize - 1, right);
+        graphics.drawLine(right, 0, right, gridSize - 1);
+        if (drawInnerLines) {
+            graphics.setColor(innerLinesColor);
+            for (int i = 1; i < n; i++) {
+                int coord = i * (cellSize + borderLineSize) + borderLineSize / 2;
+                graphics.drawLine(borderLineSize+1, coord, gridSize - 1 - borderLineSize, coord);
+                graphics.drawLine(coord, borderLineSize+1, coord, gridSize - 1 - borderLineSize);
+            }
         }
 
         // filling
@@ -409,7 +430,7 @@ public class FullHeatMap {
             }
         }
         String[] names = {"Abracadabra library got from some url", "Boldii fish lib2s",
-                "Cnot", "Do not know", "mmmm"};
+                "Cnot", "Don't know", "mmmm"};
 
         FullHeatMap hm = new FullHeatMap(matrix, names);
         BufferedImage image = hm.createFullHeatMap(true);

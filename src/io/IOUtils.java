@@ -67,6 +67,23 @@ public class IOUtils {
     }
 
 
+    public static void tryToAppendDescription(File[] outputFilesDesc, File f, String msg) {
+        if (outputFilesDesc != null) {
+            for (File wf : outputFilesDesc) {
+                try {
+                    PrintWriter out = new PrintWriter(new FileWriter(wf, true));
+                    out.println();
+                    out.println(f);
+                    out.println("   " + msg);
+                    out.close();
+                } catch (IOException e) {
+                    // does not matter
+                }
+            }
+        }
+    }
+
+
 
     // ---------------------------- for loading kmers ----------------------------------
 
@@ -122,7 +139,7 @@ public class IOUtils {
         Tool.debug(logger,
                 "Added/All kmers frequency sum = " + NumUtils.groupDigits(freqSumAdded) + "/" + NumUtils.groupDigits(freqSum)
                         + " (" + String.format("%.1f", freqSumAdded * 100.0 / freqSum) + "%)");
-        logger.debug("k-mers HM size = " + NumUtils.groupDigits(hm.size()));
+        Tool.debug(logger, "k-mers HM size = " + NumUtils.groupDigits(hm.size()));
 
         return hm;
     }
@@ -244,7 +261,7 @@ public class IOUtils {
         Tool.debug(logger,
                 "Good/Total sequences length = " + NumUtils.groupDigits(goodLen) + "/" + NumUtils.groupDigits(totalLen)
                         + " (" + String.format("%.1f", goodLen * 100.0 / totalLen) + "%)");
-        logger.debug("k-mers HM size = " + NumUtils.groupDigits(hm.size()));
+        Tool.debug(logger, "k-mers HM size = " + NumUtils.groupDigits(hm.size()));
 
         return hm;
     }

@@ -1,5 +1,6 @@
 package tools;
 
+import io.IOUtils;
 import ru.ifmo.genetics.statistics.Timer;
 import ru.ifmo.genetics.utils.TextUtils;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
@@ -93,20 +94,11 @@ public class KmersCounterForManyFilesMain extends Tool {
 
     @Override
     protected void postprocessing() {
-        if (outputDescFiles != null) {
-            for (File f : outputDescFiles) {
-                try {
-                    PrintWriter out = new PrintWriter(new FileWriter(f, true));
-                    out.println();
-                    out.println(statsDir.get());
-                    out.println("   Directory with kmer frequency statistics " +
-                            "(statistics files is in text format for every input reads file)");
-                    out.close();
-                } catch (IOException e) {
-                    // does not matter
-                }
-            }
-        }
+        IOUtils.tryToAppendDescription(outputDescFiles,
+                statsDir.get(),
+                "Directory with kmer frequency statistics " +
+                        "(statistics files is in text format for every input reads file)"
+        );
     }
 
 

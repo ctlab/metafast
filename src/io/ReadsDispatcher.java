@@ -38,15 +38,15 @@ public class ReadsDispatcher {
             ++reads;
 
             if (reads % 2500000 == 0) {
-                logger.debug("Processed " + NumUtils.groupDigits(reads) + " reads:");
+                Tool.debug(logger, "Processed " + NumUtils.groupDigits(reads) + " reads:");
                 if (hm != null) {
-                    logger.debug("Total hm size = " + NumUtils.groupDigits(hm.size()) + ", " +
+                    Tool.debug(logger, "Total hm size = " + NumUtils.groupDigits(hm.size()) + ", " +
                             "size in hm.maps = {" + NumUtils.groupDigits(hm.maps[0].size()) + ", "
                             + NumUtils.groupDigits(hm.maps[1].size()) + ", "
                             + NumUtils.groupDigits(hm.maps[2].size()) + ", "
                             + NumUtils.groupDigits(hm.maps[3].size()) + ", ...}");
                 }
-                logger.debug("Available memory (without running GC) = " + Misc.availableMemoryWithoutRunningGCAsString());
+                Tool.debug(logger, "Available memory (without running GC) = " + Misc.availableMemoryWithoutRunningGCAsString());
             }
         }
         return list.isEmpty() ? null : list;

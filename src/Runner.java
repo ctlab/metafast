@@ -1,20 +1,28 @@
+import ru.ifmo.genetics.utils.Misc;
 import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.StringParameterBuilder;
+import ru.ifmo.genetics.utils.tool.parameters.ParameterDescription;
 import tools.DistanceMatrixBuilderMain;
 
 public class Runner extends ru.ifmo.genetics.Runner {
 
-    public static final Parameter<String> toolParameter = new Parameter<String>(new StringParameterBuilder("tool")
+    public static final ParameterDescription<String> toolParameterDescr = new StringParameterBuilder("tool")
             .withShortOpt("t")
             .withDescription("set certain tool to run")
             .withDefaultComment(DistanceMatrixBuilderMain.NAME)
-            .create());
+            .create();
+    public static final ParameterDescription<String> memoryParameterDescr = new StringParameterBuilder("memory")
+            .important()
+            .withShortOpt("m")
+            .withDescription("memory to use (for example: 1500M, 4G, etc.)")
+            .withDefaultComment("90% of free memory (currently " + Misc.availableMemoryAsString() + ")")
+            .create();
 
     static {
-        Tool.launchOptions.remove(ru.ifmo.genetics.Runner.toolParameter);
-        Tool.launchOptions.add(2, toolParameter);
+        ru.ifmo.genetics.Runner.toolParameter.replaceDescription(toolParameterDescr);
         Tool.launchOptions.remove(ru.ifmo.genetics.Runner.guiParameter);
+        ru.ifmo.genetics.Runner.memoryParameter.replaceDescription(memoryParameterDescr);
     }
 
     Runner() {

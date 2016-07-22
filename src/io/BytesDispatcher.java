@@ -50,15 +50,15 @@ public class BytesDispatcher {
             bytesRead += read;
             /*
             if ((bytesRead & ((1 << 29) - 1)) == 0) { // 512 Mb
-                logger.debug("Processed " + (bytesRead >> 20) + " Mb of data:");
+                Tool.debug(logger, "Processed " + (bytesRead >> 20) + " Mb of data:");
                 if (hm != null) {
-                    logger.debug("Total hm size = " + NumUtils.groupDigits(hm.size()) + ", " +
+                    Tool.debug(logger, "Total hm size = " + NumUtils.groupDigits(hm.size()) + ", " +
                             "size in hm.maps = {" + NumUtils.groupDigits(hm.maps[0].size()) + ", "
                             + NumUtils.groupDigits(hm.maps[1].size()) + ", "
                             + NumUtils.groupDigits(hm.maps[2].size()) + ", "
                             + NumUtils.groupDigits(hm.maps[3].size()) + ", ...}");
                 }
-                logger.debug("Available memory (without running GC) = " + Misc.availableMemoryWithoutRunningGCAsString());
+                Tool.debug(logger, "Available memory (without running GC) = " + Misc.availableMemoryWithoutRunningGCAsString());
             }
             */
             return read;

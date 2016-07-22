@@ -106,19 +106,10 @@ public class SeqBuilderForManyFilesMain extends Tool {
 
     @Override
     protected void postprocessing() {
-        if (outputDescFiles != null) {
-            for (File f : outputDescFiles) {
-                try {
-                    PrintWriter out = new PrintWriter(new FileWriter(f, true));
-                    out.println();
-                    out.println(outputDir.get());
-                    out.println("   Directory with FASTA files - paths from reads for every library");
-                    out.close();
-                } catch (IOException e) {
-                    // does not matter
-                }
-            }
-        }
+        IOUtils.tryToAppendDescription(outputDescFiles,
+                outputDir.get(),
+                "Directory with FASTA files - paths from reads for every library"
+        );
     }
 
 

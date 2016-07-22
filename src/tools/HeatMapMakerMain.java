@@ -1,6 +1,7 @@
 package tools;
 
 import algo.FullHeatMap;
+import io.IOUtils;
 import ru.ifmo.genetics.utils.FileUtils;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
@@ -46,6 +47,10 @@ public class HeatMapMakerMain extends Tool {
             .withDescription("resulting heatmap file")
             .create());
 
+    public final Parameter<Boolean> invertColors = addParameter(new BoolParameterBuilder("invert-colors")
+            .withDescription("invert colors in heatmap")
+            .create());
+
     public File[] outputDescFiles = null;
 
 
@@ -72,7 +77,7 @@ public class HeatMapMakerMain extends Tool {
 
 
         // creating full heat map
-        FullHeatMap maker = new FullHeatMap(matrix, names);
+        FullHeatMap maker = new FullHeatMap(matrix, names, invertColors.get());
         BufferedImage image = maker.createFullHeatMap(!withoutRenumbering.get());
 
 
@@ -191,25 +196,16 @@ public class HeatMapMakerMain extends Tool {
 
     @Override
     protected void postprocessing() {
-        if (outputDescFiles != null) {
-            for (File f : outputDescFiles) {
-                try {
-                    PrintWriter out = new PrintWriter(new FileWriter(f, true));
-                    if (!withoutRenumbering.get()) {
-                        out.println();
-                        out.println(newMatrixFileOut.get());
-                        out.println("   File with resulted distance matrix between samples with new order based on adjacency of the samples");
-                    }
-                    out.println();
-                    out.println(heatmapFileOut.get());
-                    out.println("   Image file with heatmap and dendrogram between samples");
-                    out.println();
-                    out.close();
-                } catch (IOException e) {
-                    // does not matter
-                }
-            }
+        if (!withoutRenumbering.get()) {
+            IOUtils.tryToAppendDescription(outputDescFiles,
+                    newMatrixFileOut.get(),
+                    "File with resulted distance matrix between samples with new order based on adjacency of the samples"
+            );
         }
+        IOUtils.tryToAppendDescription(outputDescFiles,
+                heatmapFileOut.get(),
+                "Image file with heatmap and dendrogram between samples"
+        );
     }
 
 
