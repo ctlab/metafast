@@ -1,6 +1,6 @@
 # MetaFast
 
-<img align="right" src="logo.jpg" alt="MetaFast" width="440">
+<img align="right" src="logo.jpg" alt="MetaFast" width="430">
 
 **MetaFast** (METAgenome FAST analysis toolkit) is a toolkit for calculating a number of statistics of 
 metagenome sequences and building the distance matrix between them.
@@ -33,7 +33,7 @@ Here is a short version of it.
 
 ## Installation
 
-To run MetaFast you need to have JRE 1.6 or higher installed and only one script -- `metafast.sh`, `metafast.bat` or `metafast.jar`.
+To run MetaFast you need to have JRE 1.6 or higher installed and only one script – `metafast.sh`, `metafast.bat` or `metafast.jar`.
 
 You can download it from the last stable release in the GitHub ['Releases' section](https://github.com/ctlab/metafast/releases).
 
@@ -115,7 +115,7 @@ The MIT License (MIT)
 
 ## See also
 
-* [khmer](https://github.com/ged-lab/khmer) -- a toolkit to split reads.
-* [crAss](http://edwards.sdsu.edu/crass/) -- Cross-Assembly of Metagenomes.
-* [MaryGold](http://sourceforge.net/projects/metavar/) -- Variation analysis of metagenomic samples.
+* [khmer](https://github.com/ged-lab/khmer) – a toolkit to split reads.
+* [crAss](http://edwards.sdsu.edu/crass/) – Cross-Assembly of Metagenomes.
+* [MaryGold](http://sourceforge.net/projects/metavar/) – Variation analysis of metagenomic samples.
 
