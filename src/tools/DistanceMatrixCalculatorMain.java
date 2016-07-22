@@ -1,5 +1,6 @@
 package tools;
 
+import io.IOUtils;
 import ru.ifmo.genetics.utils.FileUtils;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
@@ -133,7 +134,7 @@ public class DistanceMatrixCalculatorMain extends Tool {
     private double brayCurtisDistance(List<Long> vector1, List<Long> vector2) {
         assert vector1.size() == vector2.size();
 
-        double sumdiff = 0, sum = 0;
+        long sumdiff = 0, sum = 0;
 
         for (int pos = 0; pos < vector1.size(); pos++) {
             sumdiff += Math.abs(vector1.get(pos) - vector2.get(pos));
@@ -141,7 +142,7 @@ public class DistanceMatrixCalculatorMain extends Tool {
         }
 
         assert sum > 0;
-        return sumdiff / sum;
+        return sumdiff / (double) sum;
     }
 
 
@@ -151,19 +152,10 @@ public class DistanceMatrixCalculatorMain extends Tool {
 
     @Override
     protected void postprocessing() {
-        if (outputDescFiles != null) {
-            for (File f : outputDescFiles) {
-                try {
-                    PrintWriter out = new PrintWriter(new FileWriter(f, true));
-                    out.println();
-                    out.println(matrixFile.get());
-                    out.println("   File with resulted distance matrix between samples keeping original order");
-                    out.close();
-                } catch (IOException e) {
-                    // does not matter
-                }
-            }
-        }
+        IOUtils.tryToAppendDescription(outputDescFiles,
+                matrixFile.get(),
+                "File with resulted distance matrix between samples keeping original order"
+        );
     }
 
 
