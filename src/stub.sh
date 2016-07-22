@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 jvm_opts=()
 params=()
@@ -6,7 +6,7 @@ params=()
 while [[ $# -ne 0 ]]
 do
     if [[ "$1" == -m || "$1" == --memory ]]; then 
-        mem=("${mem[@]}" "-Xmx$2" "-Xms$2")
+        mem=("-Xmx$2" "-Xms$2")
         shift
     elif [[ "$1" == -ea || "$1" == --enable-assertions ]]; then 
         jvm_opts=("${jvm_opts[@]}" "-ea")
@@ -21,19 +21,19 @@ done
 if [ ${#mem[@]} == 0 ]; then
     if which free > /dev/null 2>&1; then
         let mem=`free -m | grep "buffers/cache" | sed -r "s/\s+/ /g" | cut -d " " -f 4`
-        mem=$(($mem * 95 / 100))M
-        mem=("-Xmx$mem" "-Xms$mem")
+        mem=$(($mem * 90 / 100))
+        mem=("-Xmx$mem""M" "-Xms$mem""M")
     elif which vm_stat > /dev/null 2>&1; then
         inactive_mem=`vm_stat | grep -i inactive | grep -o "[[:digit:]]\+"`
         free_mem=`vm_stat | grep -i free | grep -o "[[:digit:]]\+"`
-        mem=$((($inactive_mem + $free_mem) * 4096 / 1024 / 1024 * 95 / 100))M
-        mem=("-Xmx$mem" "-Xms$mem")
-    else 
+        mem=$((($inactive_mem + $free_mem) * 4096 / 1024 / 1024 * 90 / 100))
+        mem=("-Xmx$mem""M" "-Xms$mem""M")
+    else
         echo "WARN: Can't detect free memory, using java default"
     fi
 fi
 
-java -Xss24M -XX:NewRatio=9 "${mem[@]}" "${jvm_opts[@]}" -jar "$0" "${params[@]}"
+java -Duser.language=en -Duser.country=US -Xss24M -XX:NewRatio=9 "${mem[@]}" "${jvm_opts[@]}" -jar "$0" "${params[@]}"
 exit
 
 

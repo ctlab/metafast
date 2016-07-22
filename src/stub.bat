@@ -14,16 +14,16 @@ for %%x in (%*) do (
     ) else if "!y!" == "--memory" (
         set nextMem=1
     ) else if "!nextMem!" == "1" (
-        set mem=!mem! -Xmx!y! -Xms!y!
+        set mem=-Xmx!y! -Xms!y!
         set nextMem=0
     ) else if "!y!" == "-ea" (
-        set jvm=!jvm! -ea
+        set jvm_opts=!jvm_opts! -ea
     ) else if "!y!" == "--enable-assertions" (
-        set jvm=!jvm! -ea
+        set jvm_opts=!jvm_opts! -ea
     ) else if "!y:~0,2!" == "-X" (
-        set jvm=!jvm! !y!
+        set jvm_opts=!jvm_opts! !y!
     ) else if "!y:~0,10!" == "-agentlib:" (
-        set jvm=!jvm! !y!
+        set jvm_opts=!jvm_opts! !y!
     ) else (
         set params=!params! !y!
     )
@@ -52,7 +52,7 @@ if "!mem!" == "" (
     set mem=-Xmx!mem!M -Xms!mem!M
 )
 
-java -Xss24M -XX:NewRatio=10 !mem! !jvm! -jar !this! !params!
+java -Duser.language=en -Duser.country=US -Xss24M -XX:NewRatio=9 !mem! !jvm_opts! -jar !this! !params!
 exit /b
 
 
