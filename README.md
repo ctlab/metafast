@@ -1,6 +1,6 @@
 # MetaFast
 
-<img align="right" src="logo.jpg" alt="MetaFast" width="430">
+<img align="right" src="logo.jpg" alt="MetaFast" width="400">
 
 **MetaFast** (METAgenome FAST analysis toolkit) is a toolkit for calculating a number of statistics of 
 metagenome sequences and building the distance matrix between them.
