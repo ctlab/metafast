@@ -76,8 +76,7 @@ public class FeaturesCalculatorMain extends Tool {
         info(NumUtils.groupDigits(components.size()) + " components loaded from " + componentsFile.get());
 
         if (components.size() == 0) {
-            error("No components were found!!! Can't continue the calculations.");
-            System.exit(1);
+            throw new ExecutionFailedException("No components were found in input files! Can't continue the calculations.");
         }
 
         String compName = FileUtils.removeExtension(componentsFile.get().getName(), ".bin");

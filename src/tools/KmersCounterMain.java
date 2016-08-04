@@ -105,6 +105,11 @@ public class KmersCounterMain extends Tool {
         info(NumUtils.groupDigits(hm.size()) + " k-mers found, "
                 + NumUtils.groupDigits(c) + " (" + String.format("%.1f", c * 100.0 / hm.size()) + "%) of them is good (not erroneous)");
 
+        if (hm.size() == 0) {
+            warn("No k-mers found in reads! Perhaps you reads file is empty or k-mer size is too big");
+        } else if (c == 0 || c < (long) (hm.size() * 0.03)) {
+            warn("Too few good k-mers were found! Perhaps you should decrease k-mer size or --maximal-bad-frequency value");
+        }
         long allKmersNumber = (1L << (2*k.get())) / 2;  // (4^k)/2
         if (hm.size() == allKmersNumber) {
             warn("All possible k-mers were found in reads! Perhaps you should increase k-mer size");

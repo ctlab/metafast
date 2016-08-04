@@ -151,6 +151,9 @@ public class SeqBuilderMain extends Tool {
             return;
         }
         info(NumUtils.groupDigits(sequences.size()) + " sequences found");
+        if (sequences.size() == 0) {
+            warn("No sequences were found! Perhaps you should decrease --min-seq-len or --maximal-bad-frequency values");
+        }
         debug("Memory used (without running GC) = " + Misc.usedMemoryWithoutRunningGCAsString());
 
         try {

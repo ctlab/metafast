@@ -75,6 +75,9 @@ public class ComponentCutterMain extends Tool {
         BigLong2ShortHashMap hm = IOUtils.loadReads(sequencesFiles.get(), k.get(), minLen.get(),
                 availableProcessors.get(), logger);
         debug("Memory used = " + Misc.usedMemoryAsString() + ", time = " + t);
+        if (hm.size() == 0) {
+            throw new ExecutionFailedException("No sequences were found in input files! The following steps will be useless");
+        }
 
 
         info("Searching for components...");
@@ -91,6 +94,9 @@ public class ComponentCutterMain extends Tool {
             return;
         }
         info("Total " + NumUtils.groupDigits(components.size()) + " components were found");
+        if (components.size() == 0) {
+            warn("No components were extracted! Perhaps you should decrease --min-component-size value");
+        }
 
         try {
             ConnectedComponent.saveComponents(components, componentsFile.get().getAbsolutePath());
