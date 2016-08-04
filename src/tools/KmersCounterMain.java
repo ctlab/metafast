@@ -104,6 +104,14 @@ public class KmersCounterMain extends Tool {
         }
         info(NumUtils.groupDigits(hm.size()) + " k-mers found, "
                 + NumUtils.groupDigits(c) + " (" + String.format("%.1f", c * 100.0 / hm.size()) + "%) of them is good (not erroneous)");
+
+        long allKmersNumber = (1L << (2*k.get())) / 2;  // (4^k)/2
+        if (hm.size() == allKmersNumber) {
+            warn("All possible k-mers were found in reads! Perhaps you should increase k-mer size");
+        } else if (hm.size() >= (long) (allKmersNumber * 0.99)) {
+            warn("Almost all possible k-mers were found in reads! Perhaps you should increase k-mer size");
+        }
+
         info("Good k-mers printed to " + outFile.getPath());
         resultingKmerFilesPr.set(outFile);
     }
