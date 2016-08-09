@@ -72,24 +72,26 @@ To see the list of available additional tools, run `metafast.sh --tools`.
 
 ## Example
 
-Download [tinytest_A.fastq](https://github.com/ctlab/metafast/raw/master/test_data/tinytest_A.fastq) and 
-[tinytest_B.fastq](https://github.com/ctlab/metafast/raw/master/test_data/tinytest_B.fastq) and run the command:
+Download [meta_test_1.fa](https://github.com/ctlab/metafast/raw/master/test_data/meta_test_1.fa),
+[meta_test_2.fa](https://github.com/ctlab/metafast/raw/master/test_data/meta_test_2.fa) and 
+[meta_test_3.fa](https://github.com/ctlab/metafast/raw/master/test_data/meta_test_3.fa) and run the command:
 ~~~
-./metafast.sh -k 7 -b 0 -l 8 -b1 3 -i tinytest_A.fastq tinytest_B.fastq
+./metafast.sh -i meta_test_1.fa meta_test_2.fa meta_test_3.fa
 ~~~
 
 After it has finished, a distance matrix can be found in `workDir/matrices/dist_matrix_<date>_<time>.txt`:
 ~~~
-#	tinytest_A	tinytest_B
-tinytest_A	0.0	0.09090909090909091
-tinytest_B	0.09090909090909091	0.0
+#       meta_test_1     meta_test_3     meta_test_2
+meta_test_1     0.0     0.2981399448537721      0.5691162409506898
+meta_test_3     0.2981399448537721      0.0     0.8448331091037222
+meta_test_2     0.5691162409506898      0.8448331091037222      0.0
 ~~~
 
 The element `matrix[i][j]` is a distance between *sample i* and *sample j*.
 
 K-mers frequency statistics is saved in `workDir/kmer-counter-many/stats/<in-file>.stat.txt`;<br/>
 image file with heatmap and dendrogram is saved in `workDir/matrices/dist_matrix_<date>_<time>_heatmap.png`:<br/>
-<img src="test_data/test_heatmap.png" alt="Test heatmap" width="450">
+<img src="test_data/meta_test_heatmap.png" alt="Test heatmap" width="450">
 
 
 ## Citation
