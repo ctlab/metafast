@@ -8,6 +8,7 @@ import ru.ifmo.genetics.utils.tool.Tool;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.BoolParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileMVParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileParameterBuilder;
+import ru.ifmo.genetics.utils.tool.inputParameterBuilder.StringParameterBuilder;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -22,7 +23,7 @@ public class DistanceMatrixCalculatorMain extends Tool {
 
     public final Parameter<File[]> featuresFiles = addParameter(new FileMVParameterBuilder("features")
             .mandatory()
-            .withDescription("features values files (for same components)")
+            .withDescription("features values files (for the same components)")
             .create());
 
     public final Parameter<Boolean> withoutNames = addParameter(new BoolParameterBuilder("without-names")
@@ -36,6 +37,11 @@ public class DistanceMatrixCalculatorMain extends Tool {
             .withDefaultValue(workDir.append("dist_matrix_$DT_original_order.txt"))
             .withDefaultComment("<workDir>/dist_matrix_<date>_<time>_original_order.txt")
             .withDescription("resulting distance matrix file")
+            .create());
+
+    public final Parameter<String> outputFormat = addParameter(new StringParameterBuilder("output-format")
+            .withDefaultValue("%.4f")
+            .withDescription("output format for distance values")
             .create());
 
     public File[] outputDescFiles = null;
@@ -74,7 +80,7 @@ public class DistanceMatrixCalculatorMain extends Tool {
         }
 
         try {
-            printMatrix(distMatrix, matrixPath, names, null);
+            printMatrix(distMatrix, matrixPath, names, null, outputFormat.get());
             info("Distance matrix printed to " + matrixPath);
         } catch (FileNotFoundException e) {
             throw new ExecutionFailedException("Failed to print matrix to " + matrixPath);
@@ -82,7 +88,7 @@ public class DistanceMatrixCalculatorMain extends Tool {
         matrixFile.set(new File(matrixPath));
     }
 
-    public static void printMatrix(double[][] matrix, String fp, String[] names, int[] perm) throws FileNotFoundException {
+    public static void printMatrix(double[][] matrix, String fp, String[] names, int[] perm, String format) throws FileNotFoundException {
         File f = new File(fp);
         FileUtils.makeSubDirsOnly(f);
         PrintWriter out = new PrintWriter(f);
@@ -105,9 +111,9 @@ public class DistanceMatrixCalculatorMain extends Tool {
                     out.print(SEPARATOR);
                 }
                 if (perm == null) {
-                    out.print(matrix[i][j]);
+                    out.printf(format, matrix[i][j]);
                 } else {
-                    out.print(matrix[perm[i]][perm[j]]);
+                    out.printf(format, matrix[perm[i]][perm[j]]);
                 }
             }
             out.println();

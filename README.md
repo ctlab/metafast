@@ -14,7 +14,7 @@ SRI of Physical-Chemical Medicine, Moscow, Russia.
 SRI of Physical-Chemical Medicine, Moscow, Russia.
 
 
-**MetaFast** documentation is available on the [MetaFast GitHub wiki](https://github.com/ctlab/metafast/wiki).<br/>
+**MetaFast** documentation is available on the GitHub [wiki page](https://github.com/ctlab/metafast/wiki).<br/>
 Here is a short version of it.
 
 
@@ -79,12 +79,12 @@ Download [meta_test_1.fa](https://github.com/ctlab/metafast/raw/master/test_data
 ./metafast.sh -i meta_test_1.fa meta_test_2.fa meta_test_3.fa
 ~~~
 
-After it has finished, a distance matrix can be found in `workDir/matrices/dist_matrix_<date>_<time>.txt`:
+After it has finished, a distance matrix can be found in `workDir/matrices/dist_matrix_<date>_<time>_original_order.txt`:
 ~~~
-#       meta_test_1     meta_test_3     meta_test_2
-meta_test_1     0.0     0.2981399448537721      0.5691162409506898
-meta_test_3     0.2981399448537721      0.0     0.8448331091037222
-meta_test_2     0.5691162409506898      0.8448331091037222      0.0
+#       meta_test_1     meta_test_2     meta_test_3
+meta_test_1     0.0000  0.5691  0.2981
+meta_test_2     0.5691  0.0000  0.8448
+meta_test_3     0.2981  0.8448  0.0000
 ~~~
 
 The element `matrix[i][j]` is a distance between *sample i* and *sample j*.
@@ -106,7 +106,7 @@ Bioinformatics, btw312.
 
 ## Contact
 
-Please report any problems directly to the github [issue tracker](https://github.com/ctlab/metafast/issues).<br/>
+Please report any problems directly to the GitHub [issue tracker](https://github.com/ctlab/metafast/issues).<br/>
 Also, you can send your feedback to [svkazakov@rain.ifmo.ru](mailto:svkazakov@rain.ifmo.ru).
 
 

@@ -132,6 +132,7 @@ public class DistanceMatrixBuilderMain extends Tool {
         setFix(heatMapMaker.matrixFile, distMatrixCalculator.matrixFile);
         setFix(heatMapMaker.newMatrixFile, matrixFile);
         setFix(heatMapMaker.heatmapFile, heatmapFile);
+        setFix(heatMapMaker.outputFormat, distMatrixCalculator.outputFormat);
         heatMapMaker.outputDescFiles = outputDescFiles;
         addSubTool(heatMapMaker);
     }

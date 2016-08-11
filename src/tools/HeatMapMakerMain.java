@@ -8,6 +8,7 @@ import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.BoolParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileParameterBuilder;
+import ru.ifmo.genetics.utils.tool.inputParameterBuilder.StringParameterBuilder;
 import ru.ifmo.genetics.utils.tool.values.InMemoryValue;
 import ru.ifmo.genetics.utils.tool.values.InValue;
 
@@ -49,6 +50,11 @@ public class HeatMapMakerMain extends Tool {
 
     public final Parameter<Boolean> invertColors = addParameter(new BoolParameterBuilder("invert-colors")
             .withDescription("invert colors in heatmap")
+            .create());
+
+    public final Parameter<String> outputFormat = addParameter(new StringParameterBuilder("output-format")
+            .withDefaultValue("%.4f")
+            .withDescription("output format for distance values")
             .create());
 
     public File[] outputDescFiles = null;
@@ -96,7 +102,7 @@ public class HeatMapMakerMain extends Tool {
         } else {
             // should renumber
             try {
-                DistanceMatrixCalculatorMain.printMatrix(matrix, newMatrixPath, names, maker.perm);
+                DistanceMatrixCalculatorMain.printMatrix(matrix, newMatrixPath, names, maker.perm, outputFormat.get());
             } catch (FileNotFoundException e) {
                 throw new ExecutionFailedException("Can't save renumbered matrix to file " + newMatrixPath, e);
             }
