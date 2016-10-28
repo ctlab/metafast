@@ -33,7 +33,10 @@ public class HeatMapMakerMain extends Tool {
     public final Parameter<Boolean> withoutRenumbering = addParameter(new BoolParameterBuilder("without-renumbering")
             .important()
             .withShortOpt("wr")
-            .withDescription("do not renumber samples in the heatmap")
+            .withDescription("don't renumber samples in the heatmap")
+            .withDescriptionShort("Don't renumber samples")
+            .withDescriptionRu("Не перенумеровывать образцы в итоговой матрице и в тепловой карте")
+            .withDescriptionRuShort("Не перенумеровывать образцы")
             .create());
 
     public final Parameter<File> newMatrixFile = addParameter(new FileParameterBuilder("newMatrix-file")

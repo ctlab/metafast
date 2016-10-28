@@ -39,6 +39,9 @@ public class ComponentCutterMain extends Tool {
             .withShortOpt("b1")
             .withDescription("minimum component size in component-cutter (in k-mers)")
             .withDefaultValue(1000)
+            .withDescriptionShort("Minimal component size")
+            .withDescriptionRu("Минимальный размер компоненты для использования")
+            .withDescriptionRuShort("Минимальный размер компоненты")
             .create());
 
     public final Parameter<Integer> maxComponentSize = addParameter(new IntParameterBuilder("max-component-size")
@@ -46,6 +49,9 @@ public class ComponentCutterMain extends Tool {
             .withShortOpt("b2")
             .withDescription("maximum component size in component-cutter (in k-mers)")
             .withDefaultValue(10000)
+            .withDescriptionShort("Maximal component size")
+            .withDescriptionRu("Максимальный размер компоненты для использования")
+            .withDescriptionRuShort("Максимальный размер компоненты")
             .create());
 
     public final Parameter<File[]> sequencesFiles = addParameter(new FileMVParameterBuilder("sequences")

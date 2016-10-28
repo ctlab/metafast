@@ -1,3 +1,4 @@
 workDir*
 .idea*
 out*
+*.log

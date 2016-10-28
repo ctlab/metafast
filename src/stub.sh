@@ -33,7 +33,7 @@ if [ ${#mem[@]} == 0 ]; then
     fi
 fi
 
-java -Duser.language=en -Duser.country=US -Djava.awt.headless=true -Xss24M -XX:NewRatio=9 "${mem[@]}" "${jvm_opts[@]}" -jar "$0" "${params[@]}"
+java -Duser.language=en -Duser.country=US -Xss24M -XX:NewRatio=9 "${mem[@]}" "${jvm_opts[@]}" -jar "$0" "${params[@]}"
 exit
 
 

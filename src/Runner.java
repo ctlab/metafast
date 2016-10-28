@@ -21,7 +21,6 @@ public class Runner extends ru.ifmo.genetics.Runner {
 
     static {
         ru.ifmo.genetics.Runner.toolParameter.replaceDescription(toolParameterDescr);
-        Tool.launchOptions.remove(ru.ifmo.genetics.Runner.guiParameter);
         ru.ifmo.genetics.Runner.memoryParameter.replaceDescription(memoryParameterDescr);
     }
 
@@ -48,6 +47,7 @@ public class Runner extends ru.ifmo.genetics.Runner {
         boolean printVersion = containsOption(args, "--version");
         boolean printFirstHelp = (args.length == 0) ||
                 (containsOption(args, getOptKeys(Tool.helpParameter)) && !containsOption(args, getOptKeys(toolParameter)));
+        boolean runGUI = containsOption(args, getOptKeys(guiParameter));
 
         if (printVersion) {
             printHeader();
@@ -58,6 +58,22 @@ public class Runner extends ru.ifmo.genetics.Runner {
             printFirstHelp();
             return false;
         }
+        if (runGUI) {
+            printHeader();
+            args = removeSingleOption(args, getOptKeys(guiParameter));
+            out.println("Starting GUI...");
+            out.println("If you want to work via command line, add -h option to view help.");
+            try {
+                GUI.mainImpl(args);
+            } catch (RuntimeException e) {
+                out.println("Can't start GUI! Try to add -h option to work via command line.");
+                out.println("Exception: " + e.getMessage());
+                e.printStackTrace();
+                System.exit(1);
+            }
+            return true;
+        }
+        System.setProperty("java.awt.headless", "true");    // to use lightweight graphics in HeatMapMaker
         return false;
     }
 

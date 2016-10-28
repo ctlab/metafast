@@ -31,12 +31,15 @@ public class DistanceMatrixBuilderMain extends Tool {
             .withShortOpt("k")
             .withDefaultValue(31)
             .withDescription("k-mer size (in nucleotides, maximum 31 due to realization details)")
+            .withDescriptionShort("k-mer size")
+            .withDescriptionRu("Длина k-мера при построении графа де Брейна")
+            .withDescriptionRuShort("Длина k-мера")
             .create());
 
     public final Parameter<File[]> inputFiles = addParameter(new FileMVParameterBuilder("reads")
             .withShortOpt("i")
             .mandatory()
-            .withDescription("list of reads files from single environment. FASTQ, BINQ, FASTA")
+            .withDescription("list of reads files from single environment. FASTQ, FASTA")
             .create());
 
     public final Parameter<Integer> maximalBadFrequency = addParameter(new IntParameterBuilder("maximal-bad-frequency")
@@ -44,13 +47,19 @@ public class DistanceMatrixBuilderMain extends Tool {
             .withShortOpt("b")
             .withDescription("maximal frequency for a k-mer to be assumed erroneous")
             .withDefaultValue(1)
+            .withDescriptionShort("Maximal bad frequency")
+            .withDescriptionRu("Максимальная частота ошибочного k-мера")
+            .withDescriptionRuShort("Максимальная частота ошибочного k-мера")
             .create());
 
-    public final Parameter<Integer> minLen = addParameter(new IntParameterBuilder("min-seq-len")
+    public final Parameter<Integer> minSequenceLength = addParameter(new IntParameterBuilder("min-seq-len")
             .important()
             .withShortOpt("l")
-            .withDescription("minimum sequence length to be added to a component (in nucleotides)")
+            .withDescription("minimal sequence length to be added to a component (in nucleotides)")
             .withDefaultValue(100)
+            .withDescriptionShort("Minimal sequence length to use")
+            .withDescriptionRu("Минимальая длина пути для добавления в компоненту (в нуклеотидах)")
+            .withDescriptionRuShort("Минимальая длина пути")
             .create());
 
     public final Parameter<Boolean> useReadsForCalculatingFeatures = addParameter(new BoolParameterBuilder("use-reads-for-calculating-features")
@@ -91,7 +100,7 @@ public class DistanceMatrixBuilderMain extends Tool {
         setFix(seqBuilder.k, k);
         setFix(seqBuilder.inputFiles, kmersCounter.resultingKmerFiles);
         setFix(seqBuilder.maximalBadFrequency, maximalBadFrequency);
-        setFix(seqBuilder.sequenceLen, minLen);
+        setFix(seqBuilder.sequenceLen, minSequenceLength);
         setFixDefault(seqBuilder.outputDir);
         seqBuilder.outputDescFiles = outputDescFiles;
         addSubTool(seqBuilder);
@@ -101,7 +110,7 @@ public class DistanceMatrixBuilderMain extends Tool {
     {
         setFix(compCutter.k, k);
         setFix(compCutter.sequencesFiles, seqBuilder.outputFilesOut);
-        setFix(compCutter.minLen, minLen);
+        setFix(compCutter.minLen, minSequenceLength);
         setFixDefault(compCutter.componentsFile);
         compCutter.outputDescFiles = outputDescFiles;
         addSubTool(compCutter);
