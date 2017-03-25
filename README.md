@@ -6,8 +6,8 @@
 metagenome sequences and building the distance matrix between them.
 
 Authors:
-* **Software:** *Sergey Kazakov* and *Vladimir Ulyantsev*, <br/>
-ITMO University, Saint-Petersburg, Russia.
+* **Software:** *Sergey Kazakov* and [*Vladimir Ulyantsev*](http://rain.ifmo.ru/~ulyantsev/), <br/>
+[ITMO University](http://en.ifmo.ru/en/), Saint-Petersburg, Russia.
 * **Testing:** *Veronika Dubinkina* and *Alexandr Tyakht*, <br/>
 SRI of Physical-Chemical Medicine, Moscow, Russia.
 * **Idea, supervisor:** *Dmitry Alexeev*, <br/>
