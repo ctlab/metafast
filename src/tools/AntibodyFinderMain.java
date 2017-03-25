@@ -64,7 +64,7 @@ public class AntibodyFinderMain extends Tool {
 
 
     @Override
-    protected void runImpl() throws ExecutionFailedException {
+    protected void runImpl() throws ExecutionFailedException, IOException {
         int LEN = k.get();
 
         String seq = loadConstantFragment();

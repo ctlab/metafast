@@ -20,15 +20,23 @@ done
 
 if [ ${#mem[@]} == 0 ]; then
     if which free > /dev/null 2>&1; then
-        let mem=`free -m | grep "buffers/cache" | sed -r "s/\s+/ /g" | cut -d " " -f 4`
-        mem=$(($mem * 90 / 100))
-        mem=("-Xmx$mem""M" "-Xms$mem""M")
-    elif which vm_stat > /dev/null 2>&1; then
+        memS=`free -m | grep "buffers/cache" | sed -r "s/\s+/ /g" | cut -d " " -f 4`
+        if [ -z "$memS" ] && [ -n "`free -m | grep available`" ]; then 
+            ind=`free -m | grep "available" | sed -r "s/\s+/ /g" | grep -o " " | wc -l`
+            memS=`free -m | grep "Mem:" | sed -r "s/\s+/ /g" | cut -d " " -f $(($ind+1))`
+        fi
+        if [ -n "$memS" ]; then        
+            mem=$(($memS * 90 / 100))
+            mem=("-Xmx$mem""M" "-Xms$mem""M")
+        fi
+    fi
+    if [ -z "$mem" ] && which vm_stat > /dev/null 2>&1; then
         inactive_mem=`vm_stat | grep -i inactive | grep -o "[[:digit:]]\+"`
         free_mem=`vm_stat | grep -i free | grep -o "[[:digit:]]\+"`
         mem=$((($inactive_mem + $free_mem) * 4096 / 1024 / 1024 * 90 / 100))
         mem=("-Xmx$mem""M" "-Xms$mem""M")
-    else
+    fi
+    if [ -z "$mem" ]; then
         echo "WARN: Can't detect free memory, using java default"
     fi
 fi

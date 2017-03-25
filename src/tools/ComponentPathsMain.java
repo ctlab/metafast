@@ -80,7 +80,7 @@ public class ComponentPathsMain extends Tool {
 
 
     @Override
-    protected void runImpl() throws ExecutionFailedException {
+    protected void runImpl() throws ExecutionFailedException, IOException {
         Timer t = new Timer();
 
         if (!allComponents.get() && (components.get().length == 0)) {

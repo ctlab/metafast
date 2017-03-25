@@ -67,7 +67,7 @@ public class FeaturesCalculatorMain extends Tool {
 
 
     @Override
-    protected void runImpl() throws ExecutionFailedException {
+    protected void runImpl() throws ExecutionFailedException, IOException {
         Timer t = new Timer();
 
         debug("Loading components...");

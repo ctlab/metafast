@@ -75,7 +75,7 @@ public class ComponentCutterMain extends Tool {
 
 
     @Override
-    protected void runImpl() throws ExecutionFailedException {
+    protected void runImpl() throws ExecutionFailedException, IOException {
         Timer t = new Timer();
         debug("Loading sequences from files...");
         BigLong2ShortHashMap hm = IOUtils.loadReads(sequencesFiles.get(), k.get(), minLen.get(),
@@ -106,7 +106,7 @@ public class ComponentCutterMain extends Tool {
 
         try {
             ConnectedComponent.saveComponents(components, componentsFile.get().getAbsolutePath());
-            info("Components printed to " + componentsFile.get());
+            info("Components saved to " + componentsFile.get());
         } catch (IOException e) {
             e.printStackTrace();
         }

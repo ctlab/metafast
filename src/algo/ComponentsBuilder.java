@@ -5,7 +5,6 @@ import org.apache.log4j.Logger;
 import ru.ifmo.genetics.executors.NonBlockingQueueExecutor;
 import ru.ifmo.genetics.statistics.Timer;
 import ru.ifmo.genetics.structures.map.BigLong2ShortHashMap;
-import ru.ifmo.genetics.structures.map.Long2ShortHashMap;
 import ru.ifmo.genetics.structures.map.Long2ShortHashMapInterface;
 import ru.ifmo.genetics.structures.map.MutableLongShortEntry;
 import ru.ifmo.genetics.utils.Misc;
@@ -16,7 +15,6 @@ import structures.ConnectedComponent;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static io.IOUtils.withP;
 
@@ -62,8 +60,8 @@ public class ComponentsBuilder {
         Timer t = new Timer();
 
         long hmSize = hm.size();
-        int freqThreshold = 1;  // i.e. consider only kmers presented in reads
-        List<ConnectedComponent> newComps = findAllComponents(hm, k, b2, freqThreshold+1);
+        int curFreqThreshold = 1;  // current component is formed of k-mers with frequency >= 1
+        List<ConnectedComponent> newComps = findAllComponents(hm, k, b2, curFreqThreshold);
 
         int small = 0, ok = 0, big = 0;
         long smallK = 0, okK = 0;
@@ -71,11 +69,10 @@ public class ComponentsBuilder {
 
         List<ConnectedComponent> toProcess = new ArrayList<ConnectedComponent>();
         for (ConnectedComponent comp : newComps) {
-            comp.usedFreqThreshold = freqThreshold;
             if (comp.size < b1) {
                 small++;
                 smallK += comp.size;
-            } else if (comp.size < b2) {
+            } else if (comp.size <= b2) {
                 ok++;
                 okK += comp.size;
                 ans.add(comp);
@@ -98,7 +95,7 @@ public class ComponentsBuilder {
         Tool.debug(logger, "Components kmers: small = " + withP(smallK, hmSize) + ", " +
                 "ok = " + withP(okK, hmSize) + ", " +
                 "big = " + withP(hmSize - smallK - okK, hmSize));
-        Tool.debug(logger, "FreqThreshold = " + freqThreshold + ", " +
+        Tool.debug(logger, "FreqThreshold = " + curFreqThreshold + ", " +
                 "components added = " + ok + ", total components added = " + ans.size());
 
         Tool.debug(logger, "Memory used: without GC = " + Misc.usedMemoryWithoutRunningGCAsString() + ", " +
@@ -123,7 +120,7 @@ public class ComponentsBuilder {
             Tool.debug(logger, "Biggest component has " +
                     withP(biggest.size, hmSize, "kmers", "of initial hm size"));
             Tool.debug(logger, "Saved to new hm from it = " +
-                    withP(biggest.hm.size(), biggest.size, "kmers", "of its size"));
+                    withP(biggest.nextHM.size(), biggest.size, "kmers", "of its size"));
             biggest = null;
 
             executor.startWorkers();
@@ -141,7 +138,11 @@ public class ComponentsBuilder {
 
 
         // post processing...
+        Tool.debug(logger, "ans.size = " + ans.size());
+
+
         Collections.sort(ans);
+
         PrintWriter statPW = new PrintWriter(statFP);
         statPW.println("# component.no\tcomponent.size\tcomponent.weight\tusedFreqThreshold");
         for (int i = 0; i < ans.size(); i++) {
@@ -159,17 +160,18 @@ public class ComponentsBuilder {
         Task(ConnectedComponent component) { this.component = component; }
         @Override
         public void run() {
-            int freqThreshold = component.usedFreqThreshold + 1;
+            int curFreqThreshold = component.usedFreqThreshold + 1;
 
             List<ConnectedComponent> newComps =
-                    findAllComponents(component.hm, k, b2, freqThreshold+1);
+                    findAllComponents(component.nextHM, k, b2, curFreqThreshold);
 
             for (ConnectedComponent comp : newComps) {
-                comp.usedFreqThreshold = freqThreshold;
                 if (comp.size < b1) {
                     // skipping
-                } else if (comp.size < b2) {
-                    ans.add(comp);
+                } else if (comp.size <= b2) {
+                    synchronized (ans) {
+                        ans.add(comp);
+                    }
                 } else {
                     executor.addTask(new Task(comp));
                 }
@@ -180,7 +182,7 @@ public class ComponentsBuilder {
     Comparator<Runnable> comparator = new Comparator<Runnable>() {
         @Override
         public int compare(Runnable o1, Runnable o2) {
-            if (!(o1 instanceof Task) && !(o1 instanceof Task)) {
+            if (!(o1 instanceof Task) || !(o2 instanceof Task)) {
                 return 0;
             }
             Task t1 = (Task) o1;
@@ -190,19 +192,19 @@ public class ComponentsBuilder {
     };
 
 
-
-
-
+    /**
+     * Assuming running in one thread for current hm!
+     */
     private static List<ConnectedComponent> findAllComponents(Long2ShortHashMapInterface hm,
-                                                   int k, int b2, int newFreqThreshold) {
+                                                   int k, int b2, int curFreqThreshold) {
         List<ConnectedComponent> ans = new ArrayList<ConnectedComponent>();
         LongArrayFIFOQueue queue = new LongArrayFIFOQueue((int) Math.min(1 << 16, hm.size()/2));
 
-        Iterator<MutableLongShortEntry> it = hm.entryIterator();
-        while (it.hasNext()) {
-            MutableLongShortEntry entry = it.next();
-            if (entry.getValue() > 0) {    // i.e. if not precessed
-                ConnectedComponent comp = findComponent(hm, entry.getKey(), queue, k, b2, newFreqThreshold);
+        Iterator<MutableLongShortEntry> iterator = hm.entryIterator();
+        while (iterator.hasNext()) {
+            MutableLongShortEntry startKmer = iterator.next();
+            if (startKmer.getValue() > 0) {    // i.e. if not precessed
+                ConnectedComponent comp = bfs(hm, startKmer.getKey(), queue, k, b2, curFreqThreshold);
                 ans.add(comp);
             }
         }
@@ -210,26 +212,26 @@ public class ComponentsBuilder {
         return ans;
     }
 
-
     /**
      * Breadth-first search to make the traversal of the component.
      * If the component is small (less than b2 vertices), all its kmers is saved to
-     * ConnectedComponent.kmers, else a subset of hm is stored to ConnectedComponent.hm structure.
+     * ConnectedComponent.kmers, else a subset of hm is stored to ConnectedComponent.nextHM structure.
      */
-    private static ConnectedComponent findComponent(Long2ShortHashMapInterface hm, long startKmer,
-                                             LongArrayFIFOQueue queue,
-                                                   int k, int b2, int newFreqThreshold) {
+    private static ConnectedComponent bfs(Long2ShortHashMapInterface hm, long startKmer,
+                                          LongArrayFIFOQueue queue,
+                                          int k, int b2, int curFreqThreshold) {
 
         ConnectedComponent comp = new ConnectedComponent();
+        comp.usedFreqThreshold = curFreqThreshold;
 
         queue.clear();
-        boolean bigComp = false;
 
         queue.enqueue(startKmer);
         short value = hm.get(startKmer);
         assert value > 0;
         hm.put(startKmer, (short) -value);  // removing
         comp.add(startKmer, value);
+        boolean alreadyBigComp = false;
 
         while (queue.size() > 0) {
             long kmer = queue.dequeue();
@@ -239,26 +241,26 @@ public class ComponentsBuilder {
                 if (value > 0) {    // i.e. if not precessed
                     queue.enqueue(neighbour);
                     hm.put(neighbour, (short) -value);
-                    if (bigComp) {
-                        if (value >= newFreqThreshold) {
-                            comp.hm.put(neighbour, value);
-                        }
-                        comp.size++;
-                    } else {
+
+                    if (!alreadyBigComp) {
                         comp.add(neighbour, value);
-                        if (comp.size == b2) {
-                            // component is big one
-                            bigComp = true;
-                            comp.hm = new BigLong2ShortHashMap(4, 13);
+                        if (comp.size > b2) {
+                            alreadyBigComp = true;
+                            comp.nextHM = new BigLong2ShortHashMap(4, 13);
                             for (long kk : comp.kmers) {
                                 value = (short) -hm.get(kk);
                                 assert value > 0;
-                                if (value >= newFreqThreshold) {
-                                    comp.hm.put(kk, value);
+                                if (value >= curFreqThreshold+1) {
+                                    comp.nextHM.put(kk, value);
                                 }
                             }
                             comp.kmers = null;
                         }
+                    } else {
+                        if (value >= curFreqThreshold+1) {  // for next HM
+                            comp.nextHM.put(neighbour, value);
+                        }
+                        comp.size++;
                     }
                 }
             }

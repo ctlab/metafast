@@ -63,7 +63,7 @@ public class KmersCounterMain extends Tool {
 
 
     @Override
-    protected void runImpl() throws ExecutionFailedException {
+    protected void runImpl() throws ExecutionFailedException, IOException {
         if (k.get() <= 0) {
             error("The size of k-mer must be at least 1.");
             System.exit(1);

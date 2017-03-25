@@ -235,7 +235,7 @@ public class IOUtils {
 
     public static BigLong2ShortHashMap loadReads(File[] files, int k, int minSeqLen,
                                                  int availableProcessors, Logger logger)
-            throws ExecutionFailedException {
+            throws ExecutionFailedException, IOException {
         BigLong2ShortHashMap hm = new BigLong2ShortHashMap(
                 (int) (Math.log(availableProcessors) / Math.log(2)) + 4, 12, true);
 
@@ -289,7 +289,7 @@ public class IOUtils {
     }
 
     public static void calculatePresenceForReads(File[] files, int k, BigLong2LongHashMap hm, int availableProcessors, Logger logger)
-            throws ExecutionFailedException {
+            throws ExecutionFailedException, IOException {
         ReadsWorker[] workers = new ReadsWorker[availableProcessors];
         for (int i = 0; i < workers.length; ++i) {
             workers[i] = new ReadsPresenceWorker(hm, k);
@@ -300,7 +300,7 @@ public class IOUtils {
 
 
     public static void run(File[] files, ReadsWorker[] workers, BigLong2ShortHashMap hmForMonitoring, Logger logger)
-            throws ExecutionFailedException {
+            throws ExecutionFailedException, IOException {
         for (File file : files) {
             Tool.info(logger, "Loading file " + file.getName() + "...");
 

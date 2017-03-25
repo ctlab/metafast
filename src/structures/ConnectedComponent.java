@@ -11,23 +11,33 @@ import java.util.List;
 
 public class ConnectedComponent implements Comparable<ConnectedComponent> {
 
-    public long size;
-    public long weight;
-
-
-    // frequently used (not always)
-    public int no;
-    public int usedFreqThreshold;
-
     /**
-     * Stores kmers if the component is small (less than b2 vertices).
+     * Stores k-mers if the component isn't a big one (less than b2 vertices).
      */
     public List<Long> kmers;
 
     /**
-     * Is used in ComponentsBuilder if the component is big.
+     * Current component size (number of k-mers)
      */
-    public BigLong2ShortHashMap hm = null;
+    public long size;
+
+
+    public int no;          // id of this component, can be not initialized
+    public long weight;     // weight of this component
+
+    /**
+     * Threshold used to construct this component!
+     * Can be not initialized
+     */
+    public int usedFreqThreshold;
+
+
+
+
+    /**
+     * Stores k-mers with (frequency >= usedFreqThreshold+1) for the following processing.
+     */
+    public BigLong2ShortHashMap nextHM = null;
 
 
 

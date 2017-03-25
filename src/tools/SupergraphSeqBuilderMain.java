@@ -78,7 +78,7 @@ public class SupergraphSeqBuilderMain extends Tool {
     private long MAX_SIZE;
 
     @Override
-    protected void runImpl() throws ExecutionFailedException {
+    protected void runImpl() throws ExecutionFailedException, IOException {
 
         MAX_SIZE = maxSize.get();
 
@@ -95,14 +95,10 @@ public class SupergraphSeqBuilderMain extends Tool {
             addToSupergraph(superHM, file);
         }
 
-        try {
-            calcSequences(superHM, workDir + File.separator + "sequences.fasta");
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
+        calcSequences(superHM, workDir + File.separator + "sequences.fasta");
     }
 
-    private void addToSupergraph(BigLong2ShortHashMap superHM, File readsFile) throws ExecutionFailedException {
+    private void addToSupergraph(BigLong2ShortHashMap superHM, File readsFile) throws ExecutionFailedException, IOException {
         BigLong2ShortHashMap hm =
                 IOUtils.loadReads(new File[]{readsFile}, k.get(), 0, availableProcessors.get(), logger);
 
