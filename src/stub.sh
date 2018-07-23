@@ -37,7 +37,7 @@ if [ ${#mem[@]} == 0 ]; then
         mem=("-Xmx$mem""M" "-Xms$mem""M")
     fi
     if [ -z "$mem" ]; then
-        echo "WARN: Can't detect free memory, using java default"
+        echo "WARNING: Can't detect free memory, using java default"
     fi
 fi
 
