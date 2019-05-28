@@ -15,6 +15,8 @@ import ru.ifmo.genetics.utils.tool.values.InValue;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.text.NumberFormat;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -82,6 +84,8 @@ public class HeatMapMakerMain extends Tool {
             parseMatrix(matrixFile.get());
         } catch (IOException e) {
             throw new ExecutionFailedException("Can't read matrix file " + matrixFile.get(), e);
+        } catch (ParseException e) {
+            throw new ExecutionFailedException("Can't read matrix file " + matrixFile.get(), e);
         }
 
 
@@ -129,7 +133,7 @@ public class HeatMapMakerMain extends Tool {
     }
 
 
-    private void parseMatrix(File f) throws IOException, ExecutionFailedException {
+    private void parseMatrix(File f) throws IOException, ExecutionFailedException, ParseException {
         debug("Parsing matrix from file " + f);
 
         BufferedReader in = new BufferedReader(new FileReader(f));
@@ -188,9 +192,10 @@ public class HeatMapMakerMain extends Tool {
             }
         }
         int dx = withNames ? 1 : 0;
+        NumberFormat nf = NumberFormat.getInstance();
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
-                matrix[i][j] = Double.parseDouble(dataArray[i + dx][j + dx]);
+                matrix[i][j] = nf.parse(dataArray[i + dx][j + dx]).doubleValue();
             }
         }
         // OK, done
