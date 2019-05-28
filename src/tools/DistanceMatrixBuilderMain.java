@@ -123,6 +123,7 @@ public class DistanceMatrixBuilderMain extends Tool {
         setFixDefault(featuresCalculator.readsFiles);
         setFix(featuresCalculator.kmersFiles, kmersCounter.resultingKmerFiles);
         setFixDefault(featuresCalculator.threshold);
+        setFix(featuresCalculator.maximalBadFrequency, maximalBadFrequency);
         featuresCalculator.outputDescFiles = outputDescFiles;
         addSubTool(featuresCalculator);
     }
