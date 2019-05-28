@@ -59,12 +59,6 @@ public class FeaturesCalculatorMain extends Tool {
             .withDefaultValue(0)
             .create());
 
-    public final Parameter<Integer> maximalBadFrequency = addParameter(new IntParameterBuilder("maximal-bad-frequency")
-            .optional()
-            .withShortOpt("b")
-            .withDescription("maximal frequency for a k-mer to be assumed erroneous")
-            .create());
-
     public File[] outputDescFiles = null;
 
 
@@ -130,7 +124,7 @@ public class FeaturesCalculatorMain extends Tool {
         if (kmersFiles.get() != null) {
             for (File kmersFile : kmersFiles.get()) {
                 // normalize on total amount of k-mers in kmersFile
-                BigLong2ShortHashMap hm_tmp =IOUtils.loadKmers(new File[]{kmersFile}, maximalBadFrequency.get(), availableProcessors.get(), logger);
+                BigLong2ShortHashMap hm_tmp =IOUtils.loadKmers(new File[]{kmersFile}, threshold.get(), availableProcessors.get(), logger);
                 debug("Memory used = " + Misc.usedMemoryAsString() + ", time = " + t);
                 long totalKmers = 0;
                 Iterator<MutableLongShortEntry> it = hm_tmp.entryIterator();
