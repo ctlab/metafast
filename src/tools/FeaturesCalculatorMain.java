@@ -4,6 +4,8 @@ import io.IOUtils;
 import ru.ifmo.genetics.io.ReadersUtils;
 import ru.ifmo.genetics.statistics.Timer;
 import ru.ifmo.genetics.structures.map.BigLong2LongHashMap;
+import ru.ifmo.genetics.structures.map.BigLong2ShortHashMap;
+import ru.ifmo.genetics.structures.map.MutableLongShortEntry;
 import ru.ifmo.genetics.utils.FileUtils;
 import ru.ifmo.genetics.utils.Misc;
 import ru.ifmo.genetics.utils.NumUtils;
@@ -19,6 +21,7 @@ import structures.ConnectedComponent;
 
 import java.io.*;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 public class FeaturesCalculatorMain extends Tool {
@@ -111,7 +114,7 @@ public class FeaturesCalculatorMain extends Tool {
                         availableProcessors.get(), logger);
 
                 File outFile = new File(outDir, ReadersUtils.readDnaLazy(readsFile).name() + ".vec");
-                buildAndPrintVector(components, hm, threshold.get(), vector, outFile);
+                buildAndPrintVector(components, hm, threshold.get(), vector, outFile, 1);
                 info("Features for file " + readsFile.getName() + " printed to " + outFile);
                 featuresFiles[curFiles] = outFile;
                 curFiles++;
@@ -120,12 +123,23 @@ public class FeaturesCalculatorMain extends Tool {
 
         if (kmersFiles.get() != null) {
             for (File kmersFile : kmersFiles.get()) {
+                // normalize on total amount of k-mers in kmersFile
+                BigLong2ShortHashMap hm_tmp =IOUtils.loadKmers(new File[]{kmersFile}, threshold.get(), availableProcessors.get(), logger);
+                debug("Memory used = " + Misc.usedMemoryAsString() + ", time = " + t);
+                long totalKmers = 0;
+                Iterator<MutableLongShortEntry> it = hm_tmp.entryIterator();
+                while (it.hasNext()) {
+                    MutableLongShortEntry entry = it.next();
+                    int value = entry.getValue();
+                    totalKmers += value;
+                }
+
                 hm.resetValues();
                 IOUtils.calculatePresenceForKmers(new File[]{kmersFile}, hm,
                         availableProcessors.get(), logger);
 
                 File outFile = new File(outDir, FileUtils.removeExtension(kmersFile.getName(), ".kmers.bin") + ".vec");
-                buildAndPrintVector(components, hm, threshold.get(), vector, outFile);
+                buildAndPrintVector(components, hm, threshold.get(), vector, outFile, totalKmers);
                 info("Features for file " + kmersFile.getName() + " printed to " + outFile);
                 featuresFiles[curFiles] = outFile;
                 curFiles++;
@@ -137,7 +151,7 @@ public class FeaturesCalculatorMain extends Tool {
     }
 
     private void buildAndPrintVector(final List<ConnectedComponent> components, final BigLong2LongHashMap hm,
-                                     final int threshold, final long[] vector, File outFile) throws ExecutionFailedException {
+                                     final int threshold, final long[] vector, File outFile, long totalKmers) throws ExecutionFailedException {
 
         try {
             debug("Building vector...");
@@ -179,7 +193,7 @@ public class FeaturesCalculatorMain extends Tool {
             PrintWriter out = new PrintWriter(new BufferedWriter(
                     new OutputStreamWriter(new FileOutputStream(outFile)), 1 << 20));   // 1 Mb buffer
             for (long kmers : vector) {
-                out.println(kmers);
+                out.println((double) kmers / totalKmers);
             }
             out.close();
         } catch (IOException e) {

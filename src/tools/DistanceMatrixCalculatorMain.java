@@ -49,7 +49,7 @@ public class DistanceMatrixCalculatorMain extends Tool {
 
     @Override
     protected void runImpl() throws ExecutionFailedException {
-        List<List<Long>> features = new ArrayList<List<Long>>();
+        List<List<Double>> features = new ArrayList<List<Double>>();
 
         for (File featuresFile : featuresFiles.get()) {
             try {
@@ -122,14 +122,14 @@ public class DistanceMatrixCalculatorMain extends Tool {
         out.close();
     }
 
-    private List<Long> readVector(File file) throws IOException {
-        List<Long> ans = new ArrayList<Long>();
+    private List<Double> readVector(File file) throws IOException {
+        List<Double> ans = new ArrayList<Double>();
 
         BufferedReader reader = new BufferedReader(new FileReader(file));
         String line;
         while ((line = reader.readLine()) != null) {
             if (!line.isEmpty()) {
-                ans.add(Long.parseLong(line));
+                ans.add(Double.parseDouble(line));
             }
         }
         reader.close();
@@ -137,10 +137,10 @@ public class DistanceMatrixCalculatorMain extends Tool {
         return ans;
     }
 
-    private double brayCurtisDistance(List<Long> vector1, List<Long> vector2) {
+    private double brayCurtisDistance(List<Double> vector1, List<Double> vector2) {
         assert vector1.size() == vector2.size();
 
-        long sumdiff = 0, sum = 0;
+        double sumdiff = 0, sum = 0;
 
         for (int pos = 0; pos < vector1.size(); pos++) {
             sumdiff += Math.abs(vector1.get(pos) - vector2.get(pos));
@@ -148,7 +148,7 @@ public class DistanceMatrixCalculatorMain extends Tool {
         }
 
         assert sum > 0;
-        return sumdiff / (double) sum;
+        return sumdiff / sum;
     }
 
 
