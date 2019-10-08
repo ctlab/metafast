@@ -1,5 +1,5 @@
 <project name="jarsBuilder" default="metafast">
-    <property name="VERSION" value="0.1.3"/>
+    <property name="VERSION" value="0.1.4"/>
     <exec executable="git" outputproperty="revision">
         <arg value="rev-parse"/>
         <arg value="--short"/>
@@ -31,6 +31,42 @@
 
     <property name="itmo-assembler.path" value="lib/itmo-assembler.jar"/>
     <property name="args4j.path" value="lib/args4j-2.0.21.jar"/>
+    <property name="batik-all-1.11.path" value="lib/batik/batik-all-1.11.jar"/>
+    <property name="batik-anim-1.11.path" value="lib/batik/batik-anim-1.11.jar"/>
+    <property name="batik-awt-util-1.11.path" value="lib/batik/batik-awt-util-1.11.jar"/>
+    <property name="batik-bridge-1.11.path" value="lib/batik/batik-bridge-1.11.jar"/>
+    <property name="batik-codec-1.11.path" value="lib/batik/batik-codec-1.11.jar"/>
+    <property name="batik-constants-1.11.path" value="lib/batik/batik-constants-1.11.jar"/>
+    <property name="batik-css-1.11.path" value="lib/batik/batik-css-1.11.jar"/>
+    <property name="batik-dom-1.11.path" value="lib/batik/batik-dom-1.11.jar"/>
+    <property name="batik-ext-1.11.path" value="lib/batik/batik-ext-1.11.jar"/>
+    <property name="batik-extension-1.11.path" value="lib/batik/batik-extension-1.11.jar"/>
+    <property name="batik-gui-util-1.11.path" value="lib/batik/batik-gui-util-1.11.jar"/>
+    <property name="batik-gvt-1.11.path" value="lib/batik/batik-gvt-1.11.jar"/>
+    <property name="batik-i18n-1.11.path" value="lib/batik/batik-i18n-1.11.jar"/>
+    <property name="batik-parser-1.11.path" value="lib/batik/batik-parser-1.11.jar"/>
+    <property name="batik-script-1.11.path" value="lib/batik/batik-script-1.11.jar"/>
+    <property name="batik-svgbrowser-1.11.path" value="lib/batik/batik-svgbrowser-1.11.jar"/>
+    <property name="batik-svg-dom-1.11.path" value="lib/batik/batik-svg-dom-1.11.jar"/>
+    <property name="batik-svggen-1.11.path" value="lib/batik/batik-svggen-1.11.jar"/>
+    <property name="batik-svgrasterizer-1.11.path" value="lib/batik/batik-svgrasterizer-1.11.jar"/>
+    <property name="batik-swing-1.11.path" value="lib/batik/batik-swing-1.11.jar"/>
+    <property name="batik-test-1.11.path" value="lib/batik/batik-test-1.11.jar"/>
+    <property name="batik-test-svg-1.11.path" value="lib/batik/batik-test-svg-1.11.jar"/>
+    <property name="batik-test-swing-1.11.path" value="lib/batik/batik-test-swing-1.11.jar"/>
+    <property name="batik-transcoder-1.11.path" value="lib/batik/batik-transcoder-1.11.jar"/>
+    <property name="batik-util-1.11.path" value="lib/batik/batik-util-1.11.jar"/>
+    <property name="batik-util-1.11-tests.path" value="lib/batik/batik-util-1.11-tests.jar"/>
+    <property name="batik-xml-1.11.path" value="lib/batik/batik-xml-1.11.jar"/>
+    <property name="fop-transcoder-allinone-2.3.path" value="lib/batik/fop-transcoder-allinone-2.3.jar"/>
+    <property name="js.path" value="lib/batik/js.jar"/>
+    <property name="serializer-2.7.2.path" value="lib/batik/serializer-2.7.2.jar"/>
+    <property name="xalan-2.7.2.path" value="lib/batik/xalan-2.7.2.jar"/>
+    <property name="xercesImpl-2.9.1.path" value="lib/batik/xercesImpl-2.9.1.jar"/>
+    <property name="xml-apis-1.3.04.path" value="lib/batik/xml-apis-1.3.04.jar"/>
+    <property name="xml-apis-ext-1.3.04.path" value="lib/batik/xml-apis-ext-1.3.04.jar"/>
+    <property name="xmlgraphics-commons-2.3.path" value="lib/batik/xmlgraphics-commons-2.3.jar"/>
+
 
     <property name="project.main" value="Runner"/>
     <property name="project.name" value="metafast"/>
@@ -48,7 +84,7 @@
         
         <javac srcdir="${src.dir}"
                destdir="${bin.dir}"
-               classpath="${itmo-assembler.path}:${args4j.path}"
+               classpath="${itmo-assembler.path}:${args4j.path}:${batik-all-1.11.path}:${batik-anim-1.11.path}:${batik-awt-util-1.11.path}:${batik-bridge-1.11.path}:${batik-codec-1.11.path}:${batik-constants-1.11.path}:${batik-css-1.11.path}:${batik-dom-1.11.path}:${batik-ext-1.11.path}:${batik-extension-1.11.path}:${batik-gui-util-1.11.path}:${batik-gvt-1.11.path}:${batik-i18n-1.11.path}:${batik-parser-1.11.path}:${batik-script-1.11.path}:${batik-svgbrowser-1.11.path}:${batik-svg-dom-1.11.path}:${batik-svggen-1.11.path}:${batik-svgrasterizer-1.11.path}:${batik-swing-1.11.path}:${batik-test-1.11.path}:${batik-test-svg-1.11.path}:${batik-test-swing-1.11.path}:${batik-transcoder-1.11.path}:${batik-util-1.11.path}:${batik-util-1.11-tests.path}:${batik-xml-1.11.path}:${fop-transcoder-allinone-2.3.path}:${js.path}:${serializer-2.7.2.path}:${xalan-2.7.2.path}:${xercesImpl-2.9.1.path}:${xml-apis-1.3.04.path}:${xml-apis-ext-1.3.04.path}:${xmlgraphics-commons-2.3.path}"
                includeantruntime="false"
                debug="true"
                debuglevel="lines,vars,source">
@@ -57,7 +93,7 @@
         <exec executable="java" failonerror="true">
             <arg value="-ea"/>
             <arg value="-cp"/>
-            <arg value="${bin.dir}:${itmo-assembler.path}:${args4j.path}"/>
+            <arg value="${bin.dir}:${itmo-assembler.path}:${args4j.path}:${batik-all-1.11.path}:${batik-anim-1.11.path}:${batik-awt-util-1.11.path}:${batik-bridge-1.11.path}:${batik-codec-1.11.path}:${batik-constants-1.11.path}:${batik-css-1.11.path}:${batik-dom-1.11.path}:${batik-ext-1.11.path}:${batik-extension-1.11.path}:${batik-gui-util-1.11.path}:${batik-gvt-1.11.path}:${batik-i18n-1.11.path}:${batik-parser-1.11.path}:${batik-script-1.11.path}:${batik-svgbrowser-1.11.path}:${batik-svg-dom-1.11.path}:${batik-svggen-1.11.path}:${batik-svgrasterizer-1.11.path}:${batik-swing-1.11.path}:${batik-test-1.11.path}:${batik-test-svg-1.11.path}:${batik-test-swing-1.11.path}:${batik-transcoder-1.11.path}:${batik-util-1.11.path}:${batik-util-1.11-tests.path}:${batik-xml-1.11.path}:${fop-transcoder-allinone-2.3.path}:${js.path}:${serializer-2.7.2.path}:${xalan-2.7.2.path}:${xercesImpl-2.9.1.path}:${xml-apis-1.3.04.path}:${xml-apis-ext-1.3.04.path}:${xmlgraphics-commons-2.3.path}"/>
             <arg value="ToolsScanner"/>
         </exec>
 
@@ -71,6 +107,42 @@
             <fileset file="VERSION"/>
             <fileset file="TOOLS"/>
             <zipfileset src="${itmo-assembler.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${batik-all-1.11.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${batik-anim-1.11.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${batik-awt-util-1.11.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${batik-bridge-1.11.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${batik-codec-1.11.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${batik-constants-1.11.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${batik-css-1.11.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${batik-dom-1.11.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${batik-ext-1.11.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${batik-extension-1.11.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${batik-gui-util-1.11.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${batik-gvt-1.11.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${batik-i18n-1.11.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${batik-parser-1.11.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${batik-script-1.11.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${batik-svgbrowser-1.11.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${batik-svg-dom-1.11.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${batik-svggen-1.11.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${batik-svgrasterizer-1.11.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${batik-swing-1.11.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${batik-test-1.11.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${batik-test-svg-1.11.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${batik-test-swing-1.11.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${batik-transcoder-1.11.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${batik-util-1.11.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${batik-util-1.11-tests.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${batik-xml-1.11.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${fop-transcoder-allinone-2.3.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${js.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${serializer-2.7.2.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${xalan-2.7.2.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${xercesImpl-2.9.1.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${xml-apis-1.3.04.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${xml-apis-ext-1.3.04.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${xmlgraphics-commons-2.3.path}" excludes="META-INF/*.SF"/>
+
         </jar>
 
         <concat destfile="${project.sh}" binary="true">

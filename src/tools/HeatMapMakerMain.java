@@ -1,7 +1,10 @@
 package tools;
 
 import algo.FullHeatMap;
+import algo.FullHeatMapXML;
+import com.sun.org.apache.xml.internal.serialize.XMLSerializer;
 import io.IOUtils;
+import org.w3c.dom.Document;
 import ru.ifmo.genetics.utils.FileUtils;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
@@ -93,7 +96,7 @@ public class HeatMapMakerMain extends Tool {
         FullHeatMap maker = new FullHeatMap(matrix, names, invertColors.get());
         BufferedImage image = maker.createFullHeatMap(!withoutRenumbering.get());
 
-
+        Document document = new FullHeatMapXML(matrix, names, invertColors.get()).createFullHeatMap(!withoutRenumbering.get());
 
         // saving results
         String filePrefix = FileUtils.removeExtension(matrixFile.get().getPath(), ".txt");
@@ -125,6 +128,8 @@ public class HeatMapMakerMain extends Tool {
         }
         try {
             ImageIO.write(image, "png", new File(heatmapPath));
+            XMLSerializer xmlSerializer = new XMLSerializer(new FileWriter(FileUtils.removeExtension(heatmapPath, ".png") + ".svg"), null);
+            xmlSerializer.serialize(document);
         } catch (IOException e) {
             throw new ExecutionFailedException("Can't save image to file " + heatmapPath, e);
         }
