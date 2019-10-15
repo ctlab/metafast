@@ -38,7 +38,8 @@ public class FullHeatMapXML {
     final int dy_scale = 30;
 
 
-    public Color lowColor = Color.WHITE;
+    public Color midColor = Color.WHITE;
+    public Color lowColor = new Color(180, 12, 12);
     public Color highColor = new Color(12, 61, 138);
     public boolean drawInnerLines = true;
     public Color innerLinesColor = Color.GRAY;
@@ -81,8 +82,8 @@ public class FullHeatMapXML {
         }
         if (invertColors) {
             Color tmp = highColor;
-            highColor = lowColor;
-            lowColor = tmp;
+            highColor = midColor;
+            midColor = tmp;
             innerLinesColor = Color.LIGHT_GRAY;
         }
     }
@@ -261,14 +262,25 @@ public class FullHeatMapXML {
     }
 
     private String getColorXML(double value) {
-        double p = (value - low) / (high - low);
-        int r = Math.min(255,
-                lowColor.getRed() + (int) Math.round(p * (highColor.getRed() - lowColor.getRed())));
-        int g = Math.min(255,
-                lowColor.getGreen() + (int) Math.round(p * (highColor.getGreen() - lowColor.getGreen())));
-        int b = Math.min(255,
-                lowColor.getBlue() + (int) Math.round(p * (highColor.getBlue() - lowColor.getBlue())));
-        return "rgb(" + r + "," + g + "," + b + ")";
+        if (value >= 0.5) {
+            double p = (value - low) / (high - low);
+            int r = Math.min(255,
+                    midColor.getRed() + (int) Math.round(p * (highColor.getRed() - midColor.getRed())));
+            int g = Math.min(255,
+                    midColor.getGreen() + (int) Math.round(p * (highColor.getGreen() - midColor.getGreen())));
+            int b = Math.min(255,
+                    midColor.getBlue() + (int) Math.round(p * (highColor.getBlue() - midColor.getBlue())));
+            return "rgb(" + r + "," + g + "," + b + ")";
+        } else {
+            double p = (2 * value - low) / (high - low);
+            int r = Math.min(255,
+                    lowColor.getRed() + (int) Math.round(p * (midColor.getRed() - lowColor.getRed())));
+            int g = Math.min(255,
+                    lowColor.getGreen() + (int) Math.round(p * (midColor.getGreen() - lowColor.getGreen())));
+            int b = Math.min(255,
+                    lowColor.getBlue() + (int) Math.round(p * (midColor.getBlue() - lowColor.getBlue())));
+            return "rgb(" + r + "," + g + "," + b + ")";
+        }
     }
 
 
