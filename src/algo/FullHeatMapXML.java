@@ -39,8 +39,8 @@ public class FullHeatMapXML {
 
 
     public Color midColor = Color.WHITE;
-    public Color lowColor = new Color(180, 12, 12);
-    public Color highColor = new Color(12, 61, 138);
+    public Color highColor = new Color(110, 2, 32);
+    public Color lowColor = new Color(38, 109, 175);
     public boolean drawInnerLines = true;
     public Color innerLinesColor = Color.GRAY;
 
@@ -500,26 +500,54 @@ public class FullHeatMapXML {
         }
 
         // colors and labels
-        int cellSize = dx_scale / 6;
-        for (int i = 0; i <= 5; i++) {
-            double v = low + (high - low) * i / 5.0;
+        Element defs = doc.createElementNS(svgNS, "defs");
+        Element gradient = doc.createElementNS(svgNS, "linearGradient");
+        gradient.setAttributeNS(null, "id", "grad");
+        gradient.setAttributeNS(null, "x1", Integer.toString(0));
+        gradient.setAttributeNS(null, "x2", Integer.toString(1));
+        gradient.setAttributeNS(null, "y1", Integer.toString(0));
+        gradient.setAttributeNS(null, "y2", Integer.toString(0));
 
-            Element rectangle = doc.createElementNS(svgNS, "rect");
-            rectangle.setAttributeNS(null, "x", Integer.toString(ddx + dx_scale_text + i * cellSize));
-            rectangle.setAttributeNS(null, "y", Integer.toString(ddy + dy_before));
-            rectangle.setAttributeNS(null, "width", Integer.toString(cellSize));
-            rectangle.setAttributeNS(null, "height", Integer.toString(dy_scale));
-            rectangle.setAttributeNS(null, "fill", getColorXML(v));
-            svgRoot.appendChild(rectangle);
+        Element stop1 = doc.createElementNS(svgNS, "stop");
+        stop1.setAttributeNS(null, "offset", "0%");
+        stop1.setAttributeNS(null, "stop-color", getColorXML(0));
+        gradient.appendChild(stop1);
+        Element stop2 = doc.createElementNS(svgNS, "stop");
+        stop2.setAttributeNS(null, "offset", "50%");
+        stop2.setAttributeNS(null, "stop-color", getColorXML(0.5));
+        stop2.setAttributeNS(null, "stop-opacity", "0");
+        gradient.appendChild(stop2);
+        Element stop3 = doc.createElementNS(svgNS, "stop");
+        stop3.setAttributeNS(null, "offset", "100%");
+        stop3.setAttributeNS(null, "stop-color", getColorXML(1));
+        gradient.appendChild(stop3);
 
-            Element text = doc.createElementNS(svgNS, "text");
-            text.setAttributeNS(null, "x", Integer.toString(ddx + dx_scale_text + i * cellSize + cellSize / 5));
-            text.setAttributeNS(null, "y", Integer.toString(ddy + dy_dist));
-            text.setAttributeNS(null, "font", fontXML);
-            text.setAttributeNS(null, "fill", "black");
-            text.setTextContent(String.format("%.1f", v));
-            svgRoot.appendChild(text);
-        }
+        defs.appendChild(gradient);
+        svgRoot.appendChild(defs);
+
+        Element rectangle = doc.createElementNS(svgNS, "rect");
+        rectangle.setAttributeNS(null, "x", Double.toString(ddx + dx_scale_text));
+        rectangle.setAttributeNS(null, "y", Integer.toString(ddy + dy_before));
+        rectangle.setAttributeNS(null, "width", Double.toString(dx_scale));
+        rectangle.setAttributeNS(null, "height", Integer.toString(dy_scale));
+        rectangle.setAttributeNS(null, "fill", "url(#grad)");
+        svgRoot.appendChild(rectangle);
+
+        Element text = doc.createElementNS(svgNS, "text");
+        text.setAttributeNS(null, "x", Double.toString(ddx + dx_scale_text));
+        text.setAttributeNS(null, "y", Integer.toString(ddy + dy_dist));
+        text.setAttributeNS(null, "font", fontXML);
+        text.setAttributeNS(null, "fill", "black");
+        text.setTextContent("0");
+        svgRoot.appendChild(text);
+
+        text = doc.createElementNS(svgNS, "text");
+        text.setAttributeNS(null, "x", Double.toString(ddx + dx_scale_text + dx_scale - 10));
+        text.setAttributeNS(null, "y", Integer.toString(ddy + dy_dist));
+        text.setAttributeNS(null, "font", fontXML);
+        text.setAttributeNS(null, "fill", "black");
+        text.setTextContent("1");
+        svgRoot.appendChild(text);
 
         return doc;
     }
