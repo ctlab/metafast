@@ -39,8 +39,8 @@ public class FullHeatMapXML {
 
 
     public Color midColor = Color.WHITE;
-    public Color highColor = new Color(110, 2, 32);
-    public Color lowColor = new Color(38, 109, 175);
+    public Color highColor;
+    public Color lowColor;
     public boolean drawInnerLines = true;
     public Color innerLinesColor = Color.GRAY;
 
@@ -552,7 +552,9 @@ public class FullHeatMapXML {
         return doc;
     }
 
-    public Document createFullHeatMap(boolean shouldRenumber) {
+    public Document createFullHeatMap(boolean shouldRenumber, String lowColor, String highColor) {
+        this.lowColor = Color.decode(lowColor);
+        this.highColor = Color.decode(highColor);
         int width = dx_before_dendrogram + dx_for_dendrogram + gridSize + dx_for_names;
         int height = dy_for_names + gridSize + dy_before_color + dy_scale + dy_after_color;
 
@@ -615,7 +617,7 @@ public class FullHeatMapXML {
         format.setPreserveEmptyAttributes(true);
         format.setPreserveSpace(true);
         XMLSerializer xmlSerializer = new XMLSerializer(new FileWriter("test.svg"), format);
-        xmlSerializer.serialize(hm.createFullHeatMap(true));
+        xmlSerializer.serialize(hm.createFullHeatMap(true, "#266DAF", "#6E0220"));
     }
 
 }

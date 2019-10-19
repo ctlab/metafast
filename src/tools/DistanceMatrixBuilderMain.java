@@ -5,10 +5,7 @@ import ru.ifmo.genetics.statistics.Timer;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
-import ru.ifmo.genetics.utils.tool.inputParameterBuilder.BoolParameterBuilder;
-import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileMVParameterBuilder;
-import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileParameterBuilder;
-import ru.ifmo.genetics.utils.tool.inputParameterBuilder.IntParameterBuilder;
+import ru.ifmo.genetics.utils.tool.inputParameterBuilder.*;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -82,7 +79,15 @@ public class DistanceMatrixBuilderMain extends Tool {
                     new File("output_description.txt"),
                     workDir.append("output_description.txt").get()};
 
+    public final Parameter<String> lowColor = addParameter(new StringParameterBuilder("low-color")
+            .withDefaultValue("#266DAF")
+            .withDescription("color for close samples")
+            .create());
 
+    public final Parameter<String> highColor = addParameter(new StringParameterBuilder("high-color")
+            .withDefaultValue("#6E0220")
+            .withDescription("color for distant samples")
+            .create());
 
     // adding sub tools
     public KmersCounterForManyFilesMain kmersCounter = new KmersCounterForManyFilesMain();
@@ -142,6 +147,8 @@ public class DistanceMatrixBuilderMain extends Tool {
         setFix(heatMapMaker.newMatrixFile, matrixFile);
         setFix(heatMapMaker.heatmapFile, heatmapFile);
         setFix(heatMapMaker.outputFormat, distMatrixCalculator.outputFormat);
+        setFix(heatMapMaker.lowColor, lowColor);
+        setFix(heatMapMaker.highColor, highColor);
         heatMapMaker.outputDescFiles = outputDescFiles;
         addSubTool(heatMapMaker);
     }

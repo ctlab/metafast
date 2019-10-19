@@ -65,6 +65,16 @@ public class HeatMapMakerMain extends Tool {
             .withDescription("output format for distance values")
             .create());
 
+    public final Parameter<String> lowColor = addParameter(new StringParameterBuilder("low-color")
+            .withDefaultValue("#266DAF")
+            .withDescription("color for close samples")
+            .create());
+
+    public final Parameter<String> highColor = addParameter(new StringParameterBuilder("high-color")
+            .withDefaultValue("#6E0220")
+            .withDescription("color for distant samples")
+            .create());
+
     public File[] outputDescFiles = null;
 
 
@@ -96,7 +106,7 @@ public class HeatMapMakerMain extends Tool {
         FullHeatMap maker = new FullHeatMap(matrix, names, invertColors.get());
         BufferedImage image = maker.createFullHeatMap(!withoutRenumbering.get());
 
-        Document document = new FullHeatMapXML(matrix, names, invertColors.get()).createFullHeatMap(!withoutRenumbering.get());
+        Document document = new FullHeatMapXML(matrix, names, invertColors.get()).createFullHeatMap(!withoutRenumbering.get(), lowColor.get(), highColor.get());
 
         // saving results
         String filePrefix = FileUtils.removeExtension(matrixFile.get().getPath(), ".txt");
