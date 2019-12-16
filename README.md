@@ -24,6 +24,7 @@ Here is a short version of it.
 * [Installation](#installation)
 * [Running instructions](#running-instructions)
 * [Example](#example)
+* [FAQ](#faq)
 * [Citation](#citation)
 * [Contact](#contact)
 * [License](#license)
@@ -92,6 +93,20 @@ The element `matrix[i][j]` is a distance between *sample i* and *sample j*.
 K-mers frequency statistics is saved in `workDir/kmer-counter-many/stats/<in-file>.stat.txt`;<br/>
 image file with heatmap and dendrogram is saved in `workDir/matrices/dist_matrix_<date>_<time>_heatmap.png`:<br/>
 <img src="test_data/meta_test_heatmap.png" alt="Test heatmap" width="450">
+
+## FAQ
+
+**Q** Does MetaFast works with paired-end reads?
+
+**A** No, MetaFast accepts only one file per sample. If you have two files with paired-end reads (i.e. `reads_1.fastq` and `reads_2.fastq`), you need to combine them into one file before running MetaFast. On Unix-like systems, one can do it running ```cat reads_1.fastq reads_2.fastq > reads_all.fastq```
+
+**Q** Can I compare samples with different read lengths or the number of reads?
+
+**A** Yes, you can do this without any specific preprocessing. MetaFast uses k-mers for comparing metagenomic sequences, so it will automatically normalize all values by the total number of k-mers per sample.
+
+**Q** Can I compare metagenomes obtained from different sequencing platforms (i.e. Illumina vs 454-seq)
+
+**A** Yes, you can. MetaFast extract features from each metagenome independently, so you can compare samples from different sequencing platforms.
 
 
 ## Citation
