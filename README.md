@@ -115,8 +115,8 @@ If you use MetaFast in your research, please cite the following publication:
 
 Ulyantsev V.I., Kazakov S.V., Dubinkina V.B., Tyakht A.V. & Alexeev D.G. (2016). 
 MetaFast: fast reference-free graph-based comparison of shotgun metagenomic data. 
-Bioinformatics, btw312. 
-[doi: 10.1093/bioinformatics/btw312](http://bioinformatics.oxfordjournals.org/content/early/2016/06/16/bioinformatics.btw312)
+Bioinformatics, 32(18), 2760-2767. 
+[doi: 10.1093/bioinformatics/btw312](https://academic.oup.com/bioinformatics/article/32/18/2760/1743520)
 
 
 ## Contact
