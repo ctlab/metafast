@@ -1,9 +1,9 @@
 package tools;
 
-import io.IOUtils;
+import algo.ComponentFromSequence;
+import ru.ifmo.genetics.dna.Dna;
+import ru.ifmo.genetics.io.ReadersUtils;
 import ru.ifmo.genetics.statistics.Timer;
-import ru.ifmo.genetics.structures.map.BigLong2ShortHashMap;
-import ru.ifmo.genetics.structures.map.MutableLongShortEntry;
 import ru.ifmo.genetics.utils.NumUtils;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
@@ -19,8 +19,10 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by -- on 03.02.2020.
@@ -34,13 +36,6 @@ public class SequencesToComponents extends Tool {
             .mandatory()
             .withShortOpt("k")
             .withDescription("k-mer size")
-            .create());
-
-    public final Parameter<Integer> minLen = addParameter(new IntParameterBuilder("min-seq-len")
-            .important()
-            .withShortOpt("l")
-            .withDescription("minimum sequence length to be added")
-            .withDefaultValue(100)
             .create());
 
     public final Parameter<File[]> sequencesFiles = addParameter(new FileMVParameterBuilder("sequences")
@@ -66,19 +61,22 @@ public class SequencesToComponents extends Tool {
     protected void runImpl() throws ExecutionFailedException, IOException {
         Timer t = new Timer();
         debug("Loading sequences from files...");
-        List<ConnectedComponent> components = new ArrayList<ConnectedComponent>();
+        List<ConnectedComponent> components = Collections.synchronizedList(new ArrayList<ConnectedComponent>());
         for (File f : sequencesFiles.get()) {
-            ConnectedComponent comp = new ConnectedComponent();
-            BigLong2ShortHashMap hm = IOUtils.loadReads(new File[]{f}, k.get(), minLen.get(),
-                    availableProcessors.get(), logger);
-            Iterator<MutableLongShortEntry> it = hm.entryIterator();
-            while (it.hasNext()) {
-                MutableLongShortEntry entry = it.next();
-                long key = entry.getKey();
-                short value = entry.getValue();
-                comp.add(key, value);
+            info("Loading file " + f.getName() + "...");
+            List<Dna> sequences = ReadersUtils.loadDnas(f);
+            int comps = components.size();
+            ExecutorService execService = Executors.newFixedThreadPool(availableProcessors.get());
+            for (Dna dna : sequences) {
+                execService.execute(new ComponentFromSequence(components, dna, k.get()));
             }
-            components.add(comp);
+            execService.shutdown();
+            try {
+                while (!execService.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS)){}
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            info(components.size() - comps + " components added");
         }
 
         Collections.sort(components);
