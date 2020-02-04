@@ -12,7 +12,7 @@ import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileMVParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.IntParameterBuilder;
 import ru.ifmo.genetics.utils.tool.values.InMemoryValue;
-import structures.ConnectedComponent;
+import structures.SequenceComponent;
 
 import java.io.File;
 import java.io.IOException;
@@ -61,7 +61,7 @@ public class SequencesToComponents extends Tool {
     protected void runImpl() throws ExecutionFailedException, IOException {
         Timer t = new Timer();
         debug("Loading sequences from files...");
-        List<ConnectedComponent> components = Collections.synchronizedList(new ArrayList<ConnectedComponent>());
+        List<SequenceComponent> components = Collections.synchronizedList(new ArrayList<SequenceComponent>());
         for (File f : sequencesFiles.get()) {
             info("Loading file " + f.getName() + "...");
             List<Dna> sequences = ReadersUtils.loadDnas(f);
@@ -79,16 +79,14 @@ public class SequencesToComponents extends Tool {
             info(components.size() - comps + " components added");
         }
 
-        Collections.sort(components);
-
         // post processing...
         Tool.debug(logger, "ans.size = " + components.size());
         String statFP = workDir + File.separator + "components-stat.txt";
         PrintWriter statPW = new PrintWriter(statFP);
-        statPW.println("# component.no\tcomponent.size\tcomponent.weight\tusedFreqThreshold");
+        statPW.println("# component.no\tcomponent.size\tcomponent.weight");
         for (int i = 0; i < components.size(); i++) {
-            ConnectedComponent comp = components.get(i);
-            statPW.println((i + 1) + "\t" + comp.size + "\t" + comp.weight + "\t" + comp.usedFreqThreshold);
+            SequenceComponent comp = components.get(i);
+            statPW.println((i + 1) + "\t" + comp.size + "\t" + comp.weight);
         }
         statPW.close();
         componentsStatPr.set(new File(statFP));
@@ -96,7 +94,7 @@ public class SequencesToComponents extends Tool {
         info("Total " + NumUtils.groupDigits(components.size()) + " components were found");
 
         try {
-            ConnectedComponent.saveComponents(components, componentsFile.get().getAbsolutePath());
+            SequenceComponent.saveComponents(components, componentsFile.get().getAbsolutePath());
             info("Components saved to " + componentsFile.get());
         } catch (IOException e) {
             e.printStackTrace();
