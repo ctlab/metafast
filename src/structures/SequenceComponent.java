@@ -27,13 +27,15 @@ public class SequenceComponent implements Comparable<SequenceComponent> {
 
 
     public void add(long kmer, short w) {
-        kmers.add(kmer);
-        size++;
+        if (kmers.add(kmer)) {
+            size++;
+        }
         weight += w;
     }
     public void add(long kmer) {
-        kmers.add(kmer);
-        size++;
+        if (kmers.add(kmer)) {
+            size++;
+        }
         weight++;
     }
 
