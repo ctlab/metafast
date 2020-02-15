@@ -66,15 +66,10 @@ public class IOUtils {
         return good;
     }
 
-    public static long filterAndPrintKmers(BigLong2ShortHashMap hm, BigLong2ShortHashMap cd_hm,
-                                           BigLong2ShortHashMap uc_hm, BigLong2ShortHashMap nonIBD_hm,
-                                           int threshold, int filter_threshold, File outDir, String name) throws IOException {
-        DataOutputStream stream_cd = new DataOutputStream(new BufferedOutputStream(
-                new FileOutputStream(new File(outDir, name + ".cd.kmers.bin")), 1 << 24));   // 16 Mb buffer
-        DataOutputStream stream_uc = new DataOutputStream(new BufferedOutputStream(
-                new FileOutputStream(new File(outDir, name + ".uc.kmers.bin")), 1 << 24));   // 16 Mb buffer
-        DataOutputStream stream_nonibd = new DataOutputStream(new BufferedOutputStream(
-                new FileOutputStream(new File(outDir, name + ".nonibd.kmers.bin")), 1 << 24));   // 16 Mb buffer
+    public static long filterAndPrintKmers(BigLong2ShortHashMap hm, BigLong2ShortHashMap filter_hm,
+                                           int threshold, int filter_threshold, File out) throws IOException {
+        DataOutputStream stream = new DataOutputStream(new BufferedOutputStream(
+                new FileOutputStream(out), 1 << 24));   // 16 Mb buffer
 
         long good = 0;
 
@@ -84,30 +79,14 @@ public class IOUtils {
             long key = entry.getKey();
             short value = entry.getValue();
 
-            if (value > threshold) {
-                short cd = cd_hm.getWithZero(key);
-                short uc = uc_hm.getWithZero(key);
-                short nonIBD = nonIBD_hm.getWithZero(key);
-
-                if (100 * cd > filter_threshold * (cd + uc + nonIBD)) {
-                    stream_cd.writeLong(key);
-                    stream_cd.writeShort(value);
-                    good++;
-                } else if (100 * uc > filter_threshold * (cd + uc + nonIBD)) {
-                    stream_uc.writeLong(key);
-                    stream_uc.writeShort(value);
-                    good++;
-                } else if (100 * nonIBD > filter_threshold * (cd + uc + nonIBD)) {
-                    stream_nonibd.writeLong(key);
-                    stream_nonibd.writeShort(value);
-                    good++;
-                }
+            if (value > threshold && filter_hm.getWithZero(key) > filter_threshold) {
+                stream.writeLong(key);
+                stream.writeShort(value);
+                good++;
             }
         }
 
-        stream_cd.close();
-        stream_uc.close();
-        stream_nonibd.close();
+        stream.close();
         return good;
     }
 

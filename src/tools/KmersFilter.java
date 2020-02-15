@@ -1,10 +1,8 @@
 package tools;
 
 import io.IOUtils;
-import ru.ifmo.genetics.io.ReadersUtils;
 import ru.ifmo.genetics.statistics.Timer;
 import ru.ifmo.genetics.structures.map.BigLong2ShortHashMap;
-import ru.ifmo.genetics.structures.map.MutableLongShortEntry;
 import ru.ifmo.genetics.utils.Misc;
 import ru.ifmo.genetics.utils.NumUtils;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
@@ -18,7 +16,6 @@ import ru.ifmo.genetics.utils.tool.values.InValue;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Iterator;
 
 /**
  * Created by -- on 14.02.2020.
@@ -66,7 +63,7 @@ public class KmersFilter extends Tool {
 
     public final Parameter<Integer> maximalThreshold = addParameter(new IntParameterBuilder("max-thresh")
             .mandatory()
-            .withDescription("minimal frequency percentage for a k-mer to keep in certain class (0..1)")
+            .withDescription("minimal frequency for a k-mer in classified metagenomes to keep in certain class")
             .create());
 
     public final Parameter<File> outputDir = addParameter(new FileParameterBuilder("output-dir")
@@ -98,24 +95,24 @@ public class KmersFilter extends Tool {
 
 
         Timer t = new Timer();
-        BigLong2ShortHashMap cd_hm = IOUtils.loadKmers(CDFiles.get(), maximalBadFrequency.get(),
-                availableProcessors.get(), logger);
-        debug("Memory used = " + Misc.usedMemoryAsString() + ", time = " + t);
-        BigLong2ShortHashMap uc_hm = IOUtils.loadKmers(UCFiles.get(), maximalBadFrequency.get(),
-                availableProcessors.get(), logger);
-        debug("Memory used = " + Misc.usedMemoryAsString() + ", time = " + t);
-        BigLong2ShortHashMap nonIBD_hm = IOUtils.loadKmers(nonIBDFiles.get(), maximalBadFrequency.get(),
-                availableProcessors.get(), logger);
-        debug("Memory used = " + Misc.usedMemoryAsString() + ", time = " + t);
-
         File outDir = outputDir.get();
         if (!outDir.exists()) {
             outDir.mkdirs();
         }
 
+        filterManyFiles(CDFiles.get(), "cd", t);
+        filterManyFiles(UCFiles.get(), "uc", t);
+        filterManyFiles(nonIBDFiles.get(), "nonibd", t);
 
-        for (File file : inputFiles.get())
-        {
+    }
+
+    private void filterManyFiles(File[] files, String category, Timer t) throws ExecutionFailedException {
+        BigLong2ShortHashMap filter_hm = IOUtils.loadKmers(files, maximalBadFrequency.get(),
+                availableProcessors.get(), logger);
+        debug("Memory used = " + Misc.usedMemoryAsString() + ", time = " + t);
+
+
+        for (File file : inputFiles.get()) {
             BigLong2ShortHashMap hm = IOUtils.loadKmers(new File[]{file}, maximalBadFrequency.get(),
                     availableProcessors.get(), logger);
             debug("Memory used = " + Misc.usedMemoryAsString() + ", time = " + t);
@@ -125,15 +122,15 @@ public class KmersFilter extends Tool {
             debug("Starting to print k-mers to " + outputDir.get());
             long c = 0;
             try {
-                c = IOUtils.filterAndPrintKmers(hm, cd_hm, uc_hm, nonIBD_hm, maximalBadFrequency.get(),
-                        maximalThreshold.get(), outputDir.get(), name);
+                c = IOUtils.filterAndPrintKmers(hm, filter_hm, maximalBadFrequency.get(),
+                        maximalThreshold.get(), new File(outputDir.get(), name + "." + category + ".kmers.bin"));
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            info(NumUtils.groupDigits(hm.size()) + " k-mers found, "
-                    + NumUtils.groupDigits(c) + " (" + String.format("%.1f", c * 100.0 / hm.size()) + "%) of them is good (dominate in one class)");
+            info(NumUtils.groupDigits(hm.size()) + " k-mers found, " + NumUtils.groupDigits(c) +
+                    " (" + String.format("%.1f", c * 100.0 / hm.size()) + "%) of them is in " + category + " class");
 
-            info("Good k-mers printed to " + outputDir.get());
+            info(category + " k-mers printed to " + outputDir.get());
         }
     }
 
