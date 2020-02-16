@@ -39,19 +39,9 @@ public class KmersFilter extends Tool {
             .withDescription("list of input files with k-mers in binary format")
             .create());
 
-    public final Parameter<File[]> CDFiles = addParameter(new FileMVParameterBuilder("cd-kmers")
+    public final Parameter<File[]> filterFiles = addParameter(new FileMVParameterBuilder("filter-kmers")
             .mandatory()
-            .withDescription("list of input files with k-mers in binary format from CD patients")
-            .create());
-
-    public final Parameter<File[]> UCFiles = addParameter(new FileMVParameterBuilder("uc-kmers")
-            .mandatory()
-            .withDescription("list of input files with k-mers in binary format from UC patients")
-            .create());
-
-    public final Parameter<File[]> nonIBDFiles = addParameter(new FileMVParameterBuilder("nonibd-kmers")
-            .mandatory()
-            .withDescription("list of input files with k-mers in binary format from non-IBD patients")
+            .withDescription("list of input files with k-mers in binary format used for filtering")
             .create());
 
     public final Parameter<Integer> maximalBadFrequency = addParameter(new IntParameterBuilder("maximal-bad-frequence")
@@ -63,7 +53,7 @@ public class KmersFilter extends Tool {
 
     public final Parameter<Integer> maximalThreshold = addParameter(new IntParameterBuilder("max-thresh")
             .mandatory()
-            .withDescription("minimal frequency for a k-mer in classified metagenomes to keep in certain class")
+            .withDescription("maximal frequency for a k-mer in filtering files to be assumed not found")
             .create());
 
     public final Parameter<File> outputDir = addParameter(new FileParameterBuilder("output-dir")
@@ -100,14 +90,7 @@ public class KmersFilter extends Tool {
             outDir.mkdirs();
         }
 
-        filterManyFiles(CDFiles.get(), "cd", t);
-        filterManyFiles(UCFiles.get(), "uc", t);
-        filterManyFiles(nonIBDFiles.get(), "nonibd", t);
-
-    }
-
-    private void filterManyFiles(File[] files, String category, Timer t) throws ExecutionFailedException {
-        BigLong2ShortHashMap filter_hm = IOUtils.loadKmers(files, maximalBadFrequency.get(),
+        BigLong2ShortHashMap filter_hm = IOUtils.loadKmers(filterFiles.get(), maximalBadFrequency.get(),
                 availableProcessors.get(), logger);
         debug("Memory used = " + Misc.usedMemoryAsString() + ", time = " + t);
 
@@ -118,19 +101,20 @@ public class KmersFilter extends Tool {
             debug("Memory used = " + Misc.usedMemoryAsString() + ", time = " + t);
 
             String name = file.getName().replaceAll(".kmers.bin", "");
+            File outFile = new File(outputDir.get(), name + ".kmers.bin");
 
-            debug("Starting to print k-mers to " + outputDir.get());
+            debug("Starting to print k-mers to " + outFile.getPath());
             long c = 0;
             try {
                 c = IOUtils.filterAndPrintKmers(hm, filter_hm, maximalBadFrequency.get(),
-                        maximalThreshold.get(), new File(outputDir.get(), name + "." + category + ".kmers.bin"));
+                        maximalThreshold.get(), outFile);
             } catch (IOException e) {
                 e.printStackTrace();
             }
             info(NumUtils.groupDigits(hm.size()) + " k-mers found, " + NumUtils.groupDigits(c) +
-                    " (" + String.format("%.1f", c * 100.0 / hm.size()) + "%) of them is in " + category + " class");
+                    " (" + String.format("%.1f", c * 100.0 / hm.size()) + "%) of them survived after filtering");
 
-            info(category + " k-mers printed to " + outputDir.get());
+            info("Filtered k-mers printed to " + outFile.getPath());
         }
     }
 
