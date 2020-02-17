@@ -53,7 +53,7 @@ public class KmersFilter extends Tool {
 
     public final Parameter<Integer> maximalThreshold = addParameter(new IntParameterBuilder("max-thresh")
             .mandatory()
-            .withDescription("maximal frequency for a k-mer in filtering files to be assumed not found")
+            .withDescription("maximal frequency for a k-mer in filtering file to be assumed not found")
             .create());
 
     public final Parameter<File> outputDir = addParameter(new FileParameterBuilder("output-dir")
@@ -107,7 +107,7 @@ public class KmersFilter extends Tool {
             long c = 0;
             try {
                 c = IOUtils.filterAndPrintKmers(hm, filter_hm, maximalBadFrequency.get(),
-                        maximalThreshold.get(), outFile);
+                        maximalThreshold.get() * filterFiles.get().length, outFile);
             } catch (IOException e) {
                 e.printStackTrace();
             }
