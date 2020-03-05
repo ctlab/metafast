@@ -99,6 +99,7 @@ public class FeaturesCalculatorMain extends Tool {
         }
         debug("Kmers in components = " + NumUtils.groupDigits(hm.size()));
         final long[] vector = new long[components.size()];
+        final double[] breadth = new double[components.size()];
         debug("Memory used (before processing files) = " + Misc.usedMemoryAsString() + ", Time for preparing = " + t);
 
 
@@ -114,8 +115,10 @@ public class FeaturesCalculatorMain extends Tool {
                         availableProcessors.get(), logger);
 
                 File outFile = new File(outDir, ReadersUtils.readDnaLazy(readsFile).name() + ".vec");
-                buildAndPrintVector(components, hm, threshold.get(), vector, outFile, 1);
+                File outBreadthFile = new File(outDir, ReadersUtils.readDnaLazy(readsFile).name() + ".breadth");
+                buildAndPrintVector(components, hm, threshold.get(), vector, breadth, outFile, 1, outBreadthFile);
                 info("Features for file " + readsFile.getName() + " printed to " + outFile);
+                info("Components breadth coverage for file " + readsFile.getName() + " printed to " + outBreadthFile);
                 featuresFiles[curFiles] = outFile;
                 curFiles++;
             }
@@ -139,8 +142,10 @@ public class FeaturesCalculatorMain extends Tool {
                         availableProcessors.get(), logger);
 
                 File outFile = new File(outDir, FileUtils.removeExtension(kmersFile.getName(), ".kmers.bin") + ".vec");
-                buildAndPrintVector(components, hm, threshold.get(), vector, outFile, totalKmers);
+                File outBreadthFile = new File(outDir, FileUtils.removeExtension(kmersFile.getName(), ".kmers.bin") + ".breadth");
+                buildAndPrintVector(components, hm, threshold.get(), vector, breadth, outFile, totalKmers, outBreadthFile);
                 info("Features for file " + kmersFile.getName() + " printed to " + outFile);
+                info("Components breadth coverage for file " + kmersFile.getName() + " printed to " + outBreadthFile);
                 featuresFiles[curFiles] = outFile;
                 curFiles++;
             }
@@ -151,13 +156,15 @@ public class FeaturesCalculatorMain extends Tool {
     }
 
     private void buildAndPrintVector(final List<ConnectedComponent> components, final BigLong2LongHashMap hm,
-                                     final int threshold, final long[] vector, File outFile, long totalKmers) throws ExecutionFailedException {
+                                     final int threshold, final long[] vector, final double[] breadth, File outFile, long totalKmers,
+                                     File outBreadthFile) throws ExecutionFailedException {
 
         try {
             debug("Building vector...");
 
             // calculating
             Arrays.fill(vector, 0);
+            Arrays.fill(breadth, 0);
             Thread[] workers = new Thread[availableProcessors.get()];
             int compPerWorker = (components.size() / workers.length) + ((components.size() % workers.length == 0) ? 0 : 1);
             for (int i = 0; i < workers.length; i++) {
@@ -170,13 +177,17 @@ public class FeaturesCalculatorMain extends Tool {
                             for (int i = from; i < to; i++) {
                                 ConnectedComponent component = components.get(i);
                                 long kmers = 0;
+                                long kmersCount = 0, kmersFound = 0;
                                 for (long kmer : component.kmers) {
                                     long value = hm.getWithZero(kmer);
                                     if (value > threshold) {
                                         kmers += value;
+                                        kmersFound++;
                                     }
+                                    kmersCount++;
                                 }
                                 vector[i] = kmers;
+                                breadth[i] = ((double) kmersFound) / kmersCount;
                             }
                         }
                     });
@@ -196,6 +207,13 @@ public class FeaturesCalculatorMain extends Tool {
                 out.println((double) kmers / totalKmers);
             }
             out.close();
+
+            PrintWriter bout = new PrintWriter(new BufferedWriter(
+                    new OutputStreamWriter(new FileOutputStream(outBreadthFile)), 1 << 20));   // 1 Mb buffer
+            for (double kmers : breadth) {
+                bout.println(kmers);
+            }
+            bout.close();
         } catch (IOException e) {
             throw new ExecutionFailedException("Can't write vector to file " + outFile, e);
         } catch (InterruptedException e) {
