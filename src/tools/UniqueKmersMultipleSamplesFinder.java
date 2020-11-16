@@ -104,7 +104,7 @@ public class UniqueKmersMultipleSamplesFinder extends Tool {
                 short value = entry.getValue();
 
                 if (value > maximalBadFrequency.get()) {
-                    hm.put(key, (short) (hm.getWithZero(key) + 1));
+                    hm_cnt.put(key, (short) (hm_cnt.getWithZero(key) + 1));
                 }
             }
         }
