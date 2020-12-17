@@ -46,6 +46,18 @@ public class UniqueKmersMultipleSamplesFinder extends Tool {
             .withDescription("list of input files with k-mers in binary format used for filtering")
             .create());
 
+    public final Parameter<Integer> minSamples = addParameter(new IntParameterBuilder("min-samples")
+            .optional()
+            .withDescription("minimal number of samples k-mer to be present in")
+            .withDefaultValue(1)
+            .create());
+
+    public final Parameter<Integer> maxSamples = addParameter(new IntParameterBuilder("max-samples")
+            .optional()
+            .withDescription("maximal number of samples k-mer to be present in")
+            .withDefaultValue(1)
+            .create());
+
     public final Parameter<Integer> maximalBadFrequency = addParameter(new IntParameterBuilder("maximal-bad-frequence")
             .optional()
             .withShortOpt("b")
@@ -138,7 +150,7 @@ public class UniqueKmersMultipleSamplesFinder extends Tool {
             stDir.mkdirs();
         }
 
-        for (int i = 1; i < 4; i++) {
+        for (int i = minSamples.get(); i < maxSamples.get() + 1; i++) {
             File outFile = new File(outDir, "filtered_" + i + ".kmers.bin");
 
 
