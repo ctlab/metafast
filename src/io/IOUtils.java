@@ -41,7 +41,7 @@ public class IOUtils {
         DataOutputStream stream = new DataOutputStream(new BufferedOutputStream(
                 new FileOutputStream(outFile), 1 << 24));   // 16 Mb buffer
 
-        QuickQuantitativeStatistics<Short> stats = new QuickQuantitativeStatistics<>();
+        QuickQuantitativeStatistics<Short> stats = new QuickQuantitativeStatistics<Short>();
         long good = 0;
 
         Iterator<MutableLongShortEntry> it = hm.entryIterator();
@@ -96,7 +96,7 @@ public class IOUtils {
         DataOutputStream stream = new DataOutputStream(new BufferedOutputStream(
                 new FileOutputStream(out), 1 << 24));   // 16 Mb buffer
 
-        QuickQuantitativeStatistics<Triple> stats = new QuickQuantitativeStatistics<>();
+        QuickQuantitativeStatistics<Triple> stats = new QuickQuantitativeStatistics<Triple>();
         long good = 0;
 
         Iterator<MutableLongShortEntry> it = hm.entryIterator();
