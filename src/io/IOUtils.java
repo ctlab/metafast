@@ -5,9 +5,7 @@ import ru.ifmo.genetics.dna.Dna;
 import ru.ifmo.genetics.dna.kmers.ShortKmer;
 import ru.ifmo.genetics.io.ReadersUtils;
 import ru.ifmo.genetics.io.sources.NamedSource;
-import ru.ifmo.genetics.io.sources.Source;
 import ru.ifmo.genetics.statistics.QuickQuantitativeStatistics;
-import ru.ifmo.genetics.structures.map.ArrayLong2IntHashMap;
 import ru.ifmo.genetics.structures.map.BigLong2LongHashMap;
 import ru.ifmo.genetics.structures.map.BigLong2ShortHashMap;
 import ru.ifmo.genetics.structures.map.MutableLongShortEntry;
@@ -43,7 +41,7 @@ public class IOUtils {
         DataOutputStream stream = new DataOutputStream(new BufferedOutputStream(
                 new FileOutputStream(outFile), 1 << 24));   // 16 Mb buffer
 
-        QuickQuantitativeStatistics<Short> stats = new QuickQuantitativeStatistics<Short>();
+        QuickQuantitativeStatistics<Short> stats = new QuickQuantitativeStatistics<>();
         long good = 0;
 
         Iterator<MutableLongShortEntry> it = hm.entryIterator();
@@ -89,6 +87,97 @@ public class IOUtils {
         stream.close();
         return good;
     }
+
+    public static long MultipleFiltersAndPrintKmers(BigLong2ShortHashMap hm,
+                                                    BigLong2ShortHashMap cd_filter_hm,
+                                                    BigLong2ShortHashMap uc_filter_hm,
+                                                    BigLong2ShortHashMap nonibd_filter_hm,
+                                                    int threshold, File out, File stFile) throws IOException {
+        DataOutputStream stream = new DataOutputStream(new BufferedOutputStream(
+                new FileOutputStream(out), 1 << 24));   // 16 Mb buffer
+
+        QuickQuantitativeStatistics<Triple> stats = new QuickQuantitativeStatistics<>();
+        long good = 0;
+
+        Iterator<MutableLongShortEntry> it = hm.entryIterator();
+        while (it.hasNext()) {
+            MutableLongShortEntry entry = it.next();
+            long key = entry.getKey();
+            short value = entry.getValue();
+
+            if (value > threshold) {
+                short cd = cd_filter_hm.getWithZero(key);
+                short uc = uc_filter_hm.getWithZero(key);
+                short nonibd = nonibd_filter_hm.getWithZero(key);
+
+                stats.add(new Triple(cd, uc, nonibd));
+
+                if (cd > 0 || uc > 0 || nonibd > 0) {
+                    stream.writeLong(key);
+                    stream.writeShort(value);
+                    good++;
+                }
+            }
+        }
+
+        stream.close();
+        stats.printToFile(stFile, "# cd k-mer samples\t" +
+                "uc k-mer samples\tnonIBD k-mer samples\tnumber of such k-mers");
+        return good;
+    }
+
+    private static class Triple implements Comparable<Triple> {
+        private final short cd;
+        private final short uc;
+        private final short nonibd;
+
+        private Triple(short cd, short uc, short nonibd) {
+            this.cd = cd;
+            this.uc = uc;
+            this.nonibd = nonibd;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof Triple)) return false;
+            Triple triple = (Triple) o;
+            return cd == triple.cd && uc == triple.uc && nonibd == triple.nonibd;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = cd;
+            result = 31 * result + uc;
+            result = 31 * result + nonibd;
+            return result;
+        }
+
+        @Override
+        public int compareTo(Triple o) {
+            if (this.equals(o)) return 0;
+
+            if (this.cd < o.cd) return -1;
+            else {
+                if (this.cd > o.cd) return 1;
+                else {
+                    if (this.uc < o.uc) return -1;
+                    else {
+                        if (this.uc > o.uc) return 1;
+                        else {
+                            return Short.compare(this.nonibd, o.nonibd);
+                        }
+                    }
+                }
+            }
+        }
+
+        @Override
+        public String toString() {
+            return cd + "\t" + uc + "\t" + nonibd;
+        }
+    }
+
 
 
     public static void tryToAppendDescription(File[] outputFilesDesc, File f, String msg) {
