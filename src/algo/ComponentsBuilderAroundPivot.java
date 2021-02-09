@@ -126,7 +126,7 @@ public class ComponentsBuilderAroundPivot {
         // extend to right
         {
             int n_neighbours = 0;
-            List<Long> rightNeighbours = new ArrayList<>();
+            List<Long> rightNeighbours = new ArrayList<Long>();
             for (long neighbour: KmerOperations.rightNeighbours(startKmer, k)) {
                 value = hm.get(neighbour);
                 if (value > 0) {
@@ -170,7 +170,7 @@ public class ComponentsBuilderAroundPivot {
         // extend to left
         {
             int n_neighbours = 0;
-            List<Long> leftNeighbours = new ArrayList<>();
+            List<Long> leftNeighbours = new ArrayList<Long>();
             for (long neighbour: KmerOperations.leftNeighbours(startKmer, k)) {
                 value = hm.get(neighbour);
                 if (value > 0) {
@@ -215,8 +215,9 @@ public class ComponentsBuilderAroundPivot {
         while (queue.size() > 0) {
             long kmer = queue.dequeue();
             long prev = parent.dequeue();
+
             int right_neighbours = 0;
-            List<Long> rightNeighbours = new ArrayList<>();
+            List<Long> rightNeighbours = new ArrayList<Long>();
             for (long neighbour: KmerOperations.rightNeighbours(kmer, k)) {
                 value = hm.get(neighbour);
                 if (value > 0) {
@@ -225,7 +226,7 @@ public class ComponentsBuilderAroundPivot {
                 }
             }
             int left_neighbours = 0;
-            List<Long> leftNeighbours = new ArrayList<>();
+            List<Long> leftNeighbours = new ArrayList<Long>();
             for (long neighbour: KmerOperations.leftNeighbours(kmer, k)) {
                 value = hm.get(neighbour);
                 if (value > 0) {
@@ -234,23 +235,20 @@ public class ComponentsBuilderAroundPivot {
                 }
             }
 
-            int n_neighbours;
-            List<Long> neighbours;
-
-            if (Arrays.stream(KmerOperations.leftNeighbours(kmer, k)).anyMatch(value1 -> value1 == prev)) {
-                n_neighbours = right_neighbours;
-                neighbours = rightNeighbours;
+            int n_neighbours = 0;
+            List<Long> neighbours = null;
+            for (long val : KmerOperations.leftNeighbours(kmer, k)) {
+                if (val == prev) {
+                    n_neighbours = right_neighbours;
+                    neighbours = rightNeighbours;
+                }
             }
-            else {
-                if (Arrays.stream(KmerOperations.rightNeighbours(kmer, k)).anyMatch(value1 -> value1 == prev)) {
+            for (long val : KmerOperations.rightNeighbours(kmer, k)) {
+                if (val == prev) {
                     n_neighbours = left_neighbours;
                     neighbours = leftNeighbours;
                 }
-                else {
-                    throw new RuntimeException("Unreachable");
-                }
             }
-
 
             if (n_neighbours == 0) {
                 continue;
@@ -298,6 +296,7 @@ public class ComponentsBuilderAroundPivot {
         return comp;
     }
 
+
     private static boolean dfs(long startKmer, long parentKmer, Long2ShortHashMapInterface hm,
                                BigLong2ShortHashMap pivot, int k, List<Long> kmersOnPath) {
         boolean foundPivot = false;
@@ -306,7 +305,7 @@ public class ComponentsBuilderAroundPivot {
 
         while (true) {
             int right_neighbours = 0;
-            List<Long> rightNeighbours = new ArrayList<>();
+            List<Long> rightNeighbours = new ArrayList<Long>();
             for (long neighbour: KmerOperations.rightNeighbours(kmer, k)) {
                 short value = hm.get(neighbour);
                 if (value > 0) {
@@ -315,7 +314,7 @@ public class ComponentsBuilderAroundPivot {
                 }
             }
             int left_neighbours = 0;
-            List<Long> leftNeighbours = new ArrayList<>();
+            List<Long> leftNeighbours = new ArrayList<Long>();
             for (long neighbour: KmerOperations.leftNeighbours(kmer, k)) {
                 short value = hm.get(neighbour);
                 if (value > 0) {
@@ -324,21 +323,18 @@ public class ComponentsBuilderAroundPivot {
                 }
             }
 
-            int n_neighbours;
-            List<Long> neighbours;
-
-            long lam = prev;
-            if (Arrays.stream(KmerOperations.leftNeighbours(kmer, k)).anyMatch(value1 -> value1 == lam)) {
-                n_neighbours = right_neighbours;
-                neighbours = rightNeighbours;
+            int n_neighbours = 0;
+            List<Long> neighbours = null;
+            for (long val : KmerOperations.leftNeighbours(kmer, k)) {
+                if (val == prev) {
+                    n_neighbours = right_neighbours;
+                    neighbours = rightNeighbours;
+                }
             }
-            else {
-                if (Arrays.stream(KmerOperations.rightNeighbours(kmer, k)).anyMatch(value1 -> value1 == lam)) {
+            for (long val : KmerOperations.rightNeighbours(kmer, k)) {
+                if (val == prev) {
                     n_neighbours = left_neighbours;
                     neighbours = leftNeighbours;
-                }
-                else {
-                    throw new RuntimeException("Unreachable");
                 }
             }
 
