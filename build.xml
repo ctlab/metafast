@@ -74,8 +74,8 @@
     <property name="project.sh" value="${jars.dir}/${project.name}.sh"/>
     <property name="project.bat" value="${jars.dir}/${project.name}.bat"/>
 
-    <property name="ant.build.javac.source" value="1.6"/>
-    <property name="ant.build.javac.target" value="1.6"/>
+    <property name="ant.build.javac.source" value="1.8"/>
+    <property name="ant.build.javac.target" value="1.8"/>
 
     
 
