@@ -155,12 +155,31 @@ public class ComponentsBuilderAroundPivot {
                         List<Long> kmersOnPath = new ArrayList<Long>();
                         boolean goodPath = dfs(neighbour, startKmer, hm, pivot, k, kmersOnPath);
                         if (goodPath) {
-                            int pathLength = kmersOnPath.size();
-                            for (long foundKmer : kmersOnPath) {
-                                comp.add(foundKmer, value);
+                            value = hm.get(neighbour);
+                            hm.put(neighbour, (short) -value);
+                            if (pivot.get(neighbour) > 0) {
+                                pivot.put(neighbour, (short) -value);
                             }
-                            queue.enqueue(kmersOnPath.get(pathLength - 1));
-                            parent.enqueue(kmersOnPath.get(pathLength - 2));
+                            comp.add(neighbour, value);
+                            int pathLength = kmersOnPath.size();
+                            for (long foundKmer: kmersOnPath) {
+                                value = hm.get(foundKmer);
+                                comp.add(foundKmer, (short) -value);
+                            }
+
+                            if (kmersOnPath.size() >= 2) {
+                                queue.enqueue(kmersOnPath.get(pathLength - 1));
+                                parent.enqueue(kmersOnPath.get(pathLength - 2));
+                            }
+                            else {
+                                if (kmersOnPath.size() == 1) {
+                                    queue.enqueue(kmersOnPath.get(pathLength - 1));
+                                    parent.enqueue(neighbour);
+                                } else {
+                                    queue.enqueue(neighbour);
+                                    parent.enqueue(startKmer);
+                                }
+                            }
                         }
                     }
                 }
@@ -199,12 +218,31 @@ public class ComponentsBuilderAroundPivot {
                         List<Long> kmersOnPath = new ArrayList<Long>();
                         boolean goodPath = dfs(neighbour, startKmer, hm, pivot, k, kmersOnPath);
                         if (goodPath) {
-                            int pathLength = kmersOnPath.size();
-                            for (long foundKmer : kmersOnPath) {
-                                comp.add(foundKmer, value);
+                            value = hm.get(neighbour);
+                            hm.put(neighbour, (short) -value);
+                            if (pivot.get(neighbour) > 0) {
+                                pivot.put(neighbour, (short) -value);
                             }
-                            queue.enqueue(kmersOnPath.get(pathLength - 1));
-                            parent.enqueue(kmersOnPath.get(pathLength - 2));
+                            comp.add(neighbour, value);
+                            int pathLength = kmersOnPath.size();
+                            for (long foundKmer: kmersOnPath) {
+                                value = hm.get(foundKmer);
+                                comp.add(foundKmer, (short) -value);
+                            }
+
+                            if (kmersOnPath.size() >= 2) {
+                                queue.enqueue(kmersOnPath.get(pathLength - 1));
+                                parent.enqueue(kmersOnPath.get(pathLength - 2));
+                            }
+                            else {
+                                if (kmersOnPath.size() == 1) {
+                                    queue.enqueue(kmersOnPath.get(pathLength - 1));
+                                    parent.enqueue(neighbour);
+                                } else {
+                                    queue.enqueue(neighbour);
+                                    parent.enqueue(startKmer);
+                                }
+                            }
                         }
                     }
                 }
@@ -284,8 +322,19 @@ public class ComponentsBuilderAroundPivot {
                             value = hm.get(foundKmer);
                             comp.add(foundKmer, (short) -value);
                         }
-                        queue.enqueue(kmersOnPath.get(pathLength - 1));
-                        parent.enqueue(kmersOnPath.get(pathLength - 2));
+                        if (kmersOnPath.size() >= 2) {
+                            queue.enqueue(kmersOnPath.get(pathLength - 1));
+                            parent.enqueue(kmersOnPath.get(pathLength - 2));
+                        }
+                        else {
+                            if (kmersOnPath.size() == 1) {
+                                queue.enqueue(kmersOnPath.get(pathLength - 1));
+                                parent.enqueue(neighbour);
+                            } else {
+                                queue.enqueue(neighbour);
+                                parent.enqueue(kmer);
+                            }
+                        }
                     }
                 }
             }
