@@ -7,6 +7,7 @@ import ru.ifmo.genetics.structures.map.MutableLongShortEntry;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
+import ru.ifmo.genetics.utils.tool.inputParameterBuilder.BoolParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.IntParameterBuilder;
 import structures.ConnectedComponent;
@@ -44,6 +45,11 @@ public class BinaryToFasta extends Tool {
             .important()
             .withShortOpt("cf")
             .withDescription("binary components file")
+            .create());
+
+    public final Parameter<Boolean> splitComponents = addParameter(new BoolParameterBuilder("split")
+            .withDescription("Save each component in separate file? Works only for components converter")
+            .withDefaultValue(false)
             .create());
 
 
@@ -100,26 +106,50 @@ public class BinaryToFasta extends Tool {
             info(components.size() + " components loaded from " + componentsFile.get());
             info("Printing " + components.size() + " components...");
 
+            if (splitComponents.get()) {
+                for (int i = 0; i < components.size(); i++) {
+                    PrintWriter out;
+                    try {
+                        out = (outputFile.get() != null)
+                                ? new PrintWriter(outputFile.get() + "_" + (i + 1) + ".fasta")
+                                : new PrintWriter(System.out);
+                    } catch (FileNotFoundException e) {
+                        throw new ExecutionFailedException("Couldn't open output file", e);
+                    }
 
-            for (int i = 0; i < components.size(); i++) {
+                    ConnectedComponent component = components.get(i);
+                    info("Component " + (i + 1) + ", size = " + component.size + " kmers, " +
+                            "weight = " + component.weight);
+
+                    int j = 1;
+                    for (long kmer : component.kmers) {
+                        out.println(">" + j);
+                        out.println(new ShortKmer(kmer, k.get()).toString());
+                        j++;
+                    }
+                    out.close();
+                }
+            } else {
                 PrintWriter out;
                 try {
                     out = (outputFile.get() != null)
-                            ? new PrintWriter(outputFile.get() + "_" + (i+1) + ".fasta")
+                            ? new PrintWriter(outputFile.get() + ".fasta")
                             : new PrintWriter(System.out);
                 } catch (FileNotFoundException e) {
                     throw new ExecutionFailedException("Couldn't open output file", e);
                 }
 
-                ConnectedComponent component = components.get(i);
-                info("Component " + (i + 1) + ", size = " + component.size + " kmers, " +
-                        "weight = " + component.weight);
+                for (int i = 0; i < components.size(); i++) {
+                    ConnectedComponent component = components.get(i);
+                    info("Component " + (i + 1) + ", size = " + component.size + " kmers, " +
+                            "weight = " + component.weight);
 
-                int j = 1;
-                for (long kmer : component.kmers) {
-                    out.println(">" + j);
-                    out.println(new ShortKmer(kmer, k.get()).toString());
-                    j++;
+                    int j = 1;
+                    for (long kmer : component.kmers) {
+                        out.println(">" + (i + 1) + "_" + j);
+                        out.println(new ShortKmer(kmer, k.get()).toString());
+                        j++;
+                    }
                 }
                 out.close();
             }
