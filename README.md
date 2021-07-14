@@ -22,6 +22,7 @@ Here is a short version of it.
 ## Content
 
 * [Installation](#installation)
+* [MetaFast 1.5](#meta-fast-1-5)
 * [Running instructions](#running-instructions)
 * [Example](#example)
 * [FAQ](#faq)
@@ -51,6 +52,10 @@ ant
 ./out/metafast.sh --version
 ~~~
 
+
+## MetaFast 1.5
+
+A new version of MetaFast software is being prepared for the release. New pipelines for comparative metagenomics data analysis have been implemented. Three recommended use cases (including the original one) and a detailed description of available tools are presented in [Pipelines.md](Pipelines.md)
 
 ## Running instructions
 
