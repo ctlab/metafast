@@ -65,15 +65,15 @@ TODO: Create class for running pipeline in one command
 Step-by-step data processing is presented on the image above. Order of tools to run:
 
 1. **K-mers counter**  
-Extract k-mers from each metagenomic sample and saves in internal binary format for further processing (`workDir/kmer-counter-many/kmers/*.kmers.bin`). This step can be performed separately for metagenomes with known and unknown categories. For the convenience of further explanations we will refer to samples with known categories as _group\_1.kmers.bin_ ... _group\_N.kmers.bin_ for $N$ categories and _ungroupped.kmers.bin_ for samples with unknown category.   
+Extract k-mers from each metagenomic sample and saves in internal binary format for further processing (`workDir/kmer-counter-many/kmers/*.kmers.bin`). This step can be performed separately for metagenomes with known and unknown categories. For the convenience of further explanations we will refer to samples with known categories as _group\_1.kmers.bin_ ... _group\_N.kmers.bin_ for N categories and _ungroupped.kmers.bin_ for samples with unknown category.   
 `
 java -jar metafast.jar -t kmer-counter-many -k <k> -i <inputFiles>
 `
 2. **Unique k-mers finder**  
-Extract k-mers present in at least given number $G$ of samples of one category and absent in all samples of other categories (`workDir/kmers/filtered_G.kmers.bin`). By default $G=1$ and can be user-defined to iterate in range [--min-samples; --max-samples].  
+Extract k-mers present in at least given number G of samples of one category and absent in all samples of other categories (`workDir/kmers/filtered_G.kmers.bin`). By default G=1 and can be user-defined to iterate in range [--min-samples; --max-samples].  
 `
 java -jar metafast.jar -t unique-kmers-multi -k <k> -i <group_1.kmers.bin> --filter-kmers <group_{2..N}.kmers.bin> --min-samples <int> --max-samples <int>
-` will extract unique k-mers for category $1$.
+` will extract unique k-mers for category 1.
 3. **K-mers filter**  
 Extract k-mers from input metagenomes that are present in specified set of k-mers. It can be used to select unique k-mers for each category from sample with unknown category and classify metagenome based on number of k-mers of each category. (`workDir/kmers/*.kmers.bin`)  
 `
@@ -113,15 +113,15 @@ TODO: Create class for running pipeline in one command
 Step-by-step data processing is presented on the image above. Order of tools to run:
 
 1. **K-mers counter**  
-Extract k-mers from each metagenomic sample and saves in internal binary format for further processing (`workDir/kmer-counter-many/kmers/*.kmers.bin`). This step can be performed separately for metagenomes with known and unknown categories. For the convenience of further explanations we will refer to samples with known categories as _group\_1.kmers.bin_ ... _group\_N.kmers.bin_ for $N$ categories and _ungroupped.kmers.bin_ for samples with unknown category.   
+Extract k-mers from each metagenomic sample and saves in internal binary format for further processing (`workDir/kmer-counter-many/kmers/*.kmers.bin`). This step can be performed separately for metagenomes with known and unknown categories. For the convenience of further explanations we will refer to samples with known categories as _group\_1.kmers.bin_ ... _group\_N.kmers.bin_ for N categories and _ungroupped.kmers.bin_ for samples with unknown category.   
 `
 java -jar metafast.jar -t kmer-counter-many -k <k> -i <inputFiles>
 `
 2. **K-mers' samples counter**  
-Count number of samples containing k-mers from group $G$ of metagenomic samples. For each k-mer saves the number of samples as a weight (`workDir/group_G/n_samples.kmers.bin`). These weights can be counted for different categories and further used to identify k-mers specific (i.e. prevalent) for a certain category.  
+Count number of samples containing k-mers from group G of metagenomic samples. For each k-mer saves the number of samples as a weight (`workDir/group_G/n_samples.kmers.bin`). These weights can be counted for different categories and further used to identify k-mers specific (i.e. prevalent) for a certain category.  
 `
 java -jar metafast.jar -t kmers-samples-counter -k <k> -i <group_1.kmers.bin> -o <group_G>
-` will count for each k-mer in category $1$ the number of samples it is found in.
+` will count for each k-mer in category 1 the number of samples it is found in.
 3. **K-mers multiple filters**  
 This tool is designed to be used with 3 categories of metagenomes and provide the staistics for unclassified metagenomes. In original research, it was applied for metagenomic datasets of patients with [Inflammatory Bowel Disease (IBD)](https://en.wikipedia.org/wiki/Inflammatory_bowel_disease). Three categories are patients with Crohn's disease, ulcerative colitis and healthy subjects. For each metagenomic sample with unknown category k-mers are compared to three sets of weighted k-mers. Output is a tab-separated file containing information about number of k-mers with various abundances among samples in three categories. (`workDir/stats/*.stat.txt`)  
 `
