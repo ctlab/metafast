@@ -6,7 +6,7 @@
 metagenome sequences and building the distance matrix between them.
 
 Authors:
-* **Software:** *Sergey Kazakov* and [*Vladimir Ulyantsev*](http://rain.ifmo.ru/~ulyantsev/), <br/>
+* **Software:** *Artem Ivanov*, *Sergey Kazakov* and [*Vladimir Ulyantsev*](http://rain.ifmo.ru/~ulyantsev/), <br/>
 [ITMO University](http://en.ifmo.ru/en/), Saint-Petersburg, Russia.
 * **Testing:** *Veronika Dubinkina* and *Alexandr Tyakht*, <br/>
 SRI of Physical-Chemical Medicine, Moscow, Russia.
@@ -127,7 +127,7 @@ Bioinformatics, 32(18), 2760-2767.
 ## Contact
 
 Please report any problems directly to the GitHub [issue tracker](https://github.com/ctlab/metafast/issues).<br/>
-Also, you can send your feedback to [svkazakov@rain.ifmo.ru](mailto:svkazakov@rain.ifmo.ru).
+Also, you can send your feedback to [abivanov@itmo.ru](mailto:abivanov@itmo.ru).
 
 
 ## License
