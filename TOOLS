@@ -1,14 +1,24 @@
 antibody-sequences-finder                tools.AntibodyFinderMain                                                         Antibody sequences finder in De Bruijn graph
+bin2fasta                                tools.BinaryToFasta                                                              Converts different binary objects to FASTA format
+comp2seq                                 tools.ComponentsToSequences                                                      Transforms components in binary format to FASTA sequences (contigs)
 comparison-script                        tools.CompareReadsAndComponentsMain                                              Statistics
 component-cutter                         tools.ComponentCutterMain                                                        Build graph components from tangled graph
+component-extractor                      tools.ComponentExtractorMain                                                     Extract graph components from tangled graph based on pivot k-mers
 component-paths                          tools.ComponentPathsMain                                                         Extracts paths in the components
 dist-matrix-calculator                   tools.DistanceMatrixCalculatorMain                                               Calculates distance matrix using features values
 features-calculator                      tools.FeaturesCalculatorMain                                                     Calculates features values for input reads files
 heatmap-maker                            tools.HeatMapMakerMain                                                           constructs heatmap with dendrogram for distance matrix
 kmer-counter                             tools.KmersCounterMain                                                           Count k-mers in given reads with ArrayLong2IntHashMap
 kmer-counter-many                        tools.KmersCounterForManyFilesMain                                               Count k-mers for many files independently
+kmers-filter                             tools.KmersFilter                                                                Filter k-mers from test set according to known samples
+kmers-multiple-filters                   tools.KmersMultipleFilters                                                       Filter k-mers from test set according to three specified sets
+kmers-samples-counter                    tools.KmersSamplesCounter                                                        Count number of samples containing k-mers from multiple samples
 matrix-builder                           tools.DistanceMatrixBuilderMain                                                  Builds the distance matrix for input sequences
 seq-builder                              tools.SeqBuilderMain                                                             Metagenome De Bruijn graph analysis and sequences building
 seq-builder-many                         tools.SeqBuilderForManyFilesMain                                                 Metagenome De Bruijn graph analysis and sequences building for many files independently
+seq2comp                                 tools.SequencesToComponents                                                      Transforms sequences to components
 supergraph-sequence-builder              tools.SupergraphSeqBuilderMain                                                   NOT COMPLETED
+unique-features                          tools.UniqueFeaturesBuilderMain                                                  Builds unique features for group of metagenomic samples
+unique-kmers                             tools.UniqueKmersFinder                                                          Output k-mers present in one dataset and missing in other
+unique-kmers-multi                       tools.UniqueKmersMultipleSamplesFinder                                           Output k-mers present in one dataset in fixed number of samples and missing in other
 view                                     tools.ViewMain                                                                   Converts different binary objects to text format

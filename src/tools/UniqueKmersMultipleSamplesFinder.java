@@ -76,9 +76,9 @@ public class UniqueKmersMultipleSamplesFinder extends Tool {
             .create());
 
 
-    private final InMemoryValue<File> resultingKmerFilesPr = new InMemoryValue<File>();
-    public final InValue<File> resultingKmerFiles =
-            addOutput("resulting-kmers-file", resultingKmerFilesPr, File.class);
+    private final InMemoryValue<File[]> resultingKmerFilesPr = new InMemoryValue<File[]>();
+    public final InValue<File[]> resultingKmerFiles =
+            addOutput("resulting-kmers-file", resultingKmerFilesPr, File[].class);
 
 
     @Override
@@ -183,6 +183,7 @@ public class UniqueKmersMultipleSamplesFinder extends Tool {
 
     @Override
     protected void cleanImpl() {
+        resultingKmerFilesPr.set(new File[]{new File(outputDir.get(), "filtered_" + minSamples.get() + ".kmers.bin")});
     }
 
     public UniqueKmersMultipleSamplesFinder() {

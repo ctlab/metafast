@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class SequencesToComponents extends Tool {
 
-    public static final String NAME = "seqs-to-comp";
+    public static final String NAME = "seq2comp";
     public static final String DESCRIPTION = "Transforms sequences to components";
 
     public final Parameter<Integer> k = addParameter(new IntParameterBuilder("k")

@@ -269,4 +269,73 @@ public class ComponentsBuilder {
         return comp;
     }
 
+
+    private static boolean dfs(long startKmer, long parentKmer, Long2ShortHashMapInterface hm,
+                               BigLong2ShortHashMap pivot, int k, List<Long> kmersOnPath) {
+        boolean foundPivot = false;
+        long kmer = startKmer;
+        long prev = parentKmer;
+
+        while (true) {
+            int right_neighbours = 0;
+            List<Long> rightNeighbours = new ArrayList<Long>();
+            for (long neighbour: KmerOperations.rightNeighbours(kmer, k)) {
+                short value = hm.get(neighbour);
+                if (value > 0) {
+                    rightNeighbours.add(neighbour);
+                    right_neighbours++;
+                }
+            }
+            int left_neighbours = 0;
+            List<Long> leftNeighbours = new ArrayList<Long>();
+            for (long neighbour: KmerOperations.leftNeighbours(kmer, k)) {
+                short value = hm.get(neighbour);
+                if (value > 0) {
+                    leftNeighbours.add(neighbour);
+                    left_neighbours++;
+                }
+            }
+
+            int n_neighbours = 0;
+            List<Long> neighbours = null;
+            for (long val : KmerOperations.leftNeighbours(kmer, k)) {
+                if (val == prev) {
+                    n_neighbours = right_neighbours;
+                    neighbours = rightNeighbours;
+                }
+            }
+            for (long val : KmerOperations.rightNeighbours(kmer, k)) {
+                if (val == prev) {
+                    n_neighbours = left_neighbours;
+                    neighbours = leftNeighbours;
+                }
+            }
+
+
+            // if single path =>  extend
+            if (n_neighbours == 1) {
+                long neighbour = neighbours.get(0);
+                kmersOnPath.add(neighbour);
+
+                short value = hm.get(neighbour);
+                hm.put(neighbour, (short) -value);
+                if (pivot.get(neighbour) > 0) {
+                    foundPivot = true;
+                    pivot.put(neighbour, (short) -value);
+                }
+                prev = kmer;
+                kmer = neighbour;
+            }
+            // if branching path or no path, stop and return
+            else
+            {
+                break;
+            }
+
+        }
+
+        return foundPivot;
+    }
+
+
 }

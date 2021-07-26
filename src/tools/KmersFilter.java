@@ -52,8 +52,9 @@ public class KmersFilter extends Tool {
             .create());
 
     public final Parameter<Integer> maximalThreshold = addParameter(new IntParameterBuilder("max-thresh")
-            .mandatory()
+            .optional()
             .withDescription("maximal frequency for a k-mer in filtering file to be assumed not found")
+            .withDefaultValue(0)
             .create());
 
     public final Parameter<File> outputDir = addParameter(new FileParameterBuilder("output-dir")

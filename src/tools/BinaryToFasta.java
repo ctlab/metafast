@@ -10,6 +10,8 @@ import ru.ifmo.genetics.utils.tool.Tool;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.BoolParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.IntParameterBuilder;
+import ru.ifmo.genetics.utils.tool.values.InMemoryValue;
+import ru.ifmo.genetics.utils.tool.values.InValue;
 import structures.ConnectedComponent;
 
 import java.io.File;
@@ -62,9 +64,16 @@ public class BinaryToFasta extends Tool {
             .create());
 
 
+    private final InMemoryValue<File[]> resultingKmerFilesPr = new InMemoryValue<File[]>();
+    public final InValue<File[]> resultingKmerFiles =
+            addOutput("resulting-kmers-files", resultingKmerFilesPr, File[].class);
+
 
     @Override
     protected void runImpl() throws ExecutionFailedException {
+        if (outputFile.get() != null && outputFile.get().getParent() != null) {
+            (new File(outputFile.get().getParent())).mkdirs();
+        }
         if (kmersFile.get() == null && componentsFile.get() == null) {
             logger.warn("No input file is selected  --->  no data to display!");
             return;
@@ -106,6 +115,8 @@ public class BinaryToFasta extends Tool {
             info(components.size() + " components loaded from " + componentsFile.get());
             info("Printing " + components.size() + " components...");
 
+            File[] outFiles = new File[splitComponents.get() ? components.size() : 1];
+
             if (splitComponents.get()) {
                 for (int i = 0; i < components.size(); i++) {
                     PrintWriter out;
@@ -116,6 +127,7 @@ public class BinaryToFasta extends Tool {
                     } catch (FileNotFoundException e) {
                         throw new ExecutionFailedException("Couldn't open output file", e);
                     }
+                    outFiles[i] = new File(outputFile.get() + "_" + (i + 1) + ".fasta");
 
                     ConnectedComponent component = components.get(i);
                     info("Component " + (i + 1) + ", size = " + component.size + " kmers, " +
@@ -138,6 +150,7 @@ public class BinaryToFasta extends Tool {
                 } catch (FileNotFoundException e) {
                     throw new ExecutionFailedException("Couldn't open output file", e);
                 }
+                outFiles[0] = new File(outputFile.get() + ".fasta");
 
                 for (int i = 0; i < components.size(); i++) {
                     ConnectedComponent component = components.get(i);
@@ -153,6 +166,8 @@ public class BinaryToFasta extends Tool {
                 }
                 out.close();
             }
+
+            resultingKmerFilesPr.set(outFiles);
         }
 
     }
