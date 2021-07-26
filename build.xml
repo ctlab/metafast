@@ -1,5 +1,5 @@
 <project name="jarsBuilder" default="metafast">
-    <property name="VERSION" value="0.1.4"/>
+    <property name="VERSION" value="1.0.0"/>
     <exec executable="git" outputproperty="revision">
         <arg value="rev-parse"/>
         <arg value="--short"/>
