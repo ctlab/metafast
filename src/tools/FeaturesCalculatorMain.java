@@ -4,6 +4,7 @@ import io.IOUtils;
 import ru.ifmo.genetics.io.ReadersUtils;
 import ru.ifmo.genetics.statistics.Timer;
 import ru.ifmo.genetics.structures.map.BigLong2LongHashMap;
+import ru.ifmo.genetics.structures.map.BigLong2ShortHashMap;
 import ru.ifmo.genetics.utils.FileUtils;
 import ru.ifmo.genetics.utils.Misc;
 import ru.ifmo.genetics.utils.NumUtils;
@@ -48,6 +49,12 @@ public class FeaturesCalculatorMain extends Tool {
             .withShortOpt("ka")
             .withDescription("k-mers files in binary (long+int) format")
             .withDefaultValue(new File[]{})
+            .create());
+
+
+    public final Parameter<File[]> selectedKmers = addParameter(new FileMVParameterBuilder("selected")
+            .optional()
+            .withDescription("Use only selected k-mers to calculate features")
             .create());
 
     public final Parameter<Integer> threshold = addParameter(new IntParameterBuilder("threshold")
@@ -105,6 +112,11 @@ public class FeaturesCalculatorMain extends Tool {
         File[] featuresFiles = new File[featuresFilesCount];
         int curFiles = 0;
 
+        BigLong2ShortHashMap selected = null;
+        if (selectedKmers.get() != null) {
+            selected = IOUtils.loadKmers(selectedKmers.get(), 0, availableProcessors.get(), logger);
+        }
+
         if (readsFiles.get() != null) {
             for (File readsFile : readsFiles.get()) {
                 hm.resetValues();
@@ -113,7 +125,7 @@ public class FeaturesCalculatorMain extends Tool {
 
                 File outFile = new File(outDir, ReadersUtils.readDnaLazy(readsFile).name() + ".vec");
                 File outBreadthFile = new File(outDir, ReadersUtils.readDnaLazy(readsFile).name() + ".breadth");
-                buildAndPrintVector(components, hm, threshold.get(), vector, breadth, outFile, outBreadthFile);
+                buildAndPrintVector(components, hm, threshold.get(), selected, vector, breadth, outFile, outBreadthFile);
                 info("Features for file " + readsFile.getName() + " printed to " + outFile);
                 info("Components breadth coverage for file " + readsFile.getName() + " printed to " + outBreadthFile);
                 featuresFiles[curFiles] = outFile;
@@ -142,7 +154,7 @@ public class FeaturesCalculatorMain extends Tool {
 
                 File outFile = new File(outDir, FileUtils.removeExtension(kmersFile.getName(), ".kmers.bin") + ".vec");
                 File outBreadthFile = new File(outDir, FileUtils.removeExtension(kmersFile.getName(), ".kmers.bin") + ".breadth");
-                buildAndPrintVector(components, hm, threshold.get(), vector, breadth, outFile, outBreadthFile);
+                buildAndPrintVector(components, hm, threshold.get(), selected, vector, breadth, outFile, outBreadthFile);
                 info("Features for file " + kmersFile.getName() + " printed to " + outFile);
                 info("Components breadth coverage for file " + kmersFile.getName() + " printed to " + outBreadthFile);
                 featuresFiles[curFiles] = outFile;
@@ -155,7 +167,7 @@ public class FeaturesCalculatorMain extends Tool {
     }
 
     private void buildAndPrintVector(final List<ConnectedComponent> components, final BigLong2LongHashMap hm,
-                                     final int threshold, final long[] vector, final double[] breadth, File outFile,
+                                     final int threshold, final BigLong2ShortHashMap selected, final long[] vector, final double[] breadth, File outFile,
                                      File outBreadthFile) throws ExecutionFailedException {
 
         try {
@@ -178,12 +190,14 @@ public class FeaturesCalculatorMain extends Tool {
                                 long kmers = 0;
                                 long kmersCount = 0, kmersFound = 0;
                                 for (long kmer : component.kmers) {
-                                    long value = hm.getWithZero(kmer);
-                                    if (value > threshold) {
-                                        kmers += value;
-                                        kmersFound++;
+                                    if (selected == null || selected != null && selected.getWithZero(kmer) > 0) {
+                                        long value = hm.getWithZero(kmer);
+                                        if (value > threshold) {
+                                            kmers += value;
+                                            kmersFound++;
+                                        }
+                                        kmersCount++;
                                     }
-                                    kmersCount++;
                                 }
                                 vector[i] = kmers;
                                 breadth[i] = ((double) kmersFound) / kmersCount;

@@ -139,6 +139,7 @@ public class UniqueFeaturesBuilderMain extends Tool {
         setFix(featuresCalculator.k, k);
         setFix(featuresCalculator.kmersFiles, kmersCounterPositive.resultingKmerFiles);
         setFix(featuresCalculator.componentsFile, compExtractor.componentsFile);
+        setFix(featuresCalculator.selectedKmers, uniqueKmers.resultingKmerFiles);
         //addSubTool(featuresCalculator);
     }
 
