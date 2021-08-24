@@ -78,21 +78,23 @@ java -jar metafast.jar -t unique-features -k <k> -pos <postiveFiles> -neg <negat
 
 **Output files in _workDir_:**
 
-`kmers\<inputFiles>.kmers.bin` – k-mers from input files in binary format
+`kmer-counter-posneg\pos\kmers\*.kmers.bin` – k-mers from input files from **positive** group in binary format
 
-`kmers\filtered.kmers.bin` – unique k-mers in binary format
+`kmer-counter-posneg\neg\kmers\*.kmers.bin` – k-mers from input files from **negative** group in binary format
 
-`filtered\*.kmers.bin` – intersection of input k-mers and unique k-mers
+`unique-kmers-multi\kmers\filtered.kmers.bin` – unique k-mers in binary format
 
-`components.bin` – components built around unique k-mers in binary format
+`kmers-filter\kmers\*.kmers.bin` – intersection of input k-mers and unique k-mers
 
-`kmers-counter-many\kmers\component_*.kmers.bin` – k-mers from components in binary format
+`component-extractor\components.bin` – components built around unique k-mers in binary format
 
-`kmers_fasta\component_*.fasta` – k-mers from components in fasta format
+`comp2seq\kmers-counter-many\kmers\component_*.kmers.bin` – k-mers from components in binary format
 
-`seq-builder-many\sequences\component_*.seq.fasta` – contigs from components in fasta format
+`comp2seq\kmers_fasta\component_*.fasta` – k-mers from components in fasta format
 
-`vectors\*` – feature vectors of components' coverage by input files
+`comp2seq\seq-builder-many\sequences\component_*.seq.fasta` – contigs from components in fasta format
+
+`features-calculator\vectors\*` – feature vectors of components' coverage by input files
 
 
 
