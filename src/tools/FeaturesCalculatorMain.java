@@ -58,7 +58,7 @@ public class FeaturesCalculatorMain extends Tool {
             .create());
 
     public final Parameter<Integer> threshold = addParameter(new IntParameterBuilder("threshold")
-            .withShortOpt("b")
+            //.withShortOpt("b")
             .withDescription("maximal frequency for a k-mer to be assumed erroneous")
             .withDefaultValue(0)
             .create());
@@ -190,7 +190,7 @@ public class FeaturesCalculatorMain extends Tool {
                                 long kmers = 0;
                                 long kmersCount = 0, kmersFound = 0;
                                 for (long kmer : component.kmers) {
-                                    if (selected == null || selected != null && selected.getWithZero(kmer) > 0) {
+                                    if (selected == null || selected.getWithZero(kmer) > 0) {
                                         long value = hm.getWithZero(kmer);
                                         if (value > threshold) {
                                             kmers += value;

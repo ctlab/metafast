@@ -10,6 +10,7 @@ features-calculator                      tools.FeaturesCalculatorMain           
 heatmap-maker                            tools.HeatMapMakerMain                                                           constructs heatmap with dendrogram for distance matrix
 kmer-counter                             tools.KmersCounterMain                                                           Count k-mers in given reads with ArrayLong2IntHashMap
 kmer-counter-many                        tools.KmersCounterForManyFilesMain                                               Count k-mers for many files independently
+kmer-counter-posneg                      tools.KmersCounterPositiveNegative                                               Count k-mers for files from two groups independently
 kmers-filter                             tools.KmersFilter                                                                Filter k-mers from test set according to known samples
 kmers-multiple-filters                   tools.KmersMultipleFilters                                                       Filter k-mers from test set according to three specified sets
 kmers-samples-counter                    tools.KmersSamplesCounter                                                        Count number of samples containing k-mers from multiple samples

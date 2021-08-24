@@ -84,63 +84,55 @@ public class UniqueFeaturesBuilderMain extends Tool {
 
 
     // adding sub tools
-    public KmersCounterForManyFilesMain kmersCounterPositive = new KmersCounterForManyFilesMain();
+    public KmersCounterPositiveNegative kmersCounterPosNeg = new KmersCounterPositiveNegative();
     {
-        setFix(kmersCounterPositive.k, k);
-        setFix(kmersCounterPositive.inputFiles, positiveFiles);
-        setFix(kmersCounterPositive.maximalBadFrequency, maximalBadFrequency);
-        setFixDefault(kmersCounterPositive.outputDir);
-        kmersCounterPositive.outputDescFiles = outputDescFiles;
-        //addSubTool(kmersCounterPositive);
-    }
-    
-    public KmersCounterForManyFilesMain kmersCounterNegative = new KmersCounterForManyFilesMain();
-    {
-        setFix(kmersCounterNegative.k, k);
-        setFix(kmersCounterNegative.inputFiles, negativeFiles);
-        setFix(kmersCounterNegative.maximalBadFrequency, maximalBadFrequency);
-        setFixDefault(kmersCounterNegative.outputDir);
-        kmersCounterNegative.outputDescFiles = outputDescFiles;
-        //addSubTool(kmersCounterNegative);
+        setFix(kmersCounterPosNeg.k, k);
+        setFix(kmersCounterPosNeg.positiveFiles, positiveFiles);
+        setFix(kmersCounterPosNeg.negativeFiles, negativeFiles);
+        setFix(kmersCounterPosNeg.maximalBadFrequency, maximalBadFrequency);
+        setFixDefault(kmersCounterPosNeg.outputDir);
+        kmersCounterPosNeg.outputDescFiles = outputDescFiles;
+        addSubTool(kmersCounterPosNeg);
     }
 
     public UniqueKmersMultipleSamplesFinder uniqueKmers = new UniqueKmersMultipleSamplesFinder();
     {
         setFix(uniqueKmers.k, k);
-        setFix(uniqueKmers.inputFiles, kmersCounterPositive.resultingKmerFiles);
-        setFix(uniqueKmers.filterFiles, kmersCounterNegative.resultingKmerFiles);
+        setFix(uniqueKmers.inputFiles, kmersCounterPosNeg.resultingPositiveKmerFiles);
+        setFix(uniqueKmers.filterFiles, kmersCounterPosNeg.resultingNegativeKmerFiles);
         setFix(uniqueKmers.maxSamples, maxSamples);
         setFix(uniqueKmers.minSamples, minSamples);
         setFix(uniqueKmers.maximalBadFrequency, maximalBadFrequency);
-        //addSubTool(uniqueKmers);
+        setFixDefault(uniqueKmers.outputDir);
+        addSubTool(uniqueKmers);
     }
 
 
     public KmersFilter kmersFilter = new KmersFilter();
     {
         setFix(kmersFilter.k, k);
-        setFix(kmersFilter.inputFiles, kmersCounterPositive.resultingKmerFiles);
+        setFix(kmersFilter.inputFiles, kmersCounterPosNeg.resultingPositiveKmerFiles);
         setFix(kmersFilter.filterFiles, uniqueKmers.resultingKmerFiles);
         setFix(kmersFilter.maximalBadFrequency, maximalBadFrequency);
-        setFix(kmersFilter.outputDir, workDir.append("filtered"));
-        //addSubTool(kmersFilter);
+        setFixDefault(kmersFilter.outputDir);
+        addSubTool(kmersFilter);
     }
 
     public ComponentExtractorMain compExtractor = new ComponentExtractorMain();
     {
         setFix(compExtractor.k, k);
-        setFix(compExtractor.inputFiles, kmersCounterPositive.resultingKmerFiles);
+        setFix(compExtractor.inputFiles, kmersCounterPosNeg.resultingPositiveKmerFiles);
         setFix(compExtractor.pivotFiles, uniqueKmers.resultingKmerFiles);
-        //addSubTool(compExtractor);
+        addSubTool(compExtractor);
     }
 
     public FeaturesCalculatorMain featuresCalculator = new FeaturesCalculatorMain();
     {
         setFix(featuresCalculator.k, k);
-        setFix(featuresCalculator.kmersFiles, kmersCounterPositive.resultingKmerFiles);
+        setFix(featuresCalculator.kmersFiles, kmersCounterPosNeg.resultingPositiveKmerFiles);
         setFix(featuresCalculator.componentsFile, compExtractor.componentsFile);
         setFix(featuresCalculator.selectedKmers, uniqueKmers.resultingKmerFiles);
-        //addSubTool(featuresCalculator);
+        addSubTool(featuresCalculator);
     }
 
     public ComponentsToSequences comp2seq = new ComponentsToSequences();
@@ -148,7 +140,7 @@ public class UniqueFeaturesBuilderMain extends Tool {
         setFix(comp2seq.k, k);
         setFix(comp2seq.componentsFile, compExtractor.componentsFile);
         setFix(comp2seq.splitComponents, splitComponents);
-        //addSubTool(comp2seq);
+        addSubTool(comp2seq);
     }
 
 
@@ -170,8 +162,7 @@ public class UniqueFeaturesBuilderMain extends Tool {
         createOutputDescFiles();
 
         // running steps
-        addStep(kmersCounterPositive);
-        addStep(kmersCounterNegative);
+        addStep(kmersCounterPosNeg);
         addStep(uniqueKmers);
         addStep(kmersFilter);
         addStep(compExtractor);
