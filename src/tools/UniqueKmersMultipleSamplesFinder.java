@@ -95,27 +95,21 @@ public class UniqueKmersMultipleSamplesFinder extends Tool {
 
         Timer t = new Timer();
 
-        BigLong2ShortHashMap hm = IOUtils.loadKmers(inputFiles.get(), maximalBadFrequency.get(),
-                availableProcessors.get(), logger);
-        debug("Memory used = " + Misc.usedMemoryAsString() + ", time = " + t);
-
-
-        BigLong2ShortHashMap hm_cnt = IOUtils.loadKmers(inputFiles.get(), maximalBadFrequency.get(),
-                availableProcessors.get(), logger);
-        hm_cnt.resetValues();
-        debug("Memory used = " + Misc.usedMemoryAsString() + ", time = " + t);
+        BigLong2ShortHashMap hm = new BigLong2ShortHashMap((int) (Math.log(availableProcessors.get()) / Math.log(2)) + 4, 8);
+        BigLong2ShortHashMap hm_cnt = new BigLong2ShortHashMap((int) (Math.log(availableProcessors.get()) / Math.log(2)) + 4, 8);
         for (File file : inputFiles.get()) {
-            BigLong2ShortHashMap filt_hm = IOUtils.loadKmers(new File[]{file}, maximalBadFrequency.get(),
+            BigLong2ShortHashMap tmp_hm = IOUtils.loadKmers(new File[]{file}, maximalBadFrequency.get(),
                     availableProcessors.get(), logger);
             debug("Memory used = " + Misc.usedMemoryAsString() + ", time = " + t);
 
-            Iterator<MutableLongShortEntry> it = filt_hm.entryIterator();
+            Iterator<MutableLongShortEntry> it = tmp_hm.entryIterator();
             while (it.hasNext()) {
                 MutableLongShortEntry entry = it.next();
                 long key = entry.getKey();
                 short value = entry.getValue();
 
                 if (value > maximalBadFrequency.get()) {
+                    hm.put(key, (short) (hm.getWithZero(key) + value));
                     hm_cnt.put(key, (short) (hm_cnt.getWithZero(key) + 1));
                 }
             }
