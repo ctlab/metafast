@@ -47,6 +47,13 @@ public class ConnectedComponent implements Comparable<ConnectedComponent> {
         weight = 0;
     }
 
+    public ConnectedComponent(SequenceComponent component) {
+        kmers = new LongArrayList();
+        kmers.addAll(component.kmers);
+        size = component.size;
+        weight = component.weight;
+    }
+
 
     public void add(long kmer, short w) {
         kmers.add(kmer);

@@ -38,6 +38,11 @@ public class SequenceComponent implements Comparable<SequenceComponent> {
         }
         weight++;
     }
+    public void addAll(SequenceComponent component) {
+        for (long kmer: component.kmers) {
+            add(kmer);
+        }
+    }
 
 
 
