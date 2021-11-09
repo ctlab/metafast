@@ -1,6 +1,7 @@
 package tools;
 
 import algo.ComponentsBuilderAroundPivot;
+import algo.IntelligentComponentsBuilderAroundPivot;
 import io.IOUtils;
 import ru.ifmo.genetics.statistics.Timer;
 import ru.ifmo.genetics.structures.map.BigLong2ShortHashMap;
@@ -50,12 +51,12 @@ public class ComponentExtractorMain extends Tool {
             .withDefaultValue(workDir.append("components.bin"))
             .create());
 
-    public final Parameter<Integer> depth = addParameter(new IntParameterBuilder("depth")
+    /*public final Parameter<Integer> depth = addParameter(new IntParameterBuilder("depth")
             .optional()
             .withDescription("Depth of traversal from pivot k-mers")
             .withDefaultValue(1)
             .create());
-
+    */
 
     private final InMemoryValue<File> componentsStatPr = new InMemoryValue<File>();
 
@@ -76,7 +77,8 @@ public class ComponentExtractorMain extends Tool {
         List<ConnectedComponent> components;
         try {
             String statFP = workDir + File.separator + "components-stat.txt";
-            components = ComponentsBuilderAroundPivot.splitStrategy(hm, pivot, k.get(), depth.get(), statFP, logger);
+            //components = IntelligentComponentsBuilderAroundPivot.splitStrategy(hm, pivot, k.get(), depth.get(), statFP, logger);
+            components = ComponentsBuilderAroundPivot.splitStrategy(hm, k.get(), pivot, statFP, logger);
 
             componentsStatPr.set(new File(statFP));
         } catch (FileNotFoundException e) {
