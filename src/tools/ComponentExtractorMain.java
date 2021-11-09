@@ -1,7 +1,6 @@
 package tools;
 
 import algo.ComponentsBuilderAroundPivot;
-import algo.IntelligentComponentsBuilderAroundPivot;
 import io.IOUtils;
 import ru.ifmo.genetics.statistics.Timer;
 import ru.ifmo.genetics.structures.map.BigLong2ShortHashMap;
