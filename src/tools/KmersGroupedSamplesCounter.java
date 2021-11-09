@@ -7,19 +7,15 @@ import ru.ifmo.genetics.statistics.Timer;
 import ru.ifmo.genetics.structures.map.BigLong2ShortHashMap;
 import ru.ifmo.genetics.structures.map.MutableLongShortEntry;
 import ru.ifmo.genetics.utils.Misc;
-import ru.ifmo.genetics.utils.NumUtils;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileMVParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.IntParameterBuilder;
-import ru.ifmo.genetics.utils.tool.values.InMemoryValue;
-import ru.ifmo.genetics.utils.tool.values.InValue;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Iterator;
 
@@ -186,7 +182,7 @@ public class KmersGroupedSamplesCounter  extends Tool {
             MutableLongShortEntry entry = it.next();
             long key = entry.getKey();
             out.println(new ShortKmer(key, k.get()) + "\t" + entry.getValue() +
-                    "\t" + cd_hm.get(key) + "\t" + nonibd_hm.get(key));
+                    "\t" + uc_hm.get(key) + "\t" + nonibd_hm.get(key));
         }
         info("K-mers printed to " + outFile.getPath());
 
