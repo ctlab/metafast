@@ -182,8 +182,9 @@ public class KmersGroupedSamplesCounter  extends Tool {
             MutableLongShortEntry entry = it.next();
             long key = entry.getKey();
             out.println(new ShortKmer(key, k.get()) + "\t" + entry.getValue() +
-                    "\t" + uc_hm.get(key) + "\t" + nonibd_hm.get(key));
+                    "\t" + uc_hm.getWithZero(key) + "\t" + nonibd_hm.getWithZero(key));
         }
+        out.close();
         info("K-mers printed to " + outFile.getPath());
 
     }
