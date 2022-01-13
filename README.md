@@ -24,7 +24,7 @@ Here is a short version of it.
 * [Installation](#installation)
 * [MetaFast 1.5](#metafast-15)
 * [Running instructions](#running-instructions)
-* [Example](#example)
+* [Examples](#examples)
 * [FAQ](#faq)
 * [Citation](#citation)
 * [Contact](#contact)
@@ -76,7 +76,9 @@ Metafast run script also allows you to run subtools of whole process or differen
 To see the list of available additional tools, run `metafast.sh --tools`.
 
 
-## Example
+## Examples
+
+#### Generated _in-silico_ dataset
 
 Download [meta_test_1.fa](https://github.com/ctlab/metafast/raw/master/test_data/meta_test_1.fa),
 [meta_test_2.fa](https://github.com/ctlab/metafast/raw/master/test_data/meta_test_2.fa) and 
@@ -98,6 +100,10 @@ The element `matrix[i][j]` is a distance between *sample i* and *sample j*.
 K-mers frequency statistics is saved in `workDir/kmer-counter-many/stats/<in-file>.stat.txt`;<br/>
 image file with heatmap and dendrogram is saved in `workDir/matrices/dist_matrix_<date>_<time>_heatmap.png`:<br/>
 <img src="test_data/meta_test_heatmap.png" alt="Test heatmap" width="450">
+
+#### Mock community example
+
+For testing on realistic metagenomic communities, the CAMI Challenge dataset was used. The detailed example description is available in file [Example.md](Example.md).
 
 ## FAQ
 
