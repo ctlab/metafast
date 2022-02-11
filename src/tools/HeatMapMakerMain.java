@@ -2,7 +2,6 @@ package tools;
 
 import algo.FullHeatMap;
 import algo.FullHeatMapXML;
-import com.sun.org.apache.xml.internal.serialize.XMLSerializer;
 import io.IOUtils;
 import org.w3c.dom.Document;
 import ru.ifmo.genetics.utils.FileUtils;
@@ -16,13 +15,16 @@ import ru.ifmo.genetics.utils.tool.values.InMemoryValue;
 import ru.ifmo.genetics.utils.tool.values.InValue;
 
 import javax.imageio.ImageIO;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.text.NumberFormat;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.StringTokenizer;
+import java.util.*;
 
 public class HeatMapMakerMain extends Tool {
     public static final String NAME = "heatmap-maker";
@@ -34,6 +36,13 @@ public class HeatMapMakerMain extends Tool {
             .withShortOpt("i")
             .withDescription("file with distance matrix")
             .create());
+
+    public final Parameter<File> colorsFile = addParameter(new FileParameterBuilder("colors-file")
+            .optional()
+            .withShortOpt("col")
+            .withDescription("file with colors in #RRGGBB format one sample per line in matrix-file order")
+            .create());
+
 
     public final Parameter<Boolean> withoutRenumbering = addParameter(new BoolParameterBuilder("without-renumbering")
             .important()
@@ -85,18 +94,33 @@ public class HeatMapMakerMain extends Tool {
         // parsing input matrix...
         try {
             parseMatrix(matrixFile.get());
-        } catch (IOException e) {
+        } catch (IOException | ParseException e) {
             throw new ExecutionFailedException("Can't read matrix file " + matrixFile.get(), e);
-        } catch (ParseException e) {
-            throw new ExecutionFailedException("Can't read matrix file " + matrixFile.get(), e);
+        }
+
+        // parse colors file
+        String[] colors;
+        if (colorsFile != null) {
+            ArrayList<String> colors_a = new ArrayList<String>();
+            try (Scanner s = new Scanner(colorsFile.get())) {
+                while (s.hasNext()) {
+                    colors_a.add(s.nextLine());
+                }
+            } catch (FileNotFoundException e) {
+                throw new ExecutionFailedException("Can't read colors file " + colorsFile.get(), e);
+            }
+            colors = colors_a.toArray(new String[0]);
+        } else {
+            colors = new String[names.length];
+            Arrays.fill(colors, "#000000");
         }
 
 
         // creating full heat map
-        FullHeatMap maker = new FullHeatMap(matrix, names, invertColors.get());
+        FullHeatMap maker = new FullHeatMap(matrix, names, invertColors.get(), colors);
         BufferedImage image = maker.createFullHeatMap(!withoutRenumbering.get());
 
-        Document document = new FullHeatMapXML(matrix, names, invertColors.get()).createFullHeatMap(!withoutRenumbering.get());
+        Document document = new FullHeatMapXML(matrix, names, invertColors.get(), colors).createFullHeatMap(!withoutRenumbering.get());
 
         // saving results
         String filePrefix = FileUtils.removeExtension(matrixFile.get().getPath(), ".txt");
@@ -128,10 +152,14 @@ public class HeatMapMakerMain extends Tool {
         }
         try {
             ImageIO.write(image, "png", new File(heatmapPath));
-            XMLSerializer xmlSerializer = new XMLSerializer(new FileWriter(FileUtils.removeExtension(heatmapPath, ".png") + ".svg"), null);
-            xmlSerializer.serialize(document);
+            Transformer transformer = TransformerFactory.newInstance().newTransformer();
+            DOMSource source = new DOMSource(document);
+            transformer.transform(source, new StreamResult(new FileWriter(FileUtils.removeExtension(heatmapPath, ".png") + ".svg")));
+
         } catch (IOException e) {
             throw new ExecutionFailedException("Can't save image to file " + heatmapPath, e);
+        } catch (TransformerException e) {
+            throw new ExecutionFailedException("Can't save image to file " + FileUtils.removeExtension(heatmapPath, ".png") + ".svg", e);
         }
         info("Heatmap for matrix saved to " + heatmapPath);
         heatmapFilePr.set(new File(heatmapPath));

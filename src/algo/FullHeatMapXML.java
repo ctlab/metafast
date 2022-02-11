@@ -1,8 +1,5 @@
 package algo;
 
-import com.sun.org.apache.xml.internal.serialize.Method;
-import com.sun.org.apache.xml.internal.serialize.OutputFormat;
-import com.sun.org.apache.xml.internal.serialize.XMLSerializer;
 import org.apache.batik.anim.dom.SVGDOMImplementation;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
@@ -10,8 +7,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 import java.awt.*;
-import java.io.FileWriter;
-import java.io.IOException;
 
 /**
  * Constructing full heat map with dendrogram for n objects.
@@ -50,6 +45,7 @@ public class FullHeatMapXML {
 
     public final int n;
     public final String[] names;
+    public final String[] colors;
     /**
      * Distance matrix with values from 0 to 1
      */
@@ -59,20 +55,21 @@ public class FullHeatMapXML {
     public final int[] perm;
 
 
-    public FullHeatMapXML(double[][] distMatrix, String[] names) {
-        this(distMatrix, 0, 1, names, false);
+    public FullHeatMapXML(double[][] distMatrix, String[] names, String[] colors) {
+        this(distMatrix, 0, 1, names, false, colors);
     }
 
-    public FullHeatMapXML(double[][] distMatrix, String[] names, boolean invertColors) {
-        this(distMatrix, 0, 1, names, invertColors);
+    public FullHeatMapXML(double[][] distMatrix, String[] names, boolean invertColors, String[] colors) {
+        this(distMatrix, 0, 1, names, invertColors, colors);
     }
 
-    public FullHeatMapXML(double[][] distMatrix, double low, double high, String[] names, boolean invertColors) {
+    public FullHeatMapXML(double[][] distMatrix, double low, double high, String[] names, boolean invertColors, String[] colors) {
         n = distMatrix.length;
         this.distMatrix = distMatrix;
         this.low = low;
         this.high = high;
         this.names = names;
+        this.colors = colors;
         gridSize = n * cellSize + (n + 1) * borderLineSize;
         dx_for_dendrogram = getDendrogramSize(n);
         perm = new int[n];
@@ -243,7 +240,7 @@ public class FullHeatMapXML {
             rowName.setAttributeNS(null, "x", Integer.toString(ddx + gridSize + 10));
             rowName.setAttributeNS(null, "y", Integer.toString(ddy + yc));
             rowName.setAttributeNS(null, "font", fontXML);
-            rowName.setAttributeNS(null, "fill", "black");
+            rowName.setAttributeNS(null, "fill", colors[perm[i]]);
             rowName.setTextContent(names[perm[i]]);
             svgRoot.appendChild(rowName);
 
@@ -251,7 +248,7 @@ public class FullHeatMapXML {
             columnName.setAttributeNS(null, "x", Integer.toString(ddx + gridSize + 10));
             columnName.setAttributeNS(null, "y", Integer.toString(ddy + yc));
             columnName.setAttributeNS(null, "font", fontXML);
-            columnName.setAttributeNS(null, "fill", "black");
+            columnName.setAttributeNS(null, "fill", colors[perm[i]]);
             columnName.setAttributeNS(null, "transform", transform);
             columnName.setTextContent(names[perm[i]]);
             svgRoot.appendChild(columnName);
@@ -545,37 +542,5 @@ public class FullHeatMapXML {
         return doc;
     }
 
-
-    public static void main(String[] args) throws IOException {
-        double[][] matrix = {{  0, 0.9,   1, 0.9, 0.8},
-                             {0.9,   0, 0.5, 0.6, 0.1},
-                             {  1, 0.5,   0, 0.2, 0.6},
-                             {0.9, 0.6, 0.2,   0, 0.7},
-                             {0.8, 0.1, 0.6, 0.7, 0}};
-        for (int i = 0; i < matrix.length; i++) {
-            for (int j = 0; j < matrix.length; j++) {
-                for (int k = 0; k < matrix.length; k++) {
-//                    if (i != j && i != k && j != k) {
-                        if (matrix[i][j] + matrix[j][k] < matrix[i][k]) {
-                            System.out.println("Wrong for i = " + i + ", j = " + j + ", k = " + k);
-                            System.out.println((matrix[i][j] + matrix[j][k]) + " < " + matrix[i][k]);
-                            return;
-                        }
-//                    }
-                }
-            }
-        }
-        String[] names = {"Abracadabra library got from some url", "Boldii fish lib2s",
-                "Cnot", "Don't know", "mmmm"};
-
-        FullHeatMapXML hm = new FullHeatMapXML(matrix, names);
-        OutputFormat format = new OutputFormat(Method.XML, "utf-8", true);
-        format.setIndent(4);
-        format.setLineWidth(80);
-        format.setPreserveEmptyAttributes(true);
-        format.setPreserveSpace(true);
-        XMLSerializer xmlSerializer = new XMLSerializer(new FileWriter("test.svg"), format);
-        xmlSerializer.serialize(hm.createFullHeatMap(true));
-    }
 
 }
