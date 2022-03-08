@@ -2,9 +2,11 @@ package tools;
 
 import io.IOUtils;
 import ru.ifmo.genetics.statistics.Timer;
+import ru.ifmo.genetics.structures.map.BigLong2LongHashMap;
 import ru.ifmo.genetics.structures.map.BigLong2ShortHashMap;
 import ru.ifmo.genetics.structures.map.MutableLongShortEntry;
 import ru.ifmo.genetics.utils.FileUtils;
+import ru.ifmo.genetics.utils.Misc;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
@@ -120,11 +122,18 @@ public class ColorKmersMain  extends Tool {
         Timer t = new Timer();
         ColoredKmers coloredKmers = new ColoredKmers(colorsN.get());
 
-        debug("Loading components...");
+        debug("Loading colors...");
         Map<String, Integer> fileToColorMap = readFileToColor(classFile.get());
-        BigLong2ShortHashMap hm;
+        debug("Loading components...");
+//        BigLong2ShortHashMap hm;
+        debug("Memory used (before processing files) = " + Misc.usedMemoryAsString() + ", Time for preparing = " + t);
+        BigLong2ShortHashMap hm = new BigLong2ShortHashMap(
+                (int) (Math.log(availableProcessors.get()) / Math.log(2)) + 4, 12);
+        int cnt_loaded = 0;
         for (File kmersFile : kmersFiles.get()) {
-            System.out.println("kmers file: " + kmersFile.getName());
+            cnt_loaded+=1;
+//            hm.resetValues();
+            System.out.println("kmers file #" + cnt_loaded + ": " + kmersFile.getName());
             hm = IOUtils.loadKmers(new File[]{kmersFile}, 0, availableProcessors.get(), logger);
             String compName = FileUtils.removeExtension(kmersFile.getName(), ".bin");
             String compName2 = FileUtils.removeExtension(compName, ".kmers");
@@ -134,7 +143,10 @@ public class ColorKmersMain  extends Tool {
                 MutableLongShortEntry curkmer = iterator.next();
                 coloredKmers.addColor(curkmer.getKey(), color);
             }
+            debug("Memory used (in cycle) = " + Misc.usedMemoryAsString() + ", Time for preparing = " + t);
+
         }
+        debug("Memory used (after cycle) = " + Misc.usedMemoryAsString() + ", Time for preparing = " + t);
         System.out.println(coloredKmers.kmers.size());
         System.out.println(coloredKmers.kmersColors.size());
         System.out.println(coloredKmers.size);
@@ -146,30 +158,31 @@ public class ColorKmersMain  extends Tool {
             e.printStackTrace();
         }
 
-        try {
-            ColoredKmers comp2 = new ColoredKmers(outputDir.get());
-            System.out.println(comp2.size);
-            System.out.println(comp2.colorsCNT);
-            System.out.println(comp2.kmers.size());
-            System.out.println(comp2.kmersColors.size());
-            Integer[] colorsstat = new Integer[comp2.colorsCNT + 1];
-            Arrays.fill(colorsstat, 0);
-
-            Map<Long, Integer> col = comp2.getColors();
-            int cnt = 0;
-           for (Long kmer : comp2.kmers) {
-               cnt+=1;
-               int c =  col.get(kmer);
-               colorsstat[c]+=1;
-           }
-           System.out.println(cnt);
-           for (int i = 0; i<comp2.colorsCNT + 1; i++) {
-               System.out.println(i + " = " + colorsstat[i]);
-           }
-            info("Loaded saved to " + outputDir.get());
-
-        } catch (ExecutionFailedException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            ColoredKmers comp2 = new ColoredKmers(outputDir.get());
+//            System.out.println(comp2.size);
+//            System.out.println(comp2.colorsCNT);
+//            System.out.println(comp2.kmers.size());
+//            System.out.println(comp2.kmersColors.size());
+//            Integer[] colorsstat = new Integer[comp2.colorsCNT + 1];
+//            Arrays.fill(colorsstat, 0);
+//
+//            Map<Long, Integer> col = comp2.getColors();
+//            int cnt = 0;
+//           for (Long kmer : comp2.kmers) {
+//               cnt+=1;
+//               int c =  col.get(kmer);
+//               colorsstat[c]+=1;
+//           }
+//           System.out.println(cnt);
+//           for (int i = 0; i<comp2.colorsCNT + 1; i++) {
+//               System.out.println(i + " = " + colorsstat[i]);
+//           }
+//            info("Loaded saved to " + outputDir.get());
+//
+//        } catch (ExecutionFailedException e) {
+//            e.printStackTrace();
+//        }
+        debug("In the end used = " + Misc.usedMemoryAsString() + ", Time for preparing = " + t);
     }
 }
