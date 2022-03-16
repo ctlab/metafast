@@ -159,6 +159,7 @@ public class ColorKmersMain  extends Tool {
         }
 
 //        try {
+//            System.out.println("test");
 //            ColoredKmers comp2 = new ColoredKmers(outputDir.get());
 //            System.out.println(comp2.size);
 //            System.out.println(comp2.colorsCNT);
@@ -170,6 +171,9 @@ public class ColorKmersMain  extends Tool {
 //            Map<Long, Integer> col = comp2.getColors();
 //            int cnt = 0;
 //           for (Long kmer : comp2.kmers) {
+//               if (cnt%100==1) {
+//                   System.out.println(kmer + " " + col.get(kmer) + " " + comp2.kmersColors.get(kmer) + " " + Arrays.toString(comp2.get_color_from_int(kmer)));
+//               }
 //               cnt+=1;
 //               int c =  col.get(kmer);
 //               colorsstat[c]+=1;

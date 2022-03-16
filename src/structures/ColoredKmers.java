@@ -7,11 +7,32 @@ import java.io.*;
 import java.util.*;
 
 public class ColoredKmers {
+
+
+    private void add_color_int(long kmer, int color, int val) {
+        long intaddval = (long) Math.pow(degree, color) + val;
+        kmersColors.put(kmer, kmersColors.get(kmer) + intaddval);
+    }
+
+    public Integer[]  get_color_from_int(long kmer) {
+        Integer[] res = new Integer[colorsCNT];
+            long longres = kmersColors.get(kmer);
+        for (int color = 0; color<colorsCNT; color++) {
+            long curdegree = (long) Math.pow(degree, color) ;
+//            long prevdegree = (long) Math.pow(degree, color + 1) ;
+            int realv = (int) (longres / curdegree % degree);
+            res[color] = realv;
+        }
+        return res;
+    }
+
     public List<Long> kmers;
-    public HashMap<Long, Integer[]> kmersColors;
+    public HashMap<Long, Long> kmersColors;
+    //max cnt for color is 999999, max colorcnt now is 3
     public int colorsCNT;
     public long size;
     public long weight;
+    private final int degree = 100000;
     private final double MIN_TO_COLOR = 0.75;
 
     public ColoredKmers(int colorsCNT) {
@@ -19,7 +40,7 @@ public class ColoredKmers {
         kmers = new LongArrayList();
         size = 0;
         weight = 0;
-        kmersColors = new HashMap<Long, Integer[]>();
+        kmersColors = new HashMap<Long, Long>();
     }
 
     public void addColor(long kmer, int color) {
@@ -30,12 +51,10 @@ public class ColoredKmers {
         if (!kmersColors.containsKey(kmer)) {
             kmers.add(kmer);
             size += 1;
-            Integer[] data = new Integer[colorsCNT];
-            Arrays.fill(data, 0);
-            kmersColors.put(kmer, data);
-
+            kmersColors.put(kmer, 0L);
         }
-        kmersColors.get(kmer)[color] += val;
+        add_color_int(kmer, color, val);
+//        kmersColors.get(kmer)[color] += val;
     }
 
 
@@ -56,7 +75,7 @@ public class ColoredKmers {
     public int getColor(long kmer) {
         int res = colorsCNT;
         if (kmersColors.containsKey(kmer)) {
-            int vi = argmax(kmersColors.get(kmer));
+            int vi = argmax(get_color_from_int(kmer));
             if (vi != -1) {
                 res = vi;
             }
@@ -89,7 +108,7 @@ public class ColoredKmers {
             int size = inputStream.readInt();
             this.colorsCNT = inputStream.readInt();
             this.kmers = new ArrayList<Long>();
-            this.kmersColors = new HashMap<Long, Integer[]>();
+            this.kmersColors = new HashMap<Long, Long>();
             for (int j = 0; j < size; j++) {
                 long kmer = inputStream.readLong();
                 this.kmers.add(kmer);
@@ -116,15 +135,15 @@ public class ColoredKmers {
         for (long kmer : this.kmers) {
             outputStream.writeLong(kmer);
             if (norm) {
-                for (Integer v : this.kmersColors.get(kmer)) {
+                for (Integer v : get_color_from_int(kmer)) {
                     outputStream.writeInt(v);
                 }
             } else {
                 int normsum = 0;
-                for (Integer v : this.kmersColors.get(kmer)) {
+                for (Integer v :  get_color_from_int(kmer)) {
                     normsum += v;
                 }
-                for (Integer v : this.kmersColors.get(kmer)) {
+                for (Integer v :  get_color_from_int(kmer)) {
                     outputStream.writeDouble(1.0 * v / normsum);
                 }
             }
