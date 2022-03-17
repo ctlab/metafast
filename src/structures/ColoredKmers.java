@@ -10,8 +10,9 @@ public class ColoredKmers {
 
 
     private void add_color_int(long kmer, int color, int val) {
-        long intaddval = (long) Math.pow(degree, color) + val;
+        int intaddval =  (int) Math.pow(degree, color) + val;
         kmersColors.put(kmer, kmersColors.get(kmer) + intaddval);
+
     }
 
     public Integer[]  get_color_from_int(long kmer) {
@@ -27,12 +28,12 @@ public class ColoredKmers {
     }
 
     public List<Long> kmers;
-    public HashMap<Long, Long> kmersColors;
+    public HashMap<Long,Integer> kmersColors;
     //max cnt for color is 999999, max colorcnt now is 3
     public int colorsCNT;
     public long size;
     public long weight;
-    private final int degree = 100000;
+    private final int degree = 1000;
     private final double MIN_TO_COLOR = 0.75;
 
     public ColoredKmers(int colorsCNT) {
@@ -40,7 +41,7 @@ public class ColoredKmers {
         kmers = new LongArrayList();
         size = 0;
         weight = 0;
-        kmersColors = new HashMap<Long, Long>();
+        kmersColors = new HashMap<Long, Integer>();
     }
 
     public void addColor(long kmer, int color) {
@@ -51,7 +52,7 @@ public class ColoredKmers {
         if (!kmersColors.containsKey(kmer)) {
             kmers.add(kmer);
             size += 1;
-            kmersColors.put(kmer, 0L);
+            kmersColors.put(kmer, 0);
         }
         add_color_int(kmer, color, val);
 //        kmersColors.get(kmer)[color] += val;
@@ -108,7 +109,7 @@ public class ColoredKmers {
             int size = inputStream.readInt();
             this.colorsCNT = inputStream.readInt();
             this.kmers = new ArrayList<Long>();
-            this.kmersColors = new HashMap<Long, Long>();
+            this.kmersColors = new HashMap<Long, Integer>();
             for (int j = 0; j < size; j++) {
                 long kmer = inputStream.readLong();
                 this.kmers.add(kmer);
