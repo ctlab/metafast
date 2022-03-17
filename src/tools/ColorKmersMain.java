@@ -132,7 +132,7 @@ public class ColorKmersMain  extends Tool {
         int cnt_loaded = 0;
         for (File kmersFile : kmersFiles.get()) {
             cnt_loaded+=1;
-//            hm.resetValues();
+            hm.resetValues();
             System.out.println("kmers file #" + cnt_loaded + ": " + kmersFile.getName());
             hm = IOUtils.loadKmers(new File[]{kmersFile}, 0, availableProcessors.get(), logger);
             String compName = FileUtils.removeExtension(kmersFile.getName(), ".bin");
@@ -147,6 +147,8 @@ public class ColorKmersMain  extends Tool {
 
         }
         debug("Memory used (after cycle) = " + Misc.usedMemoryAsString() + ", Time for preparing = " + t);
+        hm.resetValues();
+        debug("Memory used (after reset) = " + Misc.usedMemoryAsString() + ", Time for preparing = " + t);
         System.out.println(coloredKmers.kmers.size());
         System.out.println(coloredKmers.kmersColors.size());
         System.out.println(coloredKmers.size);
