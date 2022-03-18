@@ -100,7 +100,7 @@ public class ComponentColoredCutter extends Tool {
     @Override
     protected void runImpl() throws ExecutionFailedException, IOException {
         Timer t = new Timer();
-        ColoredKmers coloredKmers = new ColoredKmers(coloredKmersFile.get());
+        ColoredKmers coloredKmers = new ColoredKmers(coloredKmersFile.get(), availableProcessors.get());
         BigLong2ShortHashMap hm = IOUtils.loadKmers(kmersFiles.get(), 0, availableProcessors.get(), logger);
         info("Searching for components...");
         List<ConnectedComponent> components;

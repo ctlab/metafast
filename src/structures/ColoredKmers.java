@@ -1,6 +1,9 @@
 package structures;
 
 import it.unimi.dsi.fastutil.longs.LongArrayList;
+import ru.ifmo.genetics.structures.map.BigLong2LongHashMap;
+import ru.ifmo.genetics.structures.map.MutableLongLongEntry;
+import ru.ifmo.genetics.structures.map.MutableLongShortEntry;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 
 import java.io.*;
@@ -27,21 +30,21 @@ public class ColoredKmers {
         return res;
     }
 
-    public List<Long> kmers;
-    public HashMap<Long,Integer> kmersColors;
+//    public List<Long> kmers;
+    public BigLong2LongHashMap kmersColors;
+//    public HashMap<Long,Integer> kmersColors;
     //max cnt for color is 999999, max colorcnt now is 3
     public int colorsCNT;
     public long size;
     public long weight;
-    private final int degree = 1000;
+    private final int degree = 10000;
     private final double MIN_TO_COLOR = 0.75;
 
-    public ColoredKmers(int colorsCNT) {
+    public ColoredKmers(int colorsCNT, int availableProcessors ) {
         this.colorsCNT = colorsCNT;
-        kmers = new LongArrayList();
         size = 0;
         weight = 0;
-        kmersColors = new HashMap<Long, Integer>();
+        kmersColors = new BigLong2LongHashMap((int) (Math.log(availableProcessors) / Math.log(2)) + 4, 8);
     }
 
     public void addColor(long kmer, int color) {
@@ -49,8 +52,7 @@ public class ColoredKmers {
     }
 
     public void addColor(long kmer, int color, int val) {
-        if (!kmersColors.containsKey(kmer)) {
-            kmers.add(kmer);
+        if (!kmersColors.contains(kmer)) {
             size += 1;
             kmersColors.put(kmer, 0);
         }
@@ -75,7 +77,7 @@ public class ColoredKmers {
 
     public int getColor(long kmer) {
         int res = colorsCNT;
-        if (kmersColors.containsKey(kmer)) {
+        if (kmersColors.contains(kmer)) {
             int vi = argmax(get_color_from_int(kmer));
             if (vi != -1) {
                 res = vi;
@@ -86,7 +88,10 @@ public class ColoredKmers {
 
     public Map<Long, Integer> getColors() {
         Map<Long, Integer> res = new HashMap<Long, Integer>();
-        for (long kmer : kmers) {
+        Iterator<MutableLongLongEntry> iterator = kmersColors.entryIterator();
+        while (iterator.hasNext()) {
+            long kmer = iterator.next().getKey();
+
             int v = getColor(kmer);
             res.put(kmer, v);
         }
@@ -102,17 +107,15 @@ public class ColoredKmers {
         saveArrToFile(fp, true);
     }
 
-    public ColoredKmers(File file) throws ExecutionFailedException {
+    public ColoredKmers(File file, int availableProcessors) throws ExecutionFailedException {
         try {
             DataInputStream inputStream = new DataInputStream(new BufferedInputStream(new FileInputStream(file)));
 
             int size = inputStream.readInt();
             this.colorsCNT = inputStream.readInt();
-            this.kmers = new ArrayList<Long>();
-            this.kmersColors = new HashMap<Long, Integer>();
+            this.kmersColors = new BigLong2LongHashMap((int) (Math.log(availableProcessors) / Math.log(2)) + 4, 8);
             for (int j = 0; j < size; j++) {
                 long kmer = inputStream.readLong();
-                this.kmers.add(kmer);
                 for (int k = 0; k < this.colorsCNT; k++) {
                     this.addColor(kmer, k, inputStream.readInt());
                 }
@@ -133,7 +136,9 @@ public class ColoredKmers {
         DataOutputStream outputStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(fp)));
         outputStream.writeInt((int) this.size);
         outputStream.writeInt(this.colorsCNT);
-        for (long kmer : this.kmers) {
+        Iterator<MutableLongLongEntry> iterator = kmersColors.entryIterator();
+        while (iterator.hasNext()) {
+            long kmer = iterator.next().getKey();
             outputStream.writeLong(kmer);
             if (norm) {
                 for (Integer v : get_color_from_int(kmer)) {

@@ -4,6 +4,7 @@ import io.IOUtils;
 import ru.ifmo.genetics.statistics.Timer;
 import ru.ifmo.genetics.structures.map.BigLong2LongHashMap;
 import ru.ifmo.genetics.structures.map.BigLong2ShortHashMap;
+import ru.ifmo.genetics.structures.map.MutableLongLongEntry;
 import ru.ifmo.genetics.structures.map.MutableLongShortEntry;
 import ru.ifmo.genetics.utils.FileUtils;
 import ru.ifmo.genetics.utils.Misc;
@@ -120,7 +121,7 @@ public class ColorKmersMain  extends Tool {
     @Override
     protected void runImpl() throws ExecutionFailedException, IOException {
         Timer t = new Timer();
-        ColoredKmers coloredKmers = new ColoredKmers(colorsN.get());
+        ColoredKmers coloredKmers = new ColoredKmers(colorsN.get(), availableProcessors.get());
 
         debug("Loading colors...");
         Map<String, Integer> fileToColorMap = readFileToColor(classFile.get());
@@ -149,7 +150,6 @@ public class ColorKmersMain  extends Tool {
         debug("Memory used (after cycle) = " + Misc.usedMemoryAsString() + ", Time for preparing = " + t);
         hm.resetValues();
         debug("Memory used (after reset) = " + Misc.usedMemoryAsString() + ", Time for preparing = " + t);
-        System.out.println(coloredKmers.kmers.size());
         System.out.println(coloredKmers.kmersColors.size());
         System.out.println(coloredKmers.size);
         System.out.println(coloredKmers.colorsCNT);
@@ -160,19 +160,20 @@ public class ColorKmersMain  extends Tool {
             e.printStackTrace();
         }
 
-//        try {
+//       try {
 //            System.out.println("test");
-//            ColoredKmers comp2 = new ColoredKmers(outputDir.get());
+//            ColoredKmers comp2 = new ColoredKmers(outputDir.get(), availableProcessors.get());
 //            System.out.println(comp2.size);
 //            System.out.println(comp2.colorsCNT);
-//            System.out.println(comp2.kmers.size());
 //            System.out.println(comp2.kmersColors.size());
 //            Integer[] colorsstat = new Integer[comp2.colorsCNT + 1];
 //            Arrays.fill(colorsstat, 0);
 //
 //            Map<Long, Integer> col = comp2.getColors();
 //            int cnt = 0;
-//           for (Long kmer : comp2.kmers) {
+//           Iterator<MutableLongLongEntry> iterator = comp2.kmersColors.entryIterator();
+//           while (iterator.hasNext()) {
+//               long kmer = iterator.next().getKey();
 //               if (cnt%100==1) {
 //                   System.out.println(kmer + " " + col.get(kmer) + " " + comp2.kmersColors.get(kmer) + " " + Arrays.toString(comp2.get_color_from_int(kmer)));
 //               }
