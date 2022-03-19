@@ -125,6 +125,9 @@ public class ColorKmersMain  extends Tool {
 
         debug("Loading colors...");
         Map<String, Integer> fileToColorMap = readFileToColor(classFile.get());
+        for (String s : fileToColorMap.keySet()) {
+            System.out.println(s + " " + fileToColorMap.get(s));
+        }
         debug("Loading components...");
 //        BigLong2ShortHashMap hm;
         debug("Memory used (before processing files) = " + Misc.usedMemoryAsString() + ", Time for preparing = " + t);
@@ -139,6 +142,7 @@ public class ColorKmersMain  extends Tool {
             String compName = FileUtils.removeExtension(kmersFile.getName(), ".bin");
             String compName2 = FileUtils.removeExtension(compName, ".kmers");
             int color = fileToColorMap.get(compName2);
+            System.out.println(kmersFile.getName() + " " + compName + " " + compName2 + " " + color);
             Iterator<MutableLongShortEntry> iterator = hm.entryIterator();
             while (iterator.hasNext()) {
                 MutableLongShortEntry curkmer = iterator.next();

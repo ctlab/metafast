@@ -13,17 +13,16 @@ public class ColoredKmers {
 
 
     private void add_color_int(long kmer, int color, int val) {
-        int intaddval =  (int) Math.pow(degree, color) + val;
+        long intaddval =  (long) Math.pow(degree, color) * val;
         kmersColors.put(kmer, kmersColors.get(kmer) + intaddval);
 
     }
 
     public Integer[]  get_color_from_int(long kmer) {
         Integer[] res = new Integer[colorsCNT];
-            long longres = kmersColors.get(kmer);
+        long longres = kmersColors.get(kmer);
         for (int color = 0; color<colorsCNT; color++) {
             long curdegree = (long) Math.pow(degree, color) ;
-//            long prevdegree = (long) Math.pow(degree, color + 1) ;
             int realv = (int) (longres / curdegree % degree);
             res[color] = realv;
         }
@@ -72,7 +71,7 @@ public class ColoredKmers {
                 mi = i;
             }
         }
-        return (1.0 * mv / sum > MIN_TO_COLOR ) ? mi : -1;
+        return (1.0 * mv / sum >= MIN_TO_COLOR ) ? mi : -1;
     }
 
     public int getColor(long kmer) {
