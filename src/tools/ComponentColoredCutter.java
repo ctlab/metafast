@@ -1,10 +1,10 @@
 package tools;
 
 import algo.ColoredComponentBuilder;
-import algo.ComponentsBuilder;
 import io.IOUtils;
 import ru.ifmo.genetics.statistics.Timer;
 import ru.ifmo.genetics.structures.map.BigLong2ShortHashMap;
+import ru.ifmo.genetics.structures.map.MutableLongLongEntry;
 import ru.ifmo.genetics.utils.NumUtils;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
@@ -18,7 +18,10 @@ import structures.ConnectedComponent;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 public class ComponentColoredCutter extends Tool {
     public final Parameter<Integer> k = addParameter(new IntParameterBuilder("k")
@@ -81,9 +84,11 @@ public class ComponentColoredCutter extends Tool {
     public static void main(String[] args) {
         new ComponentColoredCutter().mainImpl(args);
     }
+
     public ComponentColoredCutter() {
         super(NAME, DESCRIPTION);
     }
+
     protected ComponentColoredCutter(String name, String description) {
         super(name, description);
     }
@@ -96,34 +101,58 @@ public class ComponentColoredCutter extends Tool {
     private final InMemoryValue<File> componentsStatPr = new InMemoryValue<File>();
 
 
+    private static final boolean IS_TEST = true;
 
     @Override
     protected void runImpl() throws ExecutionFailedException, IOException {
         Timer t = new Timer();
         ColoredKmers coloredKmers = new ColoredKmers(coloredKmersFile.get(), availableProcessors.get());
-        BigLong2ShortHashMap hm = IOUtils.loadKmers(kmersFiles.get(), 0, availableProcessors.get(), logger);
-        info("Searching for components...");
-        List<ConnectedComponent> components;
-        String statFP = workDir + File.separator + "components-stat-" +
-                minComponentSize.get() + "-" + maxComponentSize.get() + ".txt";
-        components = ColoredComponentBuilder.splitStrategy(hm, coloredKmers, k.get(), minComponentSize.get(),
-                maxComponentSize.get(), statFP, logger, availableProcessors.get());
+        if (IS_TEST) {
+            System.out.println("test");
+            System.out.println(coloredKmers.size);
+            System.out.println(coloredKmers.colorsCNT);
+            System.out.println(coloredKmers.kmersColors.size());
+            Integer[] colorsstat = new Integer[coloredKmers.colorsCNT + 1];
+            Arrays.fill(colorsstat, 0);
 
-        componentsStatPr.set(new File(statFP));
-
-        System.out.println("in main, components size is: " + components.size());
-        info("Total " + NumUtils.groupDigits(components.size()) + " components were found");
-        if (components.size() == 0) {
-            warn("No components were extracted! Perhaps you should decrease --min-component-size value");
+            Map<Long, Integer> col = coloredKmers.getColors();
+            int cnt = 0;
+            Iterator<MutableLongLongEntry> iterator = coloredKmers.kmersColors.entryIterator();
+            while (iterator.hasNext()) {
+                long kmer = iterator.next().getKey();
+                if (cnt % 10000 == 1) {
+                    System.out.println(kmer + " " + col.get(kmer) + " " + coloredKmers.kmersColors.get(kmer) + " " + Arrays.toString(coloredKmers.get_color_from_int(kmer)));
+                }
+                cnt += 1;
+                int c = col.get(kmer);
+                colorsstat[c] += 1;
+            }
+            System.out.println(cnt);
+            for (int i = 0; i < coloredKmers.colorsCNT + 1; i++) {
+                System.out.println(i + " = " + colorsstat[i]);
+            }
+        } else {
+            BigLong2ShortHashMap hm = IOUtils.loadKmers(kmersFiles.get(), 0, availableProcessors.get(), logger);
+            info("Searching for components...");
+            List<ConnectedComponent> components;
+            String statFP = workDir + File.separator + "components-stat-" +
+                    minComponentSize.get() + "-" + maxComponentSize.get() + ".txt";
+            components = ColoredComponentBuilder.splitStrategy(hm, coloredKmers, k.get(), minComponentSize.get(),
+                    maxComponentSize.get(), statFP, logger, availableProcessors.get());
+            componentsStatPr.set(new File(statFP));
+            System.out.println("in main, components size is: " + components.size());
+            info("Total " + NumUtils.groupDigits(components.size()) + " components were found");
+            if (components.size() == 0) {
+                warn("No components were extracted! Perhaps you should decrease --min-component-size value");
+            }
+            try {
+                ConnectedComponent.saveComponents(components, componentsFile.get().getAbsolutePath());
+                info("Components saved to " + componentsFile.get());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            debug("Components-cutter has finished! Time = " + t);
         }
-        try {
-            ConnectedComponent.saveComponents(components, componentsFile.get().getAbsolutePath());
-            info("Components saved to " + componentsFile.get());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        debug("Components-cutter has finished! Time = " + t);
-
 //        components.an
 
 
