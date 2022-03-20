@@ -114,17 +114,12 @@ public class ComponentColoredCutter extends Tool {
             System.out.println(coloredKmers.kmersColors.size());
             Integer[] colorsstat = new Integer[coloredKmers.colorsCNT + 1];
             Arrays.fill(colorsstat, 0);
-
-            Map<Long, Integer> col = coloredKmers.getColors();
             int cnt = 0;
             Iterator<MutableLongLongEntry> iterator = coloredKmers.kmersColors.entryIterator();
             while (iterator.hasNext()) {
                 long kmer = iterator.next().getKey();
-                if (cnt % 10000 == 1) {
-                    System.out.println(kmer + " " + col.get(kmer) + " " + coloredKmers.kmersColors.get(kmer) + " " + Arrays.toString(coloredKmers.get_color_from_int(kmer)));
-                }
                 cnt += 1;
-                int c = col.get(kmer);
+                int c = coloredKmers.getColor(kmer);
                 colorsstat[c] += 1;
             }
             System.out.println(cnt);
