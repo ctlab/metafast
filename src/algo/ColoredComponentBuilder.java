@@ -1,6 +1,7 @@
 package algo;
 
 import it.unimi.dsi.fastutil.longs.LongArrayFIFOQueue;
+import javafx.util.Pair;
 import org.apache.log4j.Logger;
 import ru.ifmo.genetics.executors.NonBlockingQueueExecutor;
 import ru.ifmo.genetics.statistics.Timer;
@@ -85,11 +86,11 @@ public class ColoredComponentBuilder{
 
         return comp;
     }
-    private static List<ConnectedComponent> findAllComponents(BigLong2ShortHashMap hm, ColoredKmers coloredKmers, int k, int b2, int curFreqThreshold) {
+    private static List<Pair<ConnectedComponent, Integer>> findAllComponents(BigLong2ShortHashMap hm, ColoredKmers coloredKmers, int k, int b2, int curFreqThreshold) {
         //todo add parallel
 
         System.out.println("find all components start: ");
-        List<ConnectedComponent> ans = new ArrayList<ConnectedComponent>();
+        List<Pair<ConnectedComponent, Integer>> ans = new ArrayList<Pair<ConnectedComponent, Integer>>();
         LongArrayFIFOQueue queue = new LongArrayFIFOQueue((int) Math.min(1 << 16, hm.size()/2));
 
         Iterator<MutableLongShortEntry> iterator = hm.entryIterator();
@@ -97,9 +98,10 @@ public class ColoredComponentBuilder{
         while (iterator.hasNext()) {
             cnt+=1;
             MutableLongShortEntry startKmer = iterator.next();
+            int component_color = coloredKmers.getColor(startKmer.getKey());
             if (startKmer.getValue() > 0) {    // i.e. if not precessed
                 ConnectedComponent comp = bfs(hm, coloredKmers, startKmer.getKey(), queue, k, b2, curFreqThreshold);
-                ans.add(comp);
+                ans.add(new Pair<ConnectedComponent, Integer>(comp, component_color));
             }
         }
 
@@ -112,21 +114,40 @@ public class ColoredComponentBuilder{
 
         long hmSize = hm.size();
         int curFreqThreshold = 1;  // current component is formed of k-mers with frequency >= 1
-        List<ConnectedComponent> newComps = findAllComponents(hm, coloredKmers, k, b2, curFreqThreshold);
+        List<Pair<ConnectedComponent, Integer>> newComps = findAllComponents(hm, coloredKmers, k, b2, curFreqThreshold);
+
+        int colorsCNT = coloredKmers.colorsCNT + 1;
+        int[] smallBYC = new int[colorsCNT], okBYC = new int[colorsCNT], bigBYC = new int[colorsCNT];
+        long[] smallKBYC = new long[colorsCNT], okKBYC = new long[colorsCNT];
+        for (int i = 0; i<colorsCNT; i++) {
+            smallBYC[i] = 0;
+            okBYC[i] = 0;
+            bigBYC[i] = 0;
+            smallKBYC[i] = 0;
+            okKBYC[i] = 0;
+        }
 
         int small = 0, ok = 0, big = 0;
         long smallK = 0, okK = 0;
-        for (ConnectedComponent comp : newComps) {
-            ans.add(comp);
+
+        for (Pair<ConnectedComponent, Integer> compWithColor : newComps) {
+            ConnectedComponent comp = compWithColor.getKey();
+            Integer color = compWithColor.getValue();
+
             if (comp.size < b1) {
                 small++;
+                smallBYC[color]++;
                 smallK += comp.size;
+                smallKBYC[color] += comp.size;
             } else if (comp.size <= b2) {
                 ok++;
+                ans.add(comp);
+                okBYC[color]++;
                 okK += comp.size;
-
+                okKBYC[color]+=1;
             } else {
                 big++;
+                bigBYC[color]++;
             }
         }
         int ansFirst = ans.size();
@@ -134,6 +155,13 @@ public class ColoredComponentBuilder{
         Tool.info(logger, "Found " + NumUtils.groupDigits(ok) + " good components, " +
                 "and " + NumUtils.groupDigits(big) + " big ones");
         Tool.info(logger, "Found " + NumUtils.groupDigits(small) + " small components, ");
+        Tool.info(logger, "By colors found: ");
+        for (int i = 0; i<colorsCNT; i++) {
+            Tool.info(logger, "#" + i + ": " + NumUtils.groupDigits(okBYC[i]) + " good components, " +
+                    "and " + NumUtils.groupDigits(bigBYC[i]) + " big ones");
+            Tool.info(logger, "Found " + NumUtils.groupDigits(smallBYC[i]) + " small components, ");
+        }
+
         Tool.info(logger, "First iteration was finished in " + t);
 
         Tool.debug(logger, "Total components found = " + NumUtils.groupDigits(newComps.size()) + ", " +
@@ -144,6 +172,18 @@ public class ColoredComponentBuilder{
         Tool.debug(logger, "Components kmers: small = " + withP(smallK, hmSize) + ", " +
                 "ok = " + withP(okK, hmSize) + ", " +
                 "big = " + withP(hmSize - smallK - okK, hmSize));
+
+        Tool.debug(logger, "Total components found  by colors: ");
+        for (int i = 0; i<colorsCNT; i++) {
+            Tool.debug(logger, "Components count: small = " + withP(smallBYC[i], newComps.size()) + ", " +
+                    "ok = " + withP(okBYC[i], newComps.size()) + ", " +
+                    "big = " + withP(bigBYC[i], newComps.size()));
+            Tool.debug(logger, "Components kmers: small = " + withP(smallKBYC[i], hmSize) + ", " +
+                    "ok = " + withP(okKBYC[i], hmSize) + ", " +
+                    //не правильно в случае по цветам
+                    "big = " + withP(hmSize - smallKBYC[i] - okKBYC[i], hmSize));
+        }
+
         Tool.debug(logger, "FreqThreshold = " + curFreqThreshold + ", " +
                 "components added = " + ok + ", total components added = " + ans.size());
 
