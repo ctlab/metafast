@@ -1,7 +1,6 @@
 package algo;
 
 import it.unimi.dsi.fastutil.longs.LongArrayFIFOQueue;
-import javafx.util.Pair;
 import org.apache.log4j.Logger;
 import ru.ifmo.genetics.executors.NonBlockingQueueExecutor;
 import ru.ifmo.genetics.statistics.Timer;
@@ -10,6 +9,8 @@ import ru.ifmo.genetics.structures.map.Long2ShortHashMapInterface;
 import ru.ifmo.genetics.structures.map.MutableLongShortEntry;
 import ru.ifmo.genetics.utils.Misc;
 import ru.ifmo.genetics.utils.NumUtils;
+import ru.ifmo.genetics.utils.pairs.MutablePair;
+import ru.ifmo.genetics.utils.pairs.Pair;
 import ru.ifmo.genetics.utils.tool.Tool;
 import structures.ColoredKmers;
 import structures.ConnectedComponent;
@@ -101,7 +102,7 @@ public class ColoredComponentBuilder{
             int component_color = coloredKmers.getColor(startKmer.getKey());
             if (startKmer.getValue() > 0) {    // i.e. if not precessed
                 ConnectedComponent comp = bfs(hm, coloredKmers, startKmer.getKey(), queue, k, b2, curFreqThreshold);
-                ans.add(new Pair<ConnectedComponent, Integer>(comp, component_color));
+                ans.add(new MutablePair<ConnectedComponent, Integer>(comp, component_color));
             }
         }
 
@@ -131,8 +132,8 @@ public class ColoredComponentBuilder{
         long smallK = 0, okK = 0;
 
         for (Pair<ConnectedComponent, Integer> compWithColor : newComps) {
-            ConnectedComponent comp = compWithColor.getKey();
-            Integer color = compWithColor.getValue();
+            ConnectedComponent comp = compWithColor.first();
+            Integer color = compWithColor.second();
 
             if (comp.size < b1) {
                 small++;
@@ -180,7 +181,7 @@ public class ColoredComponentBuilder{
                     "big = " + withP(bigBYC[i], newComps.size()));
             Tool.debug(logger, "Components kmers: small = " + withP(smallKBYC[i], hmSize) + ", " +
                     "ok = " + withP(okKBYC[i], hmSize) + ", " +
-                    //не правильно в случае по цветам
+                    //неправильно в случае по цветам
                     "big = " + withP(hmSize - smallKBYC[i] - okKBYC[i], hmSize));
         }
 
