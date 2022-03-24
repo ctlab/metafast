@@ -101,7 +101,7 @@ public class ComponentColoredCutter extends Tool {
     private final InMemoryValue<File> componentsStatPr = new InMemoryValue<File>();
 
 
-    private static final boolean IS_TEST = true;
+    private static final boolean IS_TEST = false;
 
     @Override
     protected void runImpl() throws ExecutionFailedException, IOException {
