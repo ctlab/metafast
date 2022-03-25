@@ -9,6 +9,7 @@ import ru.ifmo.genetics.utils.NumUtils;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
+import ru.ifmo.genetics.utils.tool.inputParameterBuilder.BoolParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileMVParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.IntParameterBuilder;
@@ -67,6 +68,12 @@ public class ComponentColoredCutter extends Tool {
     public final Parameter<File> componentsFile = addParameter(new FileParameterBuilder("components-file")
             .withDescription("file to write found components to")
             .withDefaultValue(workDir.append("components.bin"))
+            .create());
+
+    public final Parameter<Boolean> mode  = addParameter(new BoolParameterBuilder("fake-is-common")
+            .withDescription("fake is common for classes or separated class")
+            .withShortOpt("fic")
+            .withDefaultValue(false)
             .create());
 
 
@@ -133,7 +140,7 @@ public class ComponentColoredCutter extends Tool {
             String statFP = workDir + File.separator + "components-stat-" +
                     minComponentSize.get() + "-" + maxComponentSize.get() + ".txt";
             components = ColoredComponentBuilder.splitStrategy(hm, coloredKmers, k.get(), minComponentSize.get(),
-                    maxComponentSize.get(), statFP, logger, availableProcessors.get());
+                    maxComponentSize.get(), statFP, logger, availableProcessors.get(), mode.get());
             componentsStatPr.set(new File(statFP));
             System.out.println("in main, components size is: " + components.size());
             info("Total " + NumUtils.groupDigits(components.size()) + " components were found");
