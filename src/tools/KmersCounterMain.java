@@ -1,12 +1,12 @@
 package tools;
 
 import io.IOUtils;
-import ru.ifmo.genetics.dna.kmers.ShortKmerIteratorFactory;
 import ru.ifmo.genetics.io.ReadersUtils;
 import ru.ifmo.genetics.statistics.Timer;
 import ru.ifmo.genetics.structures.map.BigLong2ShortHashMap;
 import ru.ifmo.genetics.utils.Misc;
-import ru.ifmo.genetics.utils.tool.*;
+import ru.ifmo.genetics.utils.NumUtils;
+import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileMVParameterBuilder;
@@ -14,7 +14,6 @@ import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.IntParameterBuilder;
 import ru.ifmo.genetics.utils.tool.values.InMemoryValue;
 import ru.ifmo.genetics.utils.tool.values.InValue;
-import ru.ifmo.genetics.utils.NumUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -89,8 +88,7 @@ public class KmersCounterMain extends Tool {
             stDir.mkdirs();
         }
 
-        String name = ReadersUtils.readDnaLazy(inputFiles.get()[0]).name()
-                            + (inputFiles.get().length > 1 ? "+" : "");
+        String name = getName();
         File outFile = new File(outDir, name + ".kmers.bin");
         File stFile = new File(stDir, name + ".stat.txt");
 
@@ -119,6 +117,23 @@ public class KmersCounterMain extends Tool {
 
         info("Good k-mers printed to " + outFile.getPath());
         resultingKmerFilesPr.set(outFile);
+    }
+
+    private String getName() throws IOException {
+        if (inputFiles.get().length == 2) {
+            String name1 = ReadersUtils.readDnaLazy(inputFiles.get()[0]).name();
+            String name2 = ReadersUtils.readDnaLazy(inputFiles.get()[1]).name();
+            if ((name1.endsWith("_r1") && name2.endsWith("_r2")) ||
+                (name1.endsWith("_R1") && name2.endsWith("_R2"))) {
+                return name1.substring(0, name1.length()-3);
+            } else {
+                return name1 + "+";
+            }
+
+        } else {
+            return ReadersUtils.readDnaLazy(inputFiles.get()[0]).name()
+                    + (inputFiles.get().length > 1 ? "+" : "");
+        }
     }
 
     @Override
