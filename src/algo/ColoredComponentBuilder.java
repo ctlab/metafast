@@ -7,6 +7,7 @@ import ru.ifmo.genetics.statistics.Timer;
 import ru.ifmo.genetics.structures.map.BigLong2ShortHashMap;
 import ru.ifmo.genetics.structures.map.Long2ShortHashMapInterface;
 import ru.ifmo.genetics.structures.map.MutableLongShortEntry;
+import ru.ifmo.genetics.structures.set.BigLongHashSet;
 import ru.ifmo.genetics.utils.Misc;
 import ru.ifmo.genetics.utils.NumUtils;
 import ru.ifmo.genetics.utils.pairs.MutablePair;
@@ -21,17 +22,18 @@ import java.util.*;
 
 import static io.IOUtils.withP;
 
-public class ColoredComponentBuilder{
+public class ColoredComponentBuilder {
     public static List<ConnectedComponent> splitStrategy(BigLong2ShortHashMap hm, ColoredKmers coloredKmers,
                                                          int k, int b1, int b2,
                                                          String statFP, Logger logger,
                                                          int availableProcessors, boolean fakeIsCommon) throws FileNotFoundException {
-        System.out.println(" " + k + " " +b1 +" " +  b2 +" " +  availableProcessors);
+        System.out.println(" " + k + " " + b1 + " " + b2 + " " + availableProcessors);
         ColoredComponentBuilder builder = new ColoredComponentBuilder(k, b1, b2, availableProcessors, statFP, logger);
-        SPLIT_MODE mode =  (fakeIsCommon)  ? SPLIT_MODE.COMMON : SPLIT_MODE.SEPARATE;
+        SPLIT_MODE mode = (fakeIsCommon) ? SPLIT_MODE.COMMON : SPLIT_MODE.SEPARATE;
         builder.run(hm, coloredKmers, mode);
         return builder.ans;
     }
+
     final private List<ConnectedComponent> ans;
     final private NonBlockingQueueExecutor executor;
     final int k;
@@ -60,7 +62,8 @@ public class ColoredComponentBuilder{
         this.statFP = statFP;
         this.logger = logger;
     }
-    private static ConnectedComponent bfs(Long2ShortHashMapInterface hm, ColoredKmers coloredKmers,  long startKmer,
+
+    private static ConnectedComponent bfs(Long2ShortHashMapInterface hm, ColoredKmers coloredKmers, long startKmer,
                                           LongArrayFIFOQueue queue,
                                           int k, int b2, int curFreqThreshold, SPLIT_MODE mode) {
         ConnectedComponent comp = new ConnectedComponent();
@@ -74,6 +77,8 @@ public class ColoredComponentBuilder{
         int fakecolor = coloredKmers.colorsCNT;
         assert value > 0;
         hm.put(startKmer, (short) -value);  // removing
+        BigLongHashSet used = new BigLongHashSet(1000);
+
         comp.add(startKmer, value);
         while (queue.size() > 0) {
             long kmer = queue.dequeue();
@@ -83,13 +88,13 @@ public class ColoredComponentBuilder{
                     queue.enqueue(neighbour);
                     hm.put(neighbour, (short) -value);
                     comp.add(neighbour, value);
-                } else if (mode == SPLIT_MODE.COMMON && coloredKmers.getColor(neighbour)==fakecolor) {
+                } else if (mode == SPLIT_MODE.COMMON && coloredKmers.getColor(neighbour) == fakecolor && !used.contains(neighbour)) {
+                    used.add(neighbour);
                     queue.enqueue(neighbour);
                     comp.add(neighbour, value);
                 }
             }
         }
-
         return comp;
     }
 
@@ -102,17 +107,17 @@ public class ColoredComponentBuilder{
 
         System.out.println("find all components start: ");
         List<Pair<ConnectedComponent, Integer>> ans = new ArrayList<Pair<ConnectedComponent, Integer>>();
-        LongArrayFIFOQueue queue = new LongArrayFIFOQueue((int) Math.min(1 << 16, hm.size()/2));
+        LongArrayFIFOQueue queue = new LongArrayFIFOQueue((int) Math.min(1 << 16, hm.size() / 2));
         int colorsCNT = coloredKmers.colorsCNT;
 
         Iterator<MutableLongShortEntry> iterator = hm.entryIterator();
         int cnt = 0;
         while (iterator.hasNext()) {
-            cnt+=1;
+            cnt += 1;
             MutableLongShortEntry startKmer = iterator.next();
 
             int component_color = coloredKmers.getColor(startKmer.getKey());
-            if (mode==SPLIT_MODE.COMMON && component_color == colorsCNT) {
+            if (mode == SPLIT_MODE.COMMON && component_color == colorsCNT) {
                 continue;
             }
             if (startKmer.getValue() > 0) {    // i.e. if not precessed
@@ -135,7 +140,7 @@ public class ColoredComponentBuilder{
         int colorsCNT = coloredKmers.colorsCNT + 1;
         int[] smallBYC = new int[colorsCNT], okBYC = new int[colorsCNT], bigBYC = new int[colorsCNT];
         long[] smallKBYC = new long[colorsCNT], okKBYC = new long[colorsCNT];
-        for (int i = 0; i<colorsCNT; i++) {
+        for (int i = 0; i < colorsCNT; i++) {
             smallBYC[i] = 0;
             okBYC[i] = 0;
             bigBYC[i] = 0;
@@ -160,7 +165,7 @@ public class ColoredComponentBuilder{
                 ans.add(comp);
                 okBYC[color]++;
                 okK += comp.size;
-                okKBYC[color]+=1;
+                okKBYC[color] += 1;
             } else {
                 big++;
                 bigBYC[color]++;
@@ -172,7 +177,7 @@ public class ColoredComponentBuilder{
                 "and " + NumUtils.groupDigits(big) + " big ones");
         Tool.info(logger, "Found " + NumUtils.groupDigits(small) + " small components, ");
         Tool.info(logger, "By colors found: ");
-        for (int i = 0; i<colorsCNT; i++) {
+        for (int i = 0; i < colorsCNT; i++) {
             Tool.info(logger, "#" + i + ": " + NumUtils.groupDigits(okBYC[i]) + " good components, " +
                     "and " + NumUtils.groupDigits(bigBYC[i]) + " big ones");
             Tool.info(logger, "Found " + NumUtils.groupDigits(smallBYC[i]) + " small components, ");
@@ -190,7 +195,7 @@ public class ColoredComponentBuilder{
                 "big = " + withP(hmSize - smallK - okK, hmSize));
 
         Tool.debug(logger, "Total components found  by colors: ");
-        for (int i = 0; i<colorsCNT; i++) {
+        for (int i = 0; i < colorsCNT; i++) {
             Tool.debug(logger, "Components count: small = " + withP(smallBYC[i], newComps.size()) + ", " +
                     "ok = " + withP(okBYC[i], newComps.size()) + ", " +
                     "big = " + withP(bigBYC[i], newComps.size()));
