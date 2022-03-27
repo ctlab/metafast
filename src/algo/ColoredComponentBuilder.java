@@ -77,7 +77,7 @@ public class ColoredComponentBuilder {
         int fakecolor = coloredKmers.colorsCNT;
         assert value > 0;
         hm.put(startKmer, (short) -value);  // removing
-        BigLongHashSet used = new BigLongHashSet(1000);
+//        BigLongHashSet used = new BigLongHashSet(1000);
 
         comp.add(startKmer, value);
         while (queue.size() > 0) {
@@ -88,8 +88,9 @@ public class ColoredComponentBuilder {
                     queue.enqueue(neighbour);
                     hm.put(neighbour, (short) -value);
                     comp.add(neighbour, value);
-                } else if (mode == SPLIT_MODE.COMMON && coloredKmers.getColor(neighbour) == fakecolor && !used.contains(neighbour)) {
-                    used.add(neighbour);
+                } else if (mode == SPLIT_MODE.COMMON && coloredKmers.getColor(neighbour) == fakecolor && (value > 0)) {
+//                    used.add(neighbour);
+                    hm.put(neighbour, (short) (value - 1));
                     queue.enqueue(neighbour);
                     comp.add(neighbour, value);
                 }
