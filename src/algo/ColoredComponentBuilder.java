@@ -139,13 +139,14 @@ public class ColoredComponentBuilder {
 
         int colorsCNT = coloredKmers.colorsCNT + 1;
         int[] smallBYC = new int[colorsCNT], okBYC = new int[colorsCNT], bigBYC = new int[colorsCNT];
-        long[] smallKBYC = new long[colorsCNT], okKBYC = new long[colorsCNT];
+        long[] smallKBYC = new long[colorsCNT], okKBYC = new long[colorsCNT], bigKbYC = new long[colorsCNT];
         for (int i = 0; i < colorsCNT; i++) {
             smallBYC[i] = 0;
             okBYC[i] = 0;
             bigBYC[i] = 0;
             smallKBYC[i] = 0;
             okKBYC[i] = 0;
+            bigKbYC[i] = 0;
         }
 
         int small = 0, ok = 0, big = 0;
@@ -162,13 +163,14 @@ public class ColoredComponentBuilder {
                 smallKBYC[color] += comp.size;
             } else if (comp.size <= b2) {
                 ok++;
-                ans.add(comp);
                 okBYC[color]++;
                 okK += comp.size;
                 okKBYC[color] += 1;
             } else {
+                ans.add(comp);
                 big++;
                 bigBYC[color]++;
+                bigKbYC[color] += comp.size;
             }
         }
         int ansFirst = ans.size();
@@ -196,13 +198,13 @@ public class ColoredComponentBuilder {
 
         Tool.debug(logger, "Total components found  by colors: ");
         for (int i = 0; i < colorsCNT; i++) {
-            Tool.debug(logger, "Components count: small = " + withP(smallBYC[i], newComps.size()) + ", " +
+            Tool.debug(logger, "#" + i + ": " + "Components count: small = " + withP(smallBYC[i], newComps.size()) + ", " +
                     "ok = " + withP(okBYC[i], newComps.size()) + ", " +
                     "big = " + withP(bigBYC[i], newComps.size()));
-            Tool.debug(logger, "Components kmers: small = " + withP(smallKBYC[i], hmSize) + ", " +
+            Tool.debug(logger, "#" + i + ": " + "Components kmers: small = " + withP(smallKBYC[i], hmSize) + ", " +
                     "ok = " + withP(okKBYC[i], hmSize) + ", " +
-                    //неправильно в случае по цветам
-                    "big = " + withP(hmSize - smallKBYC[i] - okKBYC[i], hmSize));
+                    //неправильно в случае по цветам (возможно, если переполнение)
+                    "big = " + withP(bigKbYC[i], hmSize));
         }
 
         Tool.debug(logger, "FreqThreshold = " + curFreqThreshold + ", " +
