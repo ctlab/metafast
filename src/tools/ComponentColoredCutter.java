@@ -9,10 +9,8 @@ import ru.ifmo.genetics.utils.NumUtils;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
-import ru.ifmo.genetics.utils.tool.inputParameterBuilder.BoolParameterBuilder;
-import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileMVParameterBuilder;
-import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileParameterBuilder;
-import ru.ifmo.genetics.utils.tool.inputParameterBuilder.IntParameterBuilder;
+import ru.ifmo.genetics.utils.tool.inputParameterBuilder.*;
+import ru.ifmo.genetics.utils.tool.parameters.ParameterDescription;
 import ru.ifmo.genetics.utils.tool.values.InMemoryValue;
 import structures.ColoredKmers;
 import structures.ConnectedComponent;
@@ -54,6 +52,13 @@ public class ComponentColoredCutter extends Tool {
             .withDescriptionRu("Минимальный размер компоненты для использования")
             .withDescriptionRuShort("Минимальный размер компоненты")
             .create());
+
+    public final Parameter<Double> minForGreedStart = addParameter(new ParameterBuilder<Double>(Double.class, "min-for-greed-start")
+            .withShortOpt("mfg")
+            .withDescription("max count of components for each color")
+            .withDefaultValue(0.90)
+            .create());
+
     /*doesn't matter now, just count*/
     public final Parameter<Integer> maxComponentSize = addParameter(new IntParameterBuilder("max-component-size")
             .important()
@@ -70,10 +75,26 @@ public class ComponentColoredCutter extends Tool {
             .withDefaultValue(workDir.append("components.bin"))
             .create());
 
-    public final Parameter<Boolean> mode  = addParameter(new BoolParameterBuilder("fake-is-common")
-            .withDescription("fake is common for classes or separated class")
-            .withShortOpt("fic")
-            .withDefaultValue(false)
+    public final Parameter<String> splitMode  = addParameter(new StringParameterBuilder("mode-for-split")
+            .withDescription("split mode, one of:  SEPARATE, COMMON, CHOOSE_THE_BEST")
+            .withShortOpt("sp_mode")
+            .withDefaultValue("SEPARATE")
+            .create());
+    public final Parameter<String> startMode  = addParameter(new StringParameterBuilder("mode-for-start")
+            .withDescription("split mode, one of:  RANDOM, BEST")
+            .withShortOpt("st_mode")
+            .withDefaultValue("RANDOM")
+            .create());
+    public final Parameter<String> bfsMode  = addParameter(new StringParameterBuilder("mode-for-bfs")
+            .withDescription("split mode, one of:  ALL, BEST")
+            .withShortOpt("bfs_mode")
+            .withDefaultValue("ALL")
+            .create());
+
+    public final Parameter<Integer> componentsForColor  = addParameter(new IntParameterBuilder("components-for-color")
+            .withDescription("max count of components for each color")
+            .withShortOpt("cfc")
+            .withDefaultValue(1000)
             .create());
 
 
@@ -103,6 +124,22 @@ public class ComponentColoredCutter extends Tool {
     @Override
     protected void cleanImpl() {
 
+    }
+
+    public enum SPLIT_MODE {
+        SEPARATE, COMMON
+    }
+
+    //DEEP от развилки по всем соседям, до следующей, подсчет, сколько нашего цвета на пути
+    //Для deep только common автоматом
+    public enum BFS_MODE {
+        ALL, BEST, DEEP
+    }
+
+
+    //greed --  берем случайный и смотрим, насколько он хорош, например, >0.99 или 0.9 и ограничиваю также по компонентам каждого цвета
+    public enum START_KMER_MODE {
+        RANDOM, BEST, GREED
     }
 
     private final InMemoryValue<File> componentsStatPr = new InMemoryValue<File>();
@@ -139,8 +176,12 @@ public class ComponentColoredCutter extends Tool {
             List<ConnectedComponent> components;
             String statFP = workDir + File.separator + "components-stat-" +
                     minComponentSize.get() + "-" + maxComponentSize.get() + ".txt";
-            components = ColoredComponentBuilder.splitStrategy(hm, coloredKmers, k.get(), minComponentSize.get(),
-                    maxComponentSize.get(), statFP, logger, availableProcessors.get(), mode.get());
+            SPLIT_MODE splitmode = SPLIT_MODE.valueOf(splitMode.get());
+            START_KMER_MODE startmode = START_KMER_MODE.valueOf(startMode.get());
+            BFS_MODE bfsmode = BFS_MODE.valueOf(bfsMode.get());
+            System.out.println("CFC is: " +componentsForColor.get());
+            components = ColoredComponentBuilder.splitStrategy(hm, coloredKmers, (int) k.get(), (int) minComponentSize.get(),
+                    (int) maxComponentSize.get(), statFP, logger, availableProcessors.get(), splitmode, startmode, bfsmode, componentsForColor.get(), minForGreedStart.get());
             componentsStatPr.set(new File(statFP));
             System.out.println("in main, components size is: " + components.size());
             info("Total " + NumUtils.groupDigits(components.size()) + " components were found");

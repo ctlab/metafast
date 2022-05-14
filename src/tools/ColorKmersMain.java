@@ -96,6 +96,7 @@ public class ColorKmersMain  extends Tool {
     }
 
     //todo нормирование на кол-во файлов одного кмера
+    //todo считать суммарно сколько в файле, а не просто кол-во файлов
     public static Map<String, Integer> readFileToColor(File file) throws ExecutionFailedException  {
         Map<String, Integer> res = new HashMap<String, Integer>();
         try {
@@ -146,6 +147,11 @@ public class ColorKmersMain  extends Tool {
             Iterator<MutableLongShortEntry> iterator = hm.entryIterator();
             while (iterator.hasNext()) {
                 MutableLongShortEntry curkmer = iterator.next();
+                if (curkmer.getValue()==0) {
+                    System.out.println("ERR: 0 for " + curkmer.getValue());
+                } else if (curkmer.getValue()==1) {
+                    System.out.println("ERR: 1 for " + curkmer.getValue());
+                }
                 coloredKmers.addColor(curkmer.getKey(), color);
             }
             debug("Memory used (in cycle) = " + Misc.usedMemoryAsString() + ", Time for preparing = " + t);

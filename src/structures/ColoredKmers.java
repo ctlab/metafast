@@ -1,9 +1,8 @@
 package structures;
 
-import it.unimi.dsi.fastutil.longs.LongArrayList;
+import algo.ComponentsBuilder;
 import ru.ifmo.genetics.structures.map.BigLong2LongHashMap;
 import ru.ifmo.genetics.structures.map.MutableLongLongEntry;
-import ru.ifmo.genetics.structures.map.MutableLongShortEntry;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 
 import java.io.*;
@@ -60,7 +59,7 @@ public class ColoredKmers {
     }
 
 
-    private int argmax(Integer[] arr) {
+    private int argmax(Integer[] arr, double minForAns) {
         long sum = 0;
         int mi = 0;
         int mv = arr[0];
@@ -71,18 +70,53 @@ public class ColoredKmers {
                 mi = i;
             }
         }
-        return (1.0 * mv / sum >= MIN_TO_COLOR ) ? mi : -1;
+        return (1.0 * mv / sum >= minForAns ) ? mi : -1;
     }
 
-    public int getColor(long kmer) {
-        int res = colorsCNT;
+    private double normmax(Integer[] arr) {
+        long sum = 0;
+        int mi = 0;
+        int mv = arr[0];
+        for (int i = 0; i < arr.length; i++) {
+            sum+=arr[i];
+            if (arr[i] > mv) {
+                mv = arr[i];
+                mi = i;
+            }
+        }
+        if (sum>0) {
+            return (1.0 * mv / sum);
+        } else return -1;
+    }
+
+    public double getColorDouble(long kmer) {
+        double res = colorsCNT;
         if (kmersColors.contains(kmer)) {
-            int vi = argmax(get_color_from_int(kmer));
+            double vi = normmax(get_color_from_int(kmer));
             if (vi != -1) {
                 res = vi;
             }
         }
         return res;
+    }
+
+    private int getColorCommon(long kmer, double minForAns) {
+        int res = colorsCNT;
+        if (kmersColors.contains(kmer)) {
+            int vi = argmax(get_color_from_int(kmer), minForAns);
+            if (vi != -1) {
+                res = vi;
+            }
+        }
+        return res;
+    }
+
+    public int getColor(long kmer) {
+        return getColorCommon(kmer, MIN_TO_COLOR);
+    }
+
+    public int getColorInt(long kmer) {
+        return getColorCommon(kmer, 0);
     }
 
     public Map<Long, Integer> getColors() {
@@ -91,9 +125,66 @@ public class ColoredKmers {
         while (iterator.hasNext()) {
             long kmer = iterator.next().getKey();
 
-            int v = getColor(kmer);
+            int v = getColorInt(kmer);
             res.put(kmer, v);
         }
+        return res;
+    }
+
+    private static class PKmer {
+        long kmer;
+        double p;
+
+        public PKmer(long kmer, double p) {
+            this.kmer = kmer;
+            this.p = p;
+        }
+
+        @Override
+        public String toString() {
+            return "PKmer{" +
+                    "kmer=" + kmer +
+                    ", p=" + p +
+                    '}';
+        }
+    }
+    Comparator<PKmer> pKmerComparator = new Comparator<PKmer>() {
+        @Override
+        public int compare(PKmer o1, PKmer o2) {
+            if (o1.kmer == o2.kmer) {
+                return 0;
+            }
+            if (o1.p < o2.p) return -1;
+            return 1;
+        }
+    };
+
+
+
+    public List<Long> getValuesForColor(int color, int cnt) {
+        List<Long> res = new ArrayList<>();
+        TreeSet<PKmer> mintree = new TreeSet<>(pKmerComparator);
+        Iterator<MutableLongLongEntry> iterator = kmersColors.entryIterator();
+        while (iterator.hasNext()) {
+            long kmer = iterator.next().getKey();
+            int v = getColor(kmer);
+            if (v==color) {
+                double p = getColorDouble(kmer);
+                if (mintree.size() < cnt) {
+                    mintree.add(new PKmer(kmer, p));
+                } else {
+                    PKmer minv = mintree.first();
+                    if (minv.p < p) {
+                        mintree.pollFirst();
+                        mintree.add(new PKmer(kmer, p));
+                    }
+                }
+            }
+        }
+        for (PKmer pKmer : mintree) {
+            res.add(pKmer.kmer);
+        }
+
         return res;
     }
 
