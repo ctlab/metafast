@@ -90,6 +90,11 @@ public class ComponentColoredCutter extends Tool {
             .withShortOpt("bfs_mode")
             .withDefaultValue("ALL")
             .create());
+    public final Parameter<String> resSizeMode  = addParameter(new StringParameterBuilder("mode-for-result")
+            .withDescription("sizes in result  SMALL, GOOD, BIG, ALL")
+            .withShortOpt("res_mode")
+            .withDefaultValue("GOOD")
+            .create());
 
     public final Parameter<Integer> componentsForColor  = addParameter(new IntParameterBuilder("components-for-color")
             .withDescription("max count of components for each color")
@@ -124,6 +129,10 @@ public class ComponentColoredCutter extends Tool {
     @Override
     protected void cleanImpl() {
 
+    }
+
+    public enum COMPONENT_SIZES_MODE  {
+        SMALL, GOOD, BIG, ALL
     }
 
     public enum SPLIT_MODE {
@@ -179,9 +188,10 @@ public class ComponentColoredCutter extends Tool {
             SPLIT_MODE splitmode = SPLIT_MODE.valueOf(splitMode.get());
             START_KMER_MODE startmode = START_KMER_MODE.valueOf(startMode.get());
             BFS_MODE bfsmode = BFS_MODE.valueOf(bfsMode.get());
+            COMPONENT_SIZES_MODE resmode = COMPONENT_SIZES_MODE.valueOf(resSizeMode.get());
             System.out.println("CFC is: " +componentsForColor.get());
             components = ColoredComponentBuilder.splitStrategy(hm, coloredKmers, (int) k.get(), (int) minComponentSize.get(),
-                    (int) maxComponentSize.get(), statFP, logger, availableProcessors.get(), splitmode, startmode, bfsmode, componentsForColor.get(), minForGreedStart.get());
+                    (int) maxComponentSize.get(), statFP, logger, availableProcessors.get(), splitmode, startmode, bfsmode, componentsForColor.get(), minForGreedStart.get(), resmode);
             componentsStatPr.set(new File(statFP));
             System.out.println("in main, components size is: " + components.size());
             info("Total " + NumUtils.groupDigits(components.size()) + " components were found");

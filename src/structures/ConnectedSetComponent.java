@@ -1,5 +1,8 @@
 package structures;
 
+import org.apache.commons.lang.mutable.MutableLong;
+import ru.ifmo.genetics.structures.set.LongHashSet;
+
 import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
 import java.io.FileOutputStream;
@@ -9,23 +12,17 @@ import java.util.HashSet;
 
 //todo  убрать копипасту
 public class ConnectedSetComponent extends ConnectedComponent{
-    public HashSet<Long> kmersset;
+    public LongHashSet kmersset;
     public boolean contains(long kmer) {
         return kmersset.contains(kmer);
     }
 
     public ConnectedSetComponent() {
-        kmersset = new HashSet<>();
+        kmersset = new LongHashSet();
         size = 0;
         weight = 0;
     }
 
-    public ConnectedSetComponent(SequenceComponent component) {
-        kmersset = new HashSet<>();
-        kmersset.addAll(component.kmers);
-        size = component.size;
-        weight = component.weight;
-    }
 
     @Override
     public void add(long kmer, short w) {
@@ -48,8 +45,8 @@ public class ConnectedSetComponent extends ConnectedComponent{
         for (ConnectedSetComponent component : components) {
             outputStream.writeInt((int) component.size);
             outputStream.writeLong(component.weight);
-            for (long kmer : component.kmersset) {
-                outputStream.writeLong(kmer);
+            for (MutableLong kmer : component.kmersset) {
+                outputStream.writeLong(kmer.toLong());
             }
         }
 

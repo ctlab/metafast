@@ -27,10 +27,10 @@ public class ColoredComponentBuilder {
     public static List<ConnectedComponent> splitStrategy(BigLong2ShortHashMap hm, ColoredKmers coloredKmers,
                                                          int k, int b1, int b2,
                                                          String statFP, Logger logger,
-                                                         int availableProcessors, SPLIT_MODE mode, START_KMER_MODE startMode, BFS_MODE bfsMode, int forEachColorCNT, double minForGreedStart) throws FileNotFoundException {
+                                                         int availableProcessors, SPLIT_MODE mode, START_KMER_MODE startMode, BFS_MODE bfsMode, int forEachColorCNT, double minForGreedStart, COMPONENT_SIZES_MODE res_mode) throws FileNotFoundException {
         System.out.println(" " + k + " " + b1 + " " + b2 + " " + availableProcessors);
         ColoredComponentBuilder builder = new ColoredComponentBuilder(k, b1, b2, statFP, logger, forEachColorCNT);
-        builder.run(hm, coloredKmers, mode, startMode, bfsMode, minForGreedStart);
+        builder.run(hm, coloredKmers, mode, startMode, bfsMode, minForGreedStart, res_mode);
         return builder.ans;
     }
 
@@ -425,7 +425,7 @@ public class ColoredComponentBuilder {
         return ans;
     }
 
-    private void run(BigLong2ShortHashMap hm, ColoredKmers coloredKmers, SPLIT_MODE mode, ComponentColoredCutter.START_KMER_MODE startMode, ComponentColoredCutter.BFS_MODE bfsMode, double minForGreedStart) throws FileNotFoundException {
+    private void run(BigLong2ShortHashMap hm, ColoredKmers coloredKmers, SPLIT_MODE mode, ComponentColoredCutter.START_KMER_MODE startMode, ComponentColoredCutter.BFS_MODE bfsMode, double minForGreedStart, COMPONENT_SIZES_MODE res_mode) throws FileNotFoundException {
         Tool.info(logger, "First iteration...");
         Timer t = new Timer();
 
@@ -468,19 +468,26 @@ public class ColoredComponentBuilder {
             Integer color = compWithColor.second();
 
             if (comp.size < b1) {
-//                ans.add(comp);
+                if (res_mode==COMPONENT_SIZES_MODE.ALL || res_mode == COMPONENT_SIZES_MODE.SMALL) {
+                    ans.add(comp);
+                }
+//
                 small++;
                 smallBYC[color]++;
                 smallK += comp.size;
                 smallKBYC[color] += comp.size;
             } else if (comp.size <= b2) {
-//                ans.add(comp);
+                if (res_mode==COMPONENT_SIZES_MODE.ALL || res_mode == COMPONENT_SIZES_MODE.GOOD) {
+                    ans.add(comp);
+                }
                 ok++;
                 okBYC[color]++;
                 okK += comp.size;
                 okKBYC[color] += 1;
             } else {
-                ans.add(comp);
+                if (res_mode==COMPONENT_SIZES_MODE.ALL || res_mode == COMPONENT_SIZES_MODE.BIG) {
+                    ans.add(comp);
+                }
                 big++;
                 bigBYC[color]++;
                 bigKbYC[color] += comp.size;
