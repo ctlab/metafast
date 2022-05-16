@@ -24,7 +24,7 @@ import static io.IOUtils.withP;
 import static tools.ComponentColoredCutter.*;
 
 public class ColoredComponentBuilder {
-    public static List<ConnectedComponent> splitStrategy(BigLong2ShortHashMap hm, ColoredKmers coloredKmers,
+    public static List<ConnectedSetComponent> splitStrategy(BigLong2ShortHashMap hm, ColoredKmers coloredKmers,
                                                          int k, int b1, int b2,
                                                          String statFP, Logger logger,
                                                          int availableProcessors, SPLIT_MODE mode, START_KMER_MODE startMode, BFS_MODE bfsMode, int forEachColorCNT, double minForGreedStart, COMPONENT_SIZES_MODE res_mode) throws FileNotFoundException {
@@ -34,7 +34,7 @@ public class ColoredComponentBuilder {
         return builder.ans;
     }
 
-    final private List<ConnectedComponent> ans;
+    final private List<ConnectedSetComponent> ans;
     final int k;
     final int b1, b2;
     final String statFP;
@@ -141,7 +141,7 @@ public class ColoredComponentBuilder {
         return res;
     }
 
-    public static ConnectedComponent bfsDeep(Long2ShortHashMapInterface hm, ColoredKmers coloredKmers, long startKmer,
+    public static ConnectedSetComponent bfsDeep(Long2ShortHashMapInterface hm, ColoredKmers coloredKmers, long startKmer,
                                              LongArrayFIFOQueue queue,
                                              int k, int curFreqThreshold, SPLIT_MODE splitMode) {
         ConnectedSetComponent comp = new ConnectedSetComponent();
@@ -199,10 +199,10 @@ public class ColoredComponentBuilder {
         return comp;
     }
 
-    private static ConnectedComponent bfsBest(Long2ShortHashMapInterface hm, ColoredKmers coloredKmers, long startKmer,
+    private static ConnectedSetComponent bfsBest(Long2ShortHashMapInterface hm, ColoredKmers coloredKmers, long startKmer,
                                               LongArrayFIFOQueue queue,
                                               int k, int curFreqThreshold, SPLIT_MODE mode) {
-        ConnectedComponent comp = new ConnectedComponent();
+        ConnectedSetComponent comp = new ConnectedSetComponent();
         comp.usedFreqThreshold = curFreqThreshold;
 
         queue.clear();
@@ -243,7 +243,7 @@ public class ColoredComponentBuilder {
         return comp;
     }
 
-    private static ConnectedComponent bfs(Long2ShortHashMapInterface hm, ColoredKmers coloredKmers, long startKmer,
+    private static ConnectedSetComponent bfs(Long2ShortHashMapInterface hm, ColoredKmers coloredKmers, long startKmer,
                                           LongArrayFIFOQueue queue,
                                           int k, int curFreqThreshold, SPLIT_MODE mode) {
         ConnectedSetComponent comp = new ConnectedSetComponent();
@@ -293,9 +293,9 @@ public class ColoredComponentBuilder {
     }
 
 
-    private static List<Pair<ConnectedComponent, Integer>> findComponentsGreed(BigLong2ShortHashMap hm, ColoredKmers coloredKmers, int k, int curFreqThreshold, SPLIT_MODE mode, int forEachColorMax, BFS_MODE bfsMode, double minForStart) {
+    private static List<Pair<ConnectedSetComponent, Integer>> findComponentsGreed(BigLong2ShortHashMap hm, ColoredKmers coloredKmers, int k, int curFreqThreshold, SPLIT_MODE mode, int forEachColorMax, BFS_MODE bfsMode, double minForStart) {
         System.out.println("find components greed start: ");
-        List<Pair<ConnectedComponent, Integer>> ans = new ArrayList<>();
+        List<Pair<ConnectedSetComponent, Integer>> ans = new ArrayList<>();
         LongArrayFIFOQueue queue = new LongArrayFIFOQueue((int) Math.min(1 << 16, hm.size() / 2));
         int colorsCNT = coloredKmers.colorsCNT;
         int fakeColor = coloredKmers.colorsCNT;
@@ -320,7 +320,7 @@ public class ColoredComponentBuilder {
             } else {
                 continue;
             }
-            ConnectedComponent comp = null;
+            ConnectedSetComponent comp = null;
             switch (bfsMode) {
                 case BEST:
                     comp = bfsBest(hm, coloredKmers, startKmer.getKey(), queue, k, curFreqThreshold, mode);
@@ -341,9 +341,9 @@ public class ColoredComponentBuilder {
     }
 
     //todo  проверить на других данных, чтобы вероятности были не 0, 0.5, 1
-    private static List<Pair<ConnectedComponent, Integer>> findBestComponents(BigLong2ShortHashMap hm, ColoredKmers coloredKmers, int k, int curFreqThreshold, SPLIT_MODE mode, int forEachColor, BFS_MODE bfsMode) {
+    private static List<Pair<ConnectedSetComponent, Integer>> findBestComponents(BigLong2ShortHashMap hm, ColoredKmers coloredKmers, int k, int curFreqThreshold, SPLIT_MODE mode, int forEachColor, BFS_MODE bfsMode) {
         System.out.println("find best components start: ");
-        List<Pair<ConnectedComponent, Integer>> ans = new ArrayList<>();
+        List<Pair<ConnectedSetComponent, Integer>> ans = new ArrayList<>();
         LongArrayFIFOQueue queue = new LongArrayFIFOQueue((int) Math.min(1 << 16, hm.size() / 2));
         int colorsCNT = coloredKmers.colorsCNT;
         ArrayList<List<Long>> startQueues = new ArrayList<>();
@@ -368,7 +368,7 @@ public class ColoredComponentBuilder {
                 }
                 long startKmer = startQueues.get(col).get(ind);
                 // i.e. if not precessed
-                ConnectedComponent comp = null;
+                ConnectedSetComponent comp = null;
                 switch (bfsMode) {
                     case BEST:
                         comp = bfsBest(hm, coloredKmers, startKmer, queue, k, curFreqThreshold, mode);
@@ -389,9 +389,9 @@ public class ColoredComponentBuilder {
     }
 
 
-    private static List<Pair<ConnectedComponent, Integer>> findAllComponents(BigLong2ShortHashMap hm, ColoredKmers coloredKmers, int k, int curFreqThreshold, SPLIT_MODE mode, BFS_MODE bfsMode) {
+    private static List<Pair<ConnectedSetComponent, Integer>> findAllComponents(BigLong2ShortHashMap hm, ColoredKmers coloredKmers, int k, int curFreqThreshold, SPLIT_MODE mode, BFS_MODE bfsMode) {
         System.out.println("find all components start: ");
-        List<Pair<ConnectedComponent, Integer>> ans = new ArrayList<>();
+        List<Pair<ConnectedSetComponent, Integer>> ans = new ArrayList<>();
         LongArrayFIFOQueue queue = new LongArrayFIFOQueue((int) Math.min(1 << 16, hm.size() / 2));
         int colorsCNT = coloredKmers.colorsCNT;
 
@@ -404,7 +404,7 @@ public class ColoredComponentBuilder {
                 continue;
             }
             if (startKmer.getValue() > 0) {    // i.e. if not precessed
-                ConnectedComponent comp = null;
+                ConnectedSetComponent comp = null;
                 switch (bfsMode) {
                     case BEST:
                         comp = bfsBest(hm, coloredKmers, startKmer.getKey(), queue, k, curFreqThreshold, mode);
@@ -432,7 +432,7 @@ public class ColoredComponentBuilder {
         long hmSize = hm.size();
         int curFreqThreshold = 1;  // current component is formed of k-mers with frequency >= 1
 
-        List<Pair<ConnectedComponent, Integer>> newComps = null;
+        List<Pair<ConnectedSetComponent, Integer>> newComps = null;
         switch (startMode) {
             case RANDOM:
                 newComps = findAllComponents(hm, coloredKmers, k, curFreqThreshold, mode, bfsMode);
@@ -463,8 +463,8 @@ public class ColoredComponentBuilder {
         int small = 0, ok = 0, big = 0;
         long smallK = 0, okK = 0;
 
-        for (Pair<ConnectedComponent, Integer> compWithColor : newComps) {
-            ConnectedComponent comp = compWithColor.first();
+        for (Pair<ConnectedSetComponent, Integer> compWithColor : newComps) {
+            ConnectedSetComponent comp = compWithColor.first();
             Integer color = compWithColor.second();
 
             if (comp.size < b1) {

@@ -14,6 +14,7 @@ import ru.ifmo.genetics.utils.tool.parameters.ParameterDescription;
 import ru.ifmo.genetics.utils.tool.values.InMemoryValue;
 import structures.ColoredKmers;
 import structures.ConnectedComponent;
+import structures.ConnectedSetComponent;
 
 import java.io.File;
 import java.io.IOException;
@@ -146,6 +147,7 @@ public class ComponentColoredCutter extends Tool {
     }
 
 
+//todo  для best и greed вообще нет класса фэйка в итоговых
     //greed --  берем случайный и смотрим, насколько он хорош, например, >0.99 или 0.9 и ограничиваю также по компонентам каждого цвета
     public enum START_KMER_MODE {
         RANDOM, BEST, GREED
@@ -182,7 +184,7 @@ public class ComponentColoredCutter extends Tool {
         } else {
             BigLong2ShortHashMap hm = IOUtils.loadKmers(kmersFiles.get(), 0, availableProcessors.get(), logger);
             info("Searching for components...");
-            List<ConnectedComponent> components;
+            List<ConnectedSetComponent> components;
             String statFP = workDir + File.separator + "components-stat-" +
                     minComponentSize.get() + "-" + maxComponentSize.get() + ".txt";
             SPLIT_MODE splitmode = SPLIT_MODE.valueOf(splitMode.get());
@@ -199,7 +201,7 @@ public class ComponentColoredCutter extends Tool {
                 warn("No components were extracted! Perhaps you should decrease --min-component-size value");
             }
             try {
-                ConnectedComponent.saveComponents(components, componentsFile.get().getAbsolutePath());
+                ConnectedSetComponent.saveSetComponents(components, componentsFile.get().getAbsolutePath());
                 info("Components saved to " + componentsFile.get());
             } catch (IOException e) {
                 e.printStackTrace();
