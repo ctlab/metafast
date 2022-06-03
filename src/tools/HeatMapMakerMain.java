@@ -100,7 +100,7 @@ public class HeatMapMakerMain extends Tool {
 
         // parse colors file
         String[] colors;
-        if (colorsFile != null) {
+        if (colorsFile.get() != null) {
             ArrayList<String> colors_a = new ArrayList<String>();
             try (Scanner s = new Scanner(colorsFile.get())) {
                 while (s.hasNext()) {
