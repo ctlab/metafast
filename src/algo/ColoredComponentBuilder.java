@@ -18,30 +18,21 @@ import tools.ComponentColoredCutter;
 
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 
 import static io.IOUtils.withP;
 import static tools.ComponentColoredCutter.*;
 
 public class ColoredComponentBuilder {
-    public static List<ConnectedSetComponent> splitStrategy(BigLong2ShortHashMap hm, ColoredKmers coloredKmers,
-                                                         int k, int b1, int b2,
-                                                         String statFP, Logger logger,
-                                                         int availableProcessors, SPLIT_MODE mode, START_KMER_MODE startMode, BFS_MODE bfsMode, int forEachColorCNT, double minForGreedStart, COMPONENT_SIZES_MODE res_mode) throws FileNotFoundException {
-        System.out.println(" " + k + " " + b1 + " " + b2 + " " + availableProcessors);
-        ColoredComponentBuilder builder = new ColoredComponentBuilder(k, b1, b2, statFP, logger, forEachColorCNT);
-        builder.run(hm, coloredKmers, mode, startMode, bfsMode, minForGreedStart, res_mode);
-        return builder.ans;
-    }
-
-    final private List<ConnectedSetComponent> ans;
     final int k;
     final int b1, b2;
     final String statFP;
-    final private Logger logger;
     final int forEachColorCNT;
-
-
+    final private List<ConnectedSetComponent> ans;
+    final private Logger logger;
     private ColoredComponentBuilder(int k, int b1, int b2, String statFP, Logger logger, Integer forEachColorCNT) {
         this.ans = new ArrayList<>();
         this.k = k;
@@ -50,6 +41,16 @@ public class ColoredComponentBuilder {
         this.statFP = statFP;
         this.logger = logger;
         this.forEachColorCNT = forEachColorCNT;
+    }
+
+    public static List<ConnectedSetComponent> splitStrategy(BigLong2ShortHashMap hm, ColoredKmers coloredKmers,
+                                                            int k, int b1, int b2,
+                                                            String statFP, Logger logger,
+                                                            int availableProcessors, SPLIT_MODE mode, START_KMER_MODE startMode, BFS_MODE bfsMode, int forEachColorCNT, double minForGreedStart, COMPONENT_SIZES_MODE res_mode) throws FileNotFoundException {
+        System.out.println(" " + k + " " + b1 + " " + b2 + " " + availableProcessors);
+        ColoredComponentBuilder builder = new ColoredComponentBuilder(k, b1, b2, statFP, logger, forEachColorCNT);
+        builder.run(hm, coloredKmers, mode, startMode, bfsMode, minForGreedStart, res_mode);
+        return builder.ans;
     }
 
     private static boolean kmerInHM(long kmer, Long2ShortHashMapInterface hm) {
@@ -83,15 +84,15 @@ public class ColoredComponentBuilder {
         comp.add(neighbour, value);
     }
 
-    private static List<Long> getKmersOnPath(long neighbour, int startColour, Long2ShortHashMapInterface hm, int k, ColoredKmers coloredKmers, int fakeColor, SPLIT_MODE split_mode, ConnectedSetComponent comp) {
+    private static List<Long> getKmersOnPath(long neighbour, Long2ShortHashMapInterface hm, int k, ColoredKmers coloredKmers, int fakeColor, SPLIT_MODE split_mode, ConnectedSetComponent comp) {
 
         List<Long> res = new ArrayList<>();
-        long curv = neighbour;
+        long curV = neighbour;
         while (true) {
-            int v = hm.get(curv);
-            int col = coloredKmers.getColor(curv);
+            int v = hm.get(curV);
+            int col = coloredKmers.getColor(curV);
             if (v < 0) {
-                if (col==fakeColor && split_mode == SPLIT_MODE.COMMON) {
+                if (col == fakeColor && split_mode == SPLIT_MODE.COMMON) {
                     if (comp.contains(neighbour)) {
                         break;
                     }
@@ -100,11 +101,11 @@ public class ColoredComponentBuilder {
                 }
             }
 
-            res.add(curv);
-            Pair<Integer, Long> cntnn = numOfPaths(curv, hm, k);
+            res.add(curV);
+            Pair<Integer, Long> cntnn = numOfPaths(curV, hm, k);
             int cntn = cntnn.first();
             if (cntn == 1) {
-                curv = cntnn.second();
+                curV = cntnn.second();
             } else {
                 break;
             }
@@ -114,12 +115,12 @@ public class ColoredComponentBuilder {
 
     private static int getColorCNTBeforePathSplit(long neighbour, int startColour, Long2ShortHashMapInterface hm, int k, ColoredKmers coloredKmers, int fakeColor, SPLIT_MODE split_mode, ConnectedSetComponent comp) {
         int res = 0;
-        long curv = neighbour;
+        long curV = neighbour;
         while (true) {
-            int v = hm.get(curv);
-            int col = coloredKmers.getColor(curv);
+            int v = hm.get(curV);
+            int col = coloredKmers.getColor(curV);
             if (v < 0) {
-                if (col==fakeColor && split_mode == SPLIT_MODE.COMMON) {
+                if (col == fakeColor && split_mode == SPLIT_MODE.COMMON) {
                     if (comp.contains(neighbour)) {
                         break;
                     }
@@ -130,10 +131,10 @@ public class ColoredComponentBuilder {
             if (col == startColour) {
                 res += 1;
             }
-            Pair<Integer, Long> cntnn = numOfPaths(curv, hm, k);
+            Pair<Integer, Long> cntnn = numOfPaths(curV, hm, k);
             int cntn = cntnn.first();
             if (cntn == 1) {
-                curv = cntnn.second();
+                curV = cntnn.second();
             } else {
                 break;
             }
@@ -142,8 +143,8 @@ public class ColoredComponentBuilder {
     }
 
     public static ConnectedSetComponent bfsDeep(Long2ShortHashMapInterface hm, ColoredKmers coloredKmers, long startKmer,
-                                             LongArrayFIFOQueue queue,
-                                             int k, int curFreqThreshold, SPLIT_MODE splitMode) {
+                                                LongArrayFIFOQueue queue,
+                                                int k, int curFreqThreshold, SPLIT_MODE splitMode) {
         ConnectedSetComponent comp = new ConnectedSetComponent();
         comp.usedFreqThreshold = curFreqThreshold;
 
@@ -159,25 +160,22 @@ public class ColoredComponentBuilder {
         comp.add(startKmer, value);
         while (queue.size() > 0) {
             long kmer = queue.dequeue();
-
             List<Long> neighbours = realNeighbours(kmer, hm, k);
-
-
             int cntn = neighbours.size();
             if (cntn > 1) {
                 long bestNeighbour = 0;
                 int maxvalue = -1;
                 for (long neighbour : neighbours) {
                     if (hm.get(neighbour) > 0) {
-                        int curcnt = getColorCNTBeforePathSplit(neighbour, startColour, hm, k, coloredKmers, fakeColor, splitMode, comp);
-                        if (curcnt > maxvalue) {
-                            maxvalue = curcnt;
+                        int curCnt = getColorCNTBeforePathSplit(neighbour, startColour, hm, k, coloredKmers, fakeColor, splitMode, comp);
+                        if (curCnt > maxvalue) {
+                            maxvalue = curCnt;
                             bestNeighbour = neighbour;
                         }
                     }
                 }
                 if (maxvalue > 0) {
-                    List<Long> onPath = getKmersOnPath(bestNeighbour, startColour, hm, k, coloredKmers, fakeColor, splitMode, comp);
+                    List<Long> onPath = getKmersOnPath(bestNeighbour, hm, k, coloredKmers, fakeColor, splitMode, comp);
                     for (long nn : onPath) {
                         short v = hm.get(nn);
                         hm.put(nn, (short) -v);
@@ -200,8 +198,8 @@ public class ColoredComponentBuilder {
     }
 
     private static ConnectedSetComponent bfsBest(Long2ShortHashMapInterface hm, ColoredKmers coloredKmers, long startKmer,
-                                              LongArrayFIFOQueue queue,
-                                              int k, int curFreqThreshold, SPLIT_MODE mode) {
+                                                 LongArrayFIFOQueue queue,
+                                                 int k, int curFreqThreshold, SPLIT_MODE mode) {
         ConnectedSetComponent comp = new ConnectedSetComponent();
         comp.usedFreqThreshold = curFreqThreshold;
 
@@ -217,25 +215,25 @@ public class ColoredComponentBuilder {
         while (queue.size() > 0) {
             long kmer = queue.dequeue();
             long bestNeighbour = 0;
-            double maxval = -1;
+            double maxvalue = -1;
             for (long neighbour : KmerOperations.possibleNeighbours(kmer, k)) {
                 value = hm.get(neighbour);
                 if (value > 0) {
-                    double curp = coloredKmers.getColorDouble(kmer);
-                    int curcol = coloredKmers.getColorInt(kmer); //without cut-off
-                    if (curp > maxval) {
-                        if (curcol == startColor) {
-                            if (curp > 0.75) {
+                    double curP = coloredKmers.getColorDouble(kmer);
+                    int curColor = coloredKmers.getColorWithoutCutoff(kmer); //without cut-off
+                    if (curP > maxvalue) {
+                        if (curColor == startColor) {
+                            if (curP > 0.75) {
                                 updateComp(hm, queue, comp, neighbour, value);
                             } else {
-                                maxval = curp;
+                                maxvalue = curP;
                                 bestNeighbour = neighbour;
                             }
                         }
                     }
                 }
             }
-            if ((maxval != -1) && (mode == SPLIT_MODE.COMMON)) {
+            if ((maxvalue != -1) && (mode == SPLIT_MODE.COMMON)) {
                 updateComp(hm, queue, comp, bestNeighbour, hm.get(bestNeighbour));
             }
 
@@ -244,8 +242,8 @@ public class ColoredComponentBuilder {
     }
 
     private static ConnectedSetComponent bfs(Long2ShortHashMapInterface hm, ColoredKmers coloredKmers, long startKmer,
-                                          LongArrayFIFOQueue queue,
-                                          int k, int curFreqThreshold, SPLIT_MODE mode) {
+                                             LongArrayFIFOQueue queue,
+                                             int k, int curFreqThreshold, SPLIT_MODE mode) {
         ConnectedSetComponent comp = new ConnectedSetComponent();
         comp.usedFreqThreshold = curFreqThreshold;
 
@@ -257,7 +255,6 @@ public class ColoredComponentBuilder {
         int fakeColor = coloredKmers.colorsCNT;
         assert value > 0;
         hm.put(startKmer, (short) -value);  // removing
-//        BigLongHashSet used = new BigLongHashSet(1000);
         comp.add(startKmer, value);
         while (queue.size() > 0) {
             long kmer = queue.dequeue();
@@ -278,8 +275,8 @@ public class ColoredComponentBuilder {
     }
 
 
-    private static int getStartKmer(BigLong2ShortHashMap hm, int prevind, List<Long> colorsQueue, int maxvalue) {
-        int res = prevind;
+    private static int getStartKmer(BigLong2ShortHashMap hm, int prevInd, List<Long> colorsQueue, int maxvalue) {
+        int res = prevInd;
 
         while (true) {
             res += 1;
@@ -306,7 +303,6 @@ public class ColoredComponentBuilder {
         for (int col = 0; col < colorsCNT; col++) {
             forEachColorAdded.add(0);
         }
-        //todo make iterator random???
         while (iterator.hasNext()) {
             MutableLongShortEntry startKmer = iterator.next();
 
@@ -340,28 +336,27 @@ public class ColoredComponentBuilder {
         return ans;
     }
 
-    //todo  проверить на других данных, чтобы вероятности были не 0, 0.5, 1
     private static List<Pair<ConnectedSetComponent, Integer>> findBestComponents(BigLong2ShortHashMap hm, ColoredKmers coloredKmers, int k, int curFreqThreshold, SPLIT_MODE mode, int forEachColor, BFS_MODE bfsMode) {
         System.out.println("find best components start: ");
         List<Pair<ConnectedSetComponent, Integer>> ans = new ArrayList<>();
         LongArrayFIFOQueue queue = new LongArrayFIFOQueue((int) Math.min(1 << 16, hm.size() / 2));
         int colorsCNT = coloredKmers.colorsCNT;
         ArrayList<List<Long>> startQueues = new ArrayList<>();
-        int mincnt = forEachColor;
+        int minCnt = forEachColor;
         ArrayList<Integer> iterators = new ArrayList<>();
         for (int i = 0; i < colorsCNT; i++) {
             iterators.add(0);
             List<Long> cc = coloredKmers.getValuesForColor(i, forEachColor);
 
-            if (cc.size() < mincnt) {
-                mincnt = cc.size();
+            if (cc.size() < minCnt) {
+                minCnt = cc.size();
             }
             startQueues.add(cc);
         }
         boolean finished = false;
         while (!finished) {
             for (int col = 0; col < colorsCNT; col++) {
-                int ind = getStartKmer(hm, iterators.get(col), startQueues.get(col), mincnt);
+                int ind = getStartKmer(hm, iterators.get(col), startQueues.get(col), minCnt);
                 if (ind == -1) {
                     finished = true;
                     continue;
@@ -468,16 +463,15 @@ public class ColoredComponentBuilder {
             Integer color = compWithColor.second();
 
             if (comp.size < b1) {
-                if (res_mode==COMPONENT_SIZES_MODE.ALL || res_mode == COMPONENT_SIZES_MODE.SMALL) {
+                if (res_mode == COMPONENT_SIZES_MODE.ALL || res_mode == COMPONENT_SIZES_MODE.SMALL) {
                     ans.add(comp);
                 }
-//
                 small++;
                 smallBYC[color]++;
                 smallK += comp.size;
                 smallKBYC[color] += comp.size;
             } else if (comp.size <= b2) {
-                if (res_mode==COMPONENT_SIZES_MODE.ALL || res_mode == COMPONENT_SIZES_MODE.GOOD) {
+                if (res_mode == COMPONENT_SIZES_MODE.ALL || res_mode == COMPONENT_SIZES_MODE.GOOD) {
                     ans.add(comp);
                 }
                 ok++;
@@ -485,7 +479,7 @@ public class ColoredComponentBuilder {
                 okK += comp.size;
                 okKBYC[color] += 1;
             } else {
-                if (res_mode==COMPONENT_SIZES_MODE.ALL || res_mode == COMPONENT_SIZES_MODE.BIG) {
+                if (res_mode == COMPONENT_SIZES_MODE.ALL || res_mode == COMPONENT_SIZES_MODE.BIG) {
                     ans.add(comp);
                 }
                 big++;
@@ -534,9 +528,6 @@ public class ColoredComponentBuilder {
 
 
         Tool.debug(logger, "Memory used after cleaning = " + Misc.usedMemoryAsString() + ", final time = " + t);
-
-
-        //todo add split big and remove small
 
         // post processing...
         Tool.debug(logger, "ans.size = " + ans.size());
