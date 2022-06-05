@@ -1,5 +1,5 @@
 <project name="jarsBuilder" default="metafast">
-    <property name="VERSION" value="1.0.0"/>
+    <property name="VERSION" value="1.2.0"/>
     <exec executable="git" outputproperty="revision">
         <arg value="rev-parse"/>
         <arg value="--short"/>
@@ -74,8 +74,8 @@
     <property name="project.sh" value="${jars.dir}/${project.name}.sh"/>
     <property name="project.bat" value="${jars.dir}/${project.name}.bat"/>
 
-    <property name="ant.build.javac.source" value="1.6"/>
-    <property name="ant.build.javac.target" value="1.6"/>
+    <property name="ant.build.javac.source" value="1.8"/>
+    <property name="ant.build.javac.target" value="1.8"/>
 
     
 
