@@ -3,15 +3,19 @@ bin2fasta                                tools.BinaryToFasta                    
 comp2seq                                 tools.ComponentsToSequences                                                      Transforms components in binary format to FASTA sequences (contigs)
 comparison-script                        tools.CompareReadsAndComponentsMain                                              Statistics
 component-cutter                         tools.ComponentCutterMain                                                        Build graph components from tangled graph
+component-cutter-color                   tools.ComponentColoredCutter                                                     Build graph components from colored kmers 
 component-extractor                      tools.ComponentExtractorMain                                                     Extract graph components from tangled graph based on pivot k-mers
 component-paths                          tools.ComponentPathsMain                                                         Extracts paths in the components
 dist-matrix-calculator                   tools.DistanceMatrixCalculatorMain                                               Calculates distance matrix using features values
+double-view                              tools.DoubleViewMain                                                             Converts two binary k-mers files to single text file
 features-calculator                      tools.FeaturesCalculatorMain                                                     Calculates features values for input reads files
 heatmap-maker                            tools.HeatMapMakerMain                                                           constructs heatmap with dendrogram for distance matrix
 kmer-counter                             tools.KmersCounterMain                                                           Count k-mers in given reads with ArrayLong2IntHashMap
 kmer-counter-many                        tools.KmersCounterForManyFilesMain                                               Count k-mers for many files independently
 kmer-counter-posneg                      tools.KmersCounterPositiveNegative                                               Count k-mers for files from two groups independently
+kmers-color                              tools.ColorKmersMain                                                             Color kmers graph 
 kmers-filter                             tools.KmersFilter                                                                Filter k-mers from test set according to known samples
+kmers-grouped-counter                    tools.KmersGroupedSamplesCounter                                                 Count number of samples from 3 groups containing specified k-mers
 kmers-multiple-filters                   tools.KmersMultipleFilters                                                       Filter k-mers from test set according to three specified sets
 kmers-samples-counter                    tools.KmersSamplesCounter                                                        Count number of samples containing k-mers from multiple samples
 matrix-builder                           tools.DistanceMatrixBuilderMain                                                  Builds the distance matrix for input sequences

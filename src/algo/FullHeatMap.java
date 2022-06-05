@@ -1,11 +1,22 @@
 package algo;
 
+import org.w3c.dom.Document;
+
 import javax.imageio.ImageIO;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Scanner;
 
 /**
  * Constructing full heat map with dendrogram for n objects.
@@ -42,6 +53,7 @@ public class FullHeatMap {
 
     public final int n;
     public final String[] names;
+    public final String[] colors;
     /**
      * Distance matrix with values from 0 to 1
      */
@@ -51,20 +63,21 @@ public class FullHeatMap {
     public final int[] perm;
 
 
-    public FullHeatMap(double[][] distMatrix, String[] names) {
-        this(distMatrix, 0, 1, names, false);
+    public FullHeatMap(double[][] distMatrix, String[] names, String[] colors) {
+        this(distMatrix, 0, 1, names, false, colors);
     }
 
-    public FullHeatMap(double[][] distMatrix, String[] names, boolean invertColors) {
-        this(distMatrix, 0, 1, names, invertColors);
+    public FullHeatMap(double[][] distMatrix, String[] names, boolean invertColors, String[] colors) {
+        this(distMatrix, 0, 1, names, invertColors, colors);
     }
 
-    public FullHeatMap(double[][] distMatrix, double low, double high, String[] names, boolean invertColors) {
+    public FullHeatMap(double[][] distMatrix, double low, double high, String[] names, boolean invertColors, String[] colors) {
         n = distMatrix.length;
         this.distMatrix = distMatrix;
         this.low = low;
         this.high = high;
         this.names = names;
+        this.colors = colors;
         gridSize = n * cellSize + (n + 1) * borderLineSize;
         dx_for_dendrogram = getDendrogramSize(n);
         perm = new int[n];
@@ -161,6 +174,7 @@ public class FullHeatMap {
         AffineTransform newTransform = new AffineTransform(originalTransform);
         newTransform.rotate(-Math.PI / 2, gridSize / 2.0, dy_for_names + gridSize / 2.0);
         for (int i = 0; i < n; i++) {
+            graphics.setColor(Color.decode(colors[perm[i]]));
             int yc = dy_for_names + (i + 1) * (cellSize + borderLineSize) - cellSize / 3;
             graphics.drawString(names[perm[i]], gridSize + 10, yc); // row name
 
@@ -168,6 +182,8 @@ public class FullHeatMap {
             graphics.drawString(names[perm[i]], gridSize + 10, yc); // column name
             graphics.setTransform(originalTransform);
         }
+        graphics.setColor(Color.BLACK);
+
 
         return image;
     }
@@ -432,10 +448,32 @@ public class FullHeatMap {
         String[] names = {"Abracadabra library got from some url", "Boldii fish lib2s",
                 "Cnot", "Don't know", "mmmm"};
 
-        FullHeatMap hm = new FullHeatMap(matrix, names);
+
+        ArrayList<String> colors_a = new ArrayList<>();
+        Scanner s = new Scanner(new File("test_colors.txt"));
+        while (s.hasNext()) {
+            colors_a.add(s.nextLine());
+        }
+        String[] colors = colors_a.toArray(new String[0]);
+
+
+
+        FullHeatMap hm = new FullHeatMap(matrix, names, colors);
         BufferedImage image = hm.createFullHeatMap(true);
 
         ImageIO.write(image, "png", new File("test.png"));
+
+        Document document = new FullHeatMapXML(matrix, names, colors).createFullHeatMap(true);
+        Transformer transformer;
+        try {
+            transformer = TransformerFactory.newInstance().newTransformer();
+            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+            transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
+            DOMSource source = new DOMSource(document);
+            transformer.transform(source, new StreamResult(new FileWriter("test.svg")));
+        } catch (TransformerException e) {
+            throw new IOException("Can't save image to file test.svg", e);
+        }
     }
 
 }

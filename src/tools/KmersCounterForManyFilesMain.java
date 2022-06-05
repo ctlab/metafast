@@ -1,8 +1,8 @@
 package tools;
 
 import io.IOUtils;
+import ru.ifmo.genetics.io.ReadersUtils;
 import ru.ifmo.genetics.statistics.Timer;
-import ru.ifmo.genetics.utils.TextUtils;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
@@ -12,8 +12,10 @@ import ru.ifmo.genetics.utils.tool.inputParameterBuilder.IntParameterBuilder;
 import ru.ifmo.genetics.utils.tool.values.InMemoryValue;
 import ru.ifmo.genetics.utils.tool.values.InValue;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class KmersCounterForManyFilesMain extends Tool {
@@ -64,22 +66,47 @@ public class KmersCounterForManyFilesMain extends Tool {
     private Timer t;
 
     @Override
-    protected void runImpl() throws ExecutionFailedException {
+    protected void runImpl() throws ExecutionFailedException, IOException {
         t = new Timer();
         counters.clear();
 
-        for (File f : inputFiles.get()) {
-            KmersCounterMain counter = new KmersCounterMain();
-            counter.workDir.set(workDir.append("sub-counter"));
-            counter.k.set(k);
-            counter.inputFiles.set(new File[]{f});
-            counter.maximalBadFrequency.set(maximalBadFrequency);
-            counter.outputDir.set(outputDir);
-            counter.statsDir.set(statsDir);
-
-            addStep(counter);
-            counters.add(counter);
+        File[] files = inputFiles.get();
+        Arrays.sort(files);
+        List<String> names = new ArrayList<String>();
+        for (File f : files) {
+            names.add(ReadersUtils.readDnaLazy(f).name());
         }
+
+        int i=0;
+        while (i < files.length) {
+            if ((names.get(i).endsWith("_r1") && i+1<files.length && names.get(i+1).endsWith("_r2")) ||
+                    (names.get(i).endsWith("_R1") && i+1<files.length && names.get(i+1).endsWith("_R2"))) {
+                KmersCounterMain counter = new KmersCounterMain();
+                counter.workDir.set(workDir.append("sub-counter"));
+                counter.k.set(k);
+                counter.inputFiles.set(new File[]{files[i], files[i+1]});
+                counter.maximalBadFrequency.set(maximalBadFrequency);
+                counter.outputDir.set(outputDir);
+                counter.statsDir.set(statsDir);
+
+                addStep(counter);
+                counters.add(counter);
+                i += 2;
+            } else {
+                KmersCounterMain counter = new KmersCounterMain();
+                counter.workDir.set(workDir.append("sub-counter"));
+                counter.k.set(k);
+                counter.inputFiles.set(new File[]{files[i]});
+                counter.maximalBadFrequency.set(maximalBadFrequency);
+                counter.outputDir.set(outputDir);
+                counter.statsDir.set(statsDir);
+
+                addStep(counter);
+                counters.add(counter);
+                i += 1;
+            }
+        }
+
     }
 
     @Override

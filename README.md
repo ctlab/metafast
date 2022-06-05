@@ -3,11 +3,12 @@
 <img align="right" src="logo.jpg" alt="MetaFast" width="400">
 
 **MetaFast** (METAgenome FAST analysis toolkit) is a toolkit for calculating a number of statistics of 
-metagenome sequences and building the distance matrix between them.
+metagenome sequences and building the distance matrix between them. It also provides a functionality
+to extract features from metagenomic samples.
 
 Authors:
-* **Software:** *Artem Ivanov*, *Sergey Kazakov* and [*Vladimir Ulyantsev*](http://rain.ifmo.ru/~ulyantsev/), <br/>
-[ITMO University](http://en.ifmo.ru/en/), Saint-Petersburg, Russia.
+* **Software:** *Artem Ivanov*, *Sergey Kazakov* and [*Vladimir Ulyantsev*](https://ulyantsev.com), <br/>
+[ITMO University](http://en.itmo.ru/en/), Saint-Petersburg, Russia.
 * **Testing:** *Veronika Dubinkina* and *Alexandr Tyakht*, <br/>
 SRI of Physical-Chemical Medicine, Moscow, Russia.
 * **Idea, supervisor:** *Dmitry Alexeev*, <br/>
@@ -24,7 +25,7 @@ Here is a short version of it.
 * [Installation](#installation)
 * [MetaFast 1.5](#metafast-15)
 * [Running instructions](#running-instructions)
-* [Example](#example)
+* [Examples](#examples)
 * [FAQ](#faq)
 * [Citation](#citation)
 * [Contact](#contact)
@@ -76,7 +77,9 @@ Metafast run script also allows you to run subtools of whole process or differen
 To see the list of available additional tools, run `metafast.sh --tools`.
 
 
-## Example
+## Examples
+
+#### Generated _in-silico_ dataset
 
 Download [meta_test_1.fa](https://github.com/ctlab/metafast/raw/master/test_data/meta_test_1.fa),
 [meta_test_2.fa](https://github.com/ctlab/metafast/raw/master/test_data/meta_test_2.fa) and 
@@ -98,6 +101,10 @@ The element `matrix[i][j]` is a distance between *sample i* and *sample j*.
 K-mers frequency statistics is saved in `workDir/kmer-counter-many/stats/<in-file>.stat.txt`;<br/>
 image file with heatmap and dendrogram is saved in `workDir/matrices/dist_matrix_<date>_<time>_heatmap.png`:<br/>
 <img src="test_data/meta_test_heatmap.png" alt="Test heatmap" width="450">
+
+#### Mock community example
+
+For testing on realistic metagenomic communities, the CAMI Challenge dataset was used. The detailed example description is available in file [Example.md](Example.md).
 
 ## FAQ
 
@@ -137,6 +144,8 @@ The MIT License (MIT)
 
 ## See also
 
+* [MetaCherchant](https://github.com/ctlab/metacherchant) – a tool for analysing genomic environment within a metagenome.
+* [RECAST](https://github.com/ctlab/recast) – a tool for sorting reads per their origin in metagenomic time series.
 * [khmer](https://github.com/ged-lab/khmer) – a toolkit to split reads.
 * [crAss](http://edwards.sdsu.edu/crass/) – Cross-Assembly of Metagenomes.
 * [MaryGold](http://sourceforge.net/projects/metavar/) – Variation analysis of metagenomic samples.
