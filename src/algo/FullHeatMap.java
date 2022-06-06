@@ -449,7 +449,7 @@ public class FullHeatMap {
                 "Cnot", "Don't know", "mmmm"};
 
 
-        ArrayList<String> colors_a = new ArrayList<>();
+        ArrayList<String> colors_a = new ArrayList<String>();
         Scanner s = new Scanner(new File("test_colors.txt"));
         while (s.hasNext()) {
             colors_a.add(s.nextLine());

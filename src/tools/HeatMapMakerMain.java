@@ -94,7 +94,9 @@ public class HeatMapMakerMain extends Tool {
         // parsing input matrix...
         try {
             parseMatrix(matrixFile.get());
-        } catch (IOException | ParseException e) {
+        } catch (IOException e) {
+            throw new ExecutionFailedException("Can't read matrix file " + matrixFile.get(), e);
+        } catch (ParseException e) {
             throw new ExecutionFailedException("Can't read matrix file " + matrixFile.get(), e);
         }
 
@@ -102,13 +104,18 @@ public class HeatMapMakerMain extends Tool {
         String[] colors;
         if (colorsFile.get() != null) {
             ArrayList<String> colors_a = new ArrayList<String>();
-            try (Scanner s = new Scanner(colorsFile.get())) {
-                while (s.hasNext()) {
-                    colors_a.add(s.nextLine());
-                }
+
+            Scanner s = null;
+            try {
+                s = new Scanner(colorsFile.get());
             } catch (FileNotFoundException e) {
                 throw new ExecutionFailedException("Can't read colors file " + colorsFile.get(), e);
             }
+            while (s.hasNext()) {
+                colors_a.add(s.nextLine());
+            }
+            s.close();
+
             colors = colors_a.toArray(new String[0]);
         } else {
             colors = new String[names.length];
