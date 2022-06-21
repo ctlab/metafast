@@ -22,6 +22,7 @@ matrix-builder                           tools.DistanceMatrixBuilderMain        
 seq-builder                              tools.SeqBuilderMain                                                             Metagenome De Bruijn graph analysis and sequences building
 seq-builder-many                         tools.SeqBuilderForManyFilesMain                                                 Metagenome De Bruijn graph analysis and sequences building for many files independently
 seq2comp                                 tools.SequencesToComponents                                                      Transforms sequences to components
+specific-kmers                           tools.SpecificKmersFinder                                                        Output k-mers specific to groups of samples based on chi-squared & Mann-Whitney tests
 supergraph-sequence-builder              tools.SupergraphSeqBuilderMain                                                   NOT COMPLETED
 unique-features                          tools.UniqueFeaturesBuilderMain                                                  Builds unique features for group of metagenomic samples
 unique-kmers                             tools.UniqueKmersFinder                                                          Output k-mers present in one dataset and missing in other

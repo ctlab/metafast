@@ -30,6 +30,7 @@
     <property name="jars.dir" value="out"/>
 
     <property name="itmo-assembler.path" value="lib/itmo-assembler.jar"/>
+    <property name="commons-math3.path" value="lib/commons-math3-3.6.1.jar"/>
     <property name="args4j.path" value="lib/args4j-2.0.21.jar"/>
     <property name="batik-all-1.11.path" value="lib/batik/batik-all-1.11.jar"/>
     <property name="batik-anim-1.11.path" value="lib/batik/batik-anim-1.11.jar"/>
@@ -84,7 +85,7 @@
         
         <javac srcdir="${src.dir}"
                destdir="${bin.dir}"
-               classpath="${itmo-assembler.path}:${args4j.path}:${batik-all-1.11.path}:${batik-anim-1.11.path}:${batik-awt-util-1.11.path}:${batik-bridge-1.11.path}:${batik-codec-1.11.path}:${batik-constants-1.11.path}:${batik-css-1.11.path}:${batik-dom-1.11.path}:${batik-ext-1.11.path}:${batik-extension-1.11.path}:${batik-gui-util-1.11.path}:${batik-gvt-1.11.path}:${batik-i18n-1.11.path}:${batik-parser-1.11.path}:${batik-script-1.11.path}:${batik-svgbrowser-1.11.path}:${batik-svg-dom-1.11.path}:${batik-svggen-1.11.path}:${batik-svgrasterizer-1.11.path}:${batik-swing-1.11.path}:${batik-test-1.11.path}:${batik-test-svg-1.11.path}:${batik-test-swing-1.11.path}:${batik-transcoder-1.11.path}:${batik-util-1.11.path}:${batik-util-1.11-tests.path}:${batik-xml-1.11.path}:${fop-transcoder-allinone-2.3.path}:${js.path}:${serializer-2.7.2.path}:${xalan-2.7.2.path}:${xercesImpl-2.9.1.path}:${xml-apis-1.3.04.path}:${xml-apis-ext-1.3.04.path}:${xmlgraphics-commons-2.3.path}"
+               classpath="${itmo-assembler.path}:${commons-math3.path}:${args4j.path}:${batik-all-1.11.path}:${batik-anim-1.11.path}:${batik-awt-util-1.11.path}:${batik-bridge-1.11.path}:${batik-codec-1.11.path}:${batik-constants-1.11.path}:${batik-css-1.11.path}:${batik-dom-1.11.path}:${batik-ext-1.11.path}:${batik-extension-1.11.path}:${batik-gui-util-1.11.path}:${batik-gvt-1.11.path}:${batik-i18n-1.11.path}:${batik-parser-1.11.path}:${batik-script-1.11.path}:${batik-svgbrowser-1.11.path}:${batik-svg-dom-1.11.path}:${batik-svggen-1.11.path}:${batik-svgrasterizer-1.11.path}:${batik-swing-1.11.path}:${batik-test-1.11.path}:${batik-test-svg-1.11.path}:${batik-test-swing-1.11.path}:${batik-transcoder-1.11.path}:${batik-util-1.11.path}:${batik-util-1.11-tests.path}:${batik-xml-1.11.path}:${fop-transcoder-allinone-2.3.path}:${js.path}:${serializer-2.7.2.path}:${xalan-2.7.2.path}:${xercesImpl-2.9.1.path}:${xml-apis-1.3.04.path}:${xml-apis-ext-1.3.04.path}:${xmlgraphics-commons-2.3.path}"
                includeantruntime="false"
                debug="true"
                debuglevel="lines,vars,source">
@@ -93,7 +94,7 @@
         <exec executable="java" failonerror="true">
             <arg value="-ea"/>
             <arg value="-cp"/>
-            <arg value="${bin.dir}:${itmo-assembler.path}:${args4j.path}:${batik-all-1.11.path}:${batik-anim-1.11.path}:${batik-awt-util-1.11.path}:${batik-bridge-1.11.path}:${batik-codec-1.11.path}:${batik-constants-1.11.path}:${batik-css-1.11.path}:${batik-dom-1.11.path}:${batik-ext-1.11.path}:${batik-extension-1.11.path}:${batik-gui-util-1.11.path}:${batik-gvt-1.11.path}:${batik-i18n-1.11.path}:${batik-parser-1.11.path}:${batik-script-1.11.path}:${batik-svgbrowser-1.11.path}:${batik-svg-dom-1.11.path}:${batik-svggen-1.11.path}:${batik-svgrasterizer-1.11.path}:${batik-swing-1.11.path}:${batik-test-1.11.path}:${batik-test-svg-1.11.path}:${batik-test-swing-1.11.path}:${batik-transcoder-1.11.path}:${batik-util-1.11.path}:${batik-util-1.11-tests.path}:${batik-xml-1.11.path}:${fop-transcoder-allinone-2.3.path}:${js.path}:${serializer-2.7.2.path}:${xalan-2.7.2.path}:${xercesImpl-2.9.1.path}:${xml-apis-1.3.04.path}:${xml-apis-ext-1.3.04.path}:${xmlgraphics-commons-2.3.path}"/>
+            <arg value="${bin.dir}:${itmo-assembler.path}:${commons-math3.path}:${args4j.path}:${batik-all-1.11.path}:${batik-anim-1.11.path}:${batik-awt-util-1.11.path}:${batik-bridge-1.11.path}:${batik-codec-1.11.path}:${batik-constants-1.11.path}:${batik-css-1.11.path}:${batik-dom-1.11.path}:${batik-ext-1.11.path}:${batik-extension-1.11.path}:${batik-gui-util-1.11.path}:${batik-gvt-1.11.path}:${batik-i18n-1.11.path}:${batik-parser-1.11.path}:${batik-script-1.11.path}:${batik-svgbrowser-1.11.path}:${batik-svg-dom-1.11.path}:${batik-svggen-1.11.path}:${batik-svgrasterizer-1.11.path}:${batik-swing-1.11.path}:${batik-test-1.11.path}:${batik-test-svg-1.11.path}:${batik-test-swing-1.11.path}:${batik-transcoder-1.11.path}:${batik-util-1.11.path}:${batik-util-1.11-tests.path}:${batik-xml-1.11.path}:${fop-transcoder-allinone-2.3.path}:${js.path}:${serializer-2.7.2.path}:${xalan-2.7.2.path}:${xercesImpl-2.9.1.path}:${xml-apis-1.3.04.path}:${xml-apis-ext-1.3.04.path}:${xmlgraphics-commons-2.3.path}"/>
             <arg value="ToolsScanner"/>
         </exec>
 
@@ -103,6 +104,7 @@
                 <attribute name="Main-Class" value="${project.main}"/>
             </manifest>
 
+            <zipfileset src="${commons-math3.path}" excludes="META-INF/*.SF"/>
             <zipfileset src="${args4j.path}" excludes="META-INF/*.SF"/>
             <fileset file="VERSION"/>
             <fileset file="TOOLS"/>
