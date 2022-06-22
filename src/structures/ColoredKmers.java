@@ -1,98 +1,44 @@
 package structures;
 
-import it.unimi.dsi.fastutil.longs.LongArrayList;
+import ru.ifmo.genetics.structures.map.BigLong2LongHashMap;
+import ru.ifmo.genetics.structures.map.MutableLongLongEntry;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 
 import java.io.*;
 import java.util.*;
 
 public class ColoredKmers {
-    public List<Long> kmers;
-    public HashMap<Long, Integer[]> kmersColors;
+
+    private final int degree = 10000;
+    private final double MIN_TO_COLOR = 0.75;
+    public BigLong2LongHashMap kmersColors;
     public int colorsCNT;
     public long size;
     public long weight;
-    private final double MIN_TO_COLOR = 0.75;
-
-    public ColoredKmers(int colorsCNT) {
+    
+    Comparator<PKmer> pKmerComparator = (o1, o2) -> {
+        if (o1.kmer == o2.kmer) {
+            return 0;
+        }
+        if (o1.p < o2.p) return -1;
+        return 1;
+    };
+    public ColoredKmers(int colorsCNT, int availableProcessors) {
         this.colorsCNT = colorsCNT;
-        kmers = new LongArrayList();
         size = 0;
         weight = 0;
-        kmersColors = new HashMap<Long, Integer[]>();
+        kmersColors = new BigLong2LongHashMap((int) (Math.log(availableProcessors) / Math.log(2)) + 4, 8);
     }
 
-    public void addColor(long kmer, int color) {
-        addColor(kmer, color, 1);
-    }
-
-    public void addColor(long kmer, int color, int val) {
-        if (!kmersColors.containsKey(kmer)) {
-            kmers.add(kmer);
-            size += 1;
-            Integer[] data = new Integer[colorsCNT];
-            Arrays.fill(data, 0);
-            kmersColors.put(kmer, data);
-
-        }
-        kmersColors.get(kmer)[color] += val;
-    }
-
-
-    private int argmax(Integer[] arr) {
-        long sum = 0;
-        int mi = 0;
-        int mv = arr[0];
-        for (int i = 0; i < arr.length; i++) {
-            sum+=arr[i];
-            if (arr[i] > mv) {
-                mv = arr[i];
-                mi = i;
-            }
-        }
-        return (1.0 * mv / sum > MIN_TO_COLOR ) ? mi : -1;
-    }
-
-    public int getColor(long kmer) {
-        int res = colorsCNT;
-        if (kmersColors.containsKey(kmer)) {
-            int vi = argmax(kmersColors.get(kmer));
-            if (vi != -1) {
-                res = vi;
-            }
-        }
-        return res;
-    }
-
-    public Map<Long, Integer> getColors() {
-        Map<Long, Integer> res = new HashMap<Long, Integer>();
-        for (long kmer : kmers) {
-            int v = getColor(kmer);
-            res.put(kmer, v);
-        }
-        return res;
-    }
-
-
-    public void saveColorDouble(String fp) throws IOException {
-        saveArrToFile(fp, false);
-    }
-
-    public void saveColorInt(String fp) throws IOException {
-        saveArrToFile(fp, true);
-    }
-
-    public ColoredKmers(File file) throws ExecutionFailedException {
+    public ColoredKmers(File file, int availableProcessors) throws ExecutionFailedException {
         try {
             DataInputStream inputStream = new DataInputStream(new BufferedInputStream(new FileInputStream(file)));
 
             int size = inputStream.readInt();
             this.colorsCNT = inputStream.readInt();
-            this.kmers = new ArrayList<Long>();
-            this.kmersColors = new HashMap<Long, Integer[]>();
+            this.kmersColors = new BigLong2LongHashMap((int) (Math.log(availableProcessors) / Math.log(2)) + 4, 8);
             for (int j = 0; j < size; j++) {
                 long kmer = inputStream.readLong();
-                this.kmers.add(kmer);
                 for (int k = 0; k < this.colorsCNT; k++) {
                     this.addColor(kmer, k, inputStream.readInt());
                 }
@@ -109,22 +55,158 @@ public class ColoredKmers {
         }
     }
 
+    private void add_color_int(long kmer, int color, int val) {
+        long intAddVal = (long) Math.pow(degree, color) * val;
+        kmersColors.put(kmer, kmersColors.get(kmer) + intAddVal);
+    }
+
+    public Integer[] get_color_from_int(long kmer) {
+        Integer[] res = new Integer[colorsCNT];
+        long longRes = kmersColors.get(kmer);
+        for (int color = 0; color < colorsCNT; color++) {
+            long curDegree = (long) Math.pow(degree, color);
+            int realV = (int) (longRes / curDegree % degree);
+            res[color] = realV;
+        }
+        return res;
+    }
+
+    public void addColor(long kmer, int color) {
+        addColor(kmer, color, 1);
+    }
+
+    public void addColor(long kmer, int color, int val) {
+        if (!kmersColors.contains(kmer)) {
+            size += 1;
+            kmersColors.put(kmer, 0);
+        }
+        add_color_int(kmer, color, val);
+    }
+
+    private int argmax(Integer[] arr, double minForAns) {
+        long sum = 0;
+        int mi = 0;
+        int mv = arr[0];
+        for (int i = 0; i < arr.length; i++) {
+            sum += arr[i];
+            if (arr[i] > mv) {
+                mv = arr[i];
+                mi = i;
+            }
+        }
+        return (1.0 * mv / sum >= minForAns) ? mi : -1;
+    }
+
+    private double normmax(Integer[] arr) {
+        long sum = 0;
+        int mv = arr[0];
+        for (Integer integer : arr) {
+            sum += integer;
+            if (integer > mv) {
+                mv = integer;
+            }
+        }
+        if (sum > 0) {
+            return (1.0 * mv / sum);
+        } else return -1;
+    }
+
+    public double getColorDouble(long kmer) {
+        double res = colorsCNT;
+        if (kmersColors.contains(kmer)) {
+            double vi = normmax(get_color_from_int(kmer));
+            if (vi != -1) {
+                res = vi;
+            }
+        }
+        return res;
+    }
+
+    private int getColorCommon(long kmer, double minForAns) {
+        int res = colorsCNT;
+        if (kmersColors.contains(kmer)) {
+            int vi = argmax(get_color_from_int(kmer), minForAns);
+            if (vi != -1) {
+                res = vi;
+            }
+        }
+        return res;
+    }
+
+    public int getColor(long kmer) {
+        return getColorCommon(kmer, MIN_TO_COLOR);
+    }
+
+    public int getColorWithoutCutoff(long kmer) {
+        return getColorCommon(kmer, 0);
+    }
+
+    public Map<Long, Integer> getColorsMap() {
+        Map<Long, Integer> res = new HashMap<>();
+        Iterator<MutableLongLongEntry> iterator = kmersColors.entryIterator();
+        while (iterator.hasNext()) {
+            long kmer = iterator.next().getKey();
+
+            int v = getColorWithoutCutoff(kmer);
+            res.put(kmer, v);
+        }
+        return res;
+    }
+
+    public List<Long> getValuesForColor(int color, int cnt) {
+        List<Long> res = new ArrayList<>();
+        TreeSet<PKmer> minTree = new TreeSet<>(pKmerComparator);
+        Iterator<MutableLongLongEntry> iterator = kmersColors.entryIterator();
+        while (iterator.hasNext()) {
+            long kmer = iterator.next().getKey();
+            int v = getColor(kmer);
+            if (v == color) {
+                double p = getColorDouble(kmer);
+                if (minTree.size() < cnt) {
+                    minTree.add(new PKmer(kmer, p));
+                } else {
+                    PKmer minV = minTree.first();
+                    if (minV.p < p) {
+                        minTree.pollFirst();
+                        minTree.add(new PKmer(kmer, p));
+                    }
+                }
+            }
+        }
+        for (PKmer pKmer : minTree) {
+            res.add(pKmer.kmer);
+        }
+
+        return res;
+    }
+
+
+    public void saveColorDouble(String fp) throws IOException {
+        saveArrToFile(fp, false);
+    }
+
+    public void saveColorInt(String fp) throws IOException {
+        saveArrToFile(fp, true);
+    }
+
     private void saveArrToFile(String fp, boolean norm) throws IOException {
         DataOutputStream outputStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(fp)));
         outputStream.writeInt((int) this.size);
         outputStream.writeInt(this.colorsCNT);
-        for (long kmer : this.kmers) {
+        Iterator<MutableLongLongEntry> iterator = kmersColors.entryIterator();
+        while (iterator.hasNext()) {
+            long kmer = iterator.next().getKey();
             outputStream.writeLong(kmer);
             if (norm) {
-                for (Integer v : this.kmersColors.get(kmer)) {
+                for (Integer v : get_color_from_int(kmer)) {
                     outputStream.writeInt(v);
                 }
             } else {
                 int normsum = 0;
-                for (Integer v : this.kmersColors.get(kmer)) {
+                for (Integer v : get_color_from_int(kmer)) {
                     normsum += v;
                 }
-                for (Integer v : this.kmersColors.get(kmer)) {
+                for (Integer v : get_color_from_int(kmer)) {
                     outputStream.writeDouble(1.0 * v / normsum);
                 }
             }
@@ -132,5 +214,21 @@ public class ColoredKmers {
         outputStream.close();
     }
 
+    private static class PKmer {
+        long kmer;
+        double p;
 
+        public PKmer(long kmer, double p) {
+            this.kmer = kmer;
+            this.p = p;
+        }
+
+        @Override
+        public String toString() {
+            return "PKmer{" +
+                    "kmer=" + kmer +
+                    ", p=" + p +
+                    '}';
+        }
+    }
 }
