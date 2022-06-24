@@ -1,26 +1,23 @@
 package tools;
 
 import io.IOUtils;
-import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import ru.ifmo.genetics.ToolTemplate;
-import ru.ifmo.genetics.dna.Dna;
 import ru.ifmo.genetics.dna.kmers.ShortKmer;
-import ru.ifmo.genetics.dna.kmers.ShortKmerIteratorFactory;
-import ru.ifmo.genetics.structures.map.*;
+import ru.ifmo.genetics.structures.map.BigLong2LongHashMap;
+import ru.ifmo.genetics.structures.map.BigLong2ShortHashMap;
+import ru.ifmo.genetics.structures.map.MutableLongLongEntry;
+import ru.ifmo.genetics.structures.map.MutableLongShortEntry;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
+import ru.ifmo.genetics.utils.tool.inputParameterBuilder.BoolParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.IntParameterBuilder;
-import ru.ifmo.genetics.utils.tool.values.InMemoryValue;
-import ru.ifmo.genetics.utils.tool.values.InValue;
 import structures.ConnectedComponent;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -58,6 +55,10 @@ public class ViewMain extends Tool {
             .withDefaultComment("print to the screen")
             .create());
 
+    public final Parameter<Boolean> isLong = addParameter(new BoolParameterBuilder("long")
+            .withDescription("k-mers values are stored in 'long'")
+            .withDefaultValue(false)
+            .create());
 
 
     @Override
@@ -81,15 +82,28 @@ public class ViewMain extends Tool {
         }
 
         if (kmersFile.get() != null) {
-            BigLong2ShortHashMap kmersHM =
-                    IOUtils.loadKmers(new File[]{kmersFile.get()}, 0, availableProcessors.get(), logger);
+            if (isLong.get()) {
+                BigLong2LongHashMap kmersHM =
+                        IOUtils.loadLongKmers(new File[]{kmersFile.get()}, 0, availableProcessors.get(), logger);
 
-            logger.info("Printing kmers...");
-            out.println("Kmer\tCount");
-            Iterator<MutableLongShortEntry> it = kmersHM.entryIterator();
-            while (it.hasNext()) {
-                MutableLongShortEntry entry = it.next();
-                out.println(new ShortKmer(entry.getKey(), k.get()) + "\t" + entry.getValue());
+                logger.info("Printing kmers...");
+                out.println("Kmer\tCount");
+                Iterator<MutableLongLongEntry> it = kmersHM.entryIterator();
+                while (it.hasNext()) {
+                    MutableLongLongEntry entry = it.next();
+                    out.println(new ShortKmer(entry.getKey(), k.get()) + "\t" + entry.getValue());
+                }
+            } else {
+                BigLong2ShortHashMap kmersHM =
+                        IOUtils.loadKmers(new File[]{kmersFile.get()}, 0, availableProcessors.get(), logger);
+
+                logger.info("Printing kmers...");
+                out.println("Kmer\tCount");
+                Iterator<MutableLongShortEntry> it = kmersHM.entryIterator();
+                while (it.hasNext()) {
+                    MutableLongShortEntry entry = it.next();
+                    out.println(new ShortKmer(entry.getKey(), k.get()) + "\t" + entry.getValue());
+                }
             }
         }
 
@@ -108,7 +122,7 @@ public class ViewMain extends Tool {
                         "weight = " + component.weight +". Kmers:");
 
                 for (long kmer : component.kmers) {
-                    out.println(new ShortKmer(kmer, k.get()).toString());
+                    out.println(new ShortKmer(kmer, k.get()));
                 }
                 out.println();
             }

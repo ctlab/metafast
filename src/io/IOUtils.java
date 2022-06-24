@@ -8,6 +8,7 @@ import ru.ifmo.genetics.io.sources.NamedSource;
 import ru.ifmo.genetics.statistics.QuickQuantitativeStatistics;
 import ru.ifmo.genetics.structures.map.BigLong2LongHashMap;
 import ru.ifmo.genetics.structures.map.BigLong2ShortHashMap;
+import ru.ifmo.genetics.structures.map.MutableLongLongEntry;
 import ru.ifmo.genetics.structures.map.MutableLongShortEntry;
 import ru.ifmo.genetics.utils.NumUtils;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
@@ -55,6 +56,34 @@ public class IOUtils {
             if (value > threshold) {
                 stream.writeLong(key);
                 stream.writeShort(value);
+                good++;
+            }
+        }
+
+        stream.close();
+        stats.printToFile(stFile, "# k-mer frequency\tnumber of such k-mers");
+        return good;
+    }
+
+    public static long printKmers(BigLong2LongHashMap hm, int threshold,
+                                  File outFile, File stFile) throws IOException {
+        DataOutputStream stream = new DataOutputStream(new BufferedOutputStream(
+                new FileOutputStream(outFile), 1 << 24));   // 16 Mb buffer
+
+        QuickQuantitativeStatistics<Long> stats = new QuickQuantitativeStatistics<>();
+        long good = 0;
+
+        Iterator<MutableLongLongEntry> it = hm.entryIterator();
+        while (it.hasNext()) {
+            MutableLongLongEntry entry = it.next();
+            long key = entry.getKey();
+            long value = entry.getValue();
+
+            stats.add(value);
+
+            if (value > threshold) {
+                stream.writeLong(key);
+                stream.writeLong(value);
                 good++;
             }
         }
@@ -223,6 +252,29 @@ public class IOUtils {
         }
     }
 
+    static class LongKmers2HMWorker extends LongKmersLoadWorker {
+        LongKmers2HMWorker(BigLong2LongHashMap hm, int freqThreshold) {
+            this.hm = hm;
+            this.freqThreshold = freqThreshold;
+        }
+
+        final BigLong2LongHashMap hm;
+        final int freqThreshold;
+        long kmers = 0, kmersAdded = 0;
+        long freqSum = 0, freqSumAdded = 0;
+
+        @Override
+        public void processKmer(long kmer, long freq) {
+            kmers++;
+            freqSum += freq;
+            if (freq > freqThreshold) {
+                hm.addAndBound(kmer, freq);
+                kmersAdded++;
+                freqSumAdded += freq;
+            }
+        }
+    }
+
     public static BigLong2ShortHashMap loadKmers(File[] files, int freqThreshold, int availableProcessors, Logger logger)
             throws ExecutionFailedException {
 
@@ -240,6 +292,41 @@ public class IOUtils {
         long kmers = 0, kmersAdded = 0;
         long freqSum = 0, freqSumAdded = 0;
         for (Kmers2HMWorker worker : workers) {
+            kmers += worker.kmers;
+            kmersAdded += worker.kmersAdded;
+            freqSum += worker.freqSum;
+            freqSumAdded += worker.freqSumAdded;
+        }
+
+        Tool.debug(logger,
+                "Added/All kmers count = " + NumUtils.groupDigits(kmersAdded) + "/" + NumUtils.groupDigits(kmers)
+                        + " (" + String.format("%.1f", kmersAdded * 100.0 / kmers) + "%)");
+        Tool.debug(logger,
+                "Added/All kmers frequency sum = " + NumUtils.groupDigits(freqSumAdded) + "/" + NumUtils.groupDigits(freqSum)
+                        + " (" + String.format("%.1f", freqSumAdded * 100.0 / freqSum) + "%)");
+        Tool.debug(logger, "k-mers HM size = " + NumUtils.groupDigits(hm.size()));
+
+        return hm;
+    }
+
+
+    public static BigLong2LongHashMap loadLongKmers(File[] files, int freqThreshold, int availableProcessors, Logger logger)
+            throws ExecutionFailedException {
+
+        BigLong2LongHashMap hm = new BigLong2LongHashMap((int) (Math.log(availableProcessors) / Math.log(2)) + 4, 12);
+
+
+        LongKmers2HMWorker[] workers = new LongKmers2HMWorker[availableProcessors];
+        for (int i = 0; i < workers.length; ++i) {
+            workers[i] = new LongKmers2HMWorker(hm, freqThreshold);
+        }
+
+        run(files, workers, null, logger);
+
+        // calculating statistics...
+        long kmers = 0, kmersAdded = 0;
+        long freqSum = 0, freqSumAdded = 0;
+        for (LongKmers2HMWorker worker : workers) {
             kmers += worker.kmers;
             kmersAdded += worker.kmersAdded;
             freqSum += worker.freqSum;
