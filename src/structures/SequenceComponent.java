@@ -44,6 +44,10 @@ public class SequenceComponent implements Comparable<SequenceComponent> {
         }
     }
 
+    public boolean contains(long kmer) {
+        return kmers.contains(kmer);
+    }
+
 
 
     public static void saveComponents(Collection<SequenceComponent> components, String fp) throws IOException {

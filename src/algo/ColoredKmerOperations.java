@@ -33,4 +33,21 @@ public class ColoredKmerOperations {
         return newValue;
     }
 
+    public static int getColor(long value, double perc) {
+        long first = getValue(value, 0);
+        long second = getValue(value, 1);
+        long third = getValue(value, 2);
+
+        long sum = first + second + third;
+
+        if ((double)first / sum >= perc) {
+            return 0;
+        } else if ((double)second / sum >= perc) {
+            return 1;
+        } else if ((double)third / sum >= perc) {
+            return 2;
+        } else {
+            return -1;
+        }
+    }
 }

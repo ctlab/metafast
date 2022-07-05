@@ -2,8 +2,8 @@ antibody-sequences-finder                tools.AntibodyFinderMain               
 bin2fasta                                tools.BinaryToFasta                                                              Converts different binary objects to FASTA format
 comp2seq                                 tools.ComponentsToSequences                                                      Transforms components in binary format to FASTA sequences (contigs)
 comparison-script                        tools.CompareReadsAndComponentsMain                                              Statistics
+component-colored                        tools.ColoredComponentMain                                                       Extract graph components from tangled graph based on k-mers coloring
 component-cutter                         tools.ComponentCutterMain                                                        Build graph components from tangled graph
-component-cutter-color                   tools.ComponentColoredCutter                                                     Build graph components from colored kmers
 component-extractor                      tools.ComponentExtractorMain                                                     Extract graph components from tangled graph based on pivot k-mers
 component-paths                          tools.ComponentPathsMain                                                         Extracts paths in the components
 dist-matrix-calculator                   tools.DistanceMatrixCalculatorMain                                               Calculates distance matrix using features values
