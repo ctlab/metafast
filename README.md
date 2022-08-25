@@ -54,9 +54,9 @@ ant
 ~~~
 
 
-## MetaFast 1.5
+## MetaFast 1.3
 
-A new version of MetaFast software is being prepared for the release. New pipelines for comparative metagenomics data analysis have been implemented. Three recommended use cases (including the original one) and a detailed description of available tools are presented in [Pipelines.md](Pipelines.md)
+A new version of MetaFast software is being prepared for the release. New pipelines for comparative metagenomics data analysis have been implemented. Four recommended use cases (including the original one) and a detailed description of available tools are presented in [Pipelines.md](Pipelines.md)
 
 ## Running instructions
 

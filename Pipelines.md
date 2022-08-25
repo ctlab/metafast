@@ -6,6 +6,7 @@ Here three possible usage pipelines of MetaFast toolkit are presented. Each pipe
 * [Pipeline 1. Metagenomic distance estimation](#pipeline-1-metagenomic-distance-estimation)
 * [Pipeline 2. Unique metagenomic features finder](#pipeline-2-unique-metagenomic-features-finder)
 * [Pipeline 3. Specific metagenomic features counter](#pipeline-3-specific-metagenomic-features-counter)
+* [Pipeline 4. Colored metagenomic features finder](#pipeline-4-colored-metagenomic-features-finder)
 * [Format conversion tools](#format-conversion-tools)
 
 ## Pipeline 1. Metagenomic distance estimation
@@ -169,6 +170,49 @@ This tool is designed to be used with 3 categories of metagenomes and provide th
 `
 java -jar metafast.jar -t kmers-multiple-filters -k <k> -i <ungroupped.kmers.bin> -cd <workDir/group_1/n_samples.kmers.bin> -uc <workDir/group_2/n_samples.kmers.bin> -nonibd <workDir/group_3/n_samples.kmers.bin>
 `
+
+## Pipeline 4. Colored metagenomic features finder
+
+Pipeline for extracting group-specific features from metagenomic samples and manipulating with them. Feature construction is based on k-mers occurencies in samples from different categories, represented as a colored nodes in de Bruijn graph (see figure below).
+
+![Colored graph](img/pipe4_colors.svg)
+
+The data analysis pipeline is symmetric to [unique features finder](#pipeline-2-unique-metagenomic-features-finder) with new steps for k-mers filtering and features extraction. Step-by-step data processing is presented on the image below.
+
+![Pipeline 4](img/pipe4.svg)
+
+Order of tools to run:
+
+1. **K-mers counter**  
+Extract k-mers from each metagenomic sample and saves in internal binary format for further processing (`workDir/kmers/*.kmers.bin`). This step can be performed separately for metagenomes with known and unknown categories. For the convenience of further explanations we will refer to samples with known categories as _group\_1.kmers.bin_ ... _group\_N.kmers.bin_ for N categories and _ungroupped.kmers.bin_ for samples with unknown category.   
+`
+java -jar metafast.jar -t kmer-counter-many -k <k> -i <inputFiles>
+`
+2. **K-mers coloring (group frequencies counter)**  
+Count the occurence frequencies of each k-mer in each category of samples and saves in internal binary format for further processing (`workDir/colored_kmers/colored_kmers.kmers.bin`). Mandatory parameter `--class` requires a text file in tab-separated format with two columns: sample_name [string] and class [0|1|2]. If `val` vlag is SET count k-mer occurrence as total coverage in samples, otherwise as number of samples.
+`
+java -jar metafast.jar -t kmers-color -k <k> -kf <group_{1..N}.kmers.bin> --class <samples_classes.tab> [-val]
+`
+
+1. **Colored component extractor**  
+Extract graph components from tangled graph based on k-mers coloring. These subgraph components can be used as features specific for analyzed category  (`workDir/colored-components/components_color_[0|1|2].bin`)  
+**_Parameters:_**\
+`--n_groups <int>` – number of classes (default: 3)\
+`--separate` – use only color-specific k-mers in components (does not work in linear mode)\
+`--linear` – choose best path on fork to create linear components\
+`--n_comps <int>` – select not more than X components for each class (default: -1, means all components)\
+`--perc` – relative abundance of k-mer in group to become color-specific (default: 0.9)\
+`
+java -jar metafast.jar -t component-colored -k <k> -i <colored_kmers.kmers.bin>
+`
+
+4. **Features calculator**  
+Counts coverage of each component (subgraph) by k-mers for each metagenomic sample independently. For each sample outputs numerical features vector of coverages  (`workDir/vectors/*.vec`). Features vectors for samples with known categories can be further used to train machine learning model to predict categories for samples with unknown categories.  
+`
+java -jar metafast.jar -t features-calculator -k <k> -cm <components.bin> -ka <*.kmers.bin>
+`
+
+
 
 ## Format conversion tools
 
