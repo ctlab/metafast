@@ -23,7 +23,7 @@ Here is a short version of it.
 ## Content
 
 * [Installation](#installation)
-* [MetaFast 1.5](#metafast-15)
+* [MetaFast 1.3](#metafast-13)
 * [Running instructions](#running-instructions)
 * [Examples](#examples)
 * [FAQ](#faq)
