@@ -209,8 +209,14 @@ public class SpecificKmersFinder extends Tool {
     }
 
     private boolean chisq(int c0, int c1, int p0, int p1, double value) {
-        int gr_1 = c0 + c1;
-        int gr_2 = p0 + p1;
+        float tmp = c0;
+        c0 = 100*c0/(c0+c1);
+        c1 = 100*c1/(tmp+c1);
+        tmp = p0;
+        p0 = 100*p0/(p0+p1);
+        p1 = 100*p1/(tmp+p1);
+        float gr_1 = c0 + c1;
+        float gr_2 = p0 + p1;
         float all = gr_1 + gr_2;
         float x1 = gr_1 / all * (p1 + c1);
         float x2 = gr_1 / all * (p0 + c0);
