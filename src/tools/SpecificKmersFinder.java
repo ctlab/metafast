@@ -14,6 +14,7 @@ import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileMVParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileParameterBuilder;
+import ru.ifmo.genetics.utils.tool.inputParameterBuilder.DoubleParameterBuilder;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -41,11 +42,13 @@ public class SpecificKmersFinder extends Tool {
     public final Parameter<Double> PValueChi2 = addParameter(new DoubleParameterBuilder("p-value-chi2")
             .withShortOpt("pchi2")
             .withDescription("p-value for chi-squared test")
+            .withDefaultValue(0.05)
             .create());
 
     public final Parameter<Double> PValueMW = addParameter(new DoubleParameterBuilder("p-value-mw")
             .withShortOpt("pmw")
             .withDescription("p-value for Mann-Whitney test")
+            .withDefaultValue(0.05)
             .create());
 
     public final Parameter<File> outputDir = addParameter(new FileParameterBuilder("output-dir")
@@ -82,13 +85,14 @@ public class SpecificKmersFinder extends Tool {
             throw new ExecutionFailedException("Error calculating chi-squared value!", e);
         }
 
-        long total_kmers = 0;
+        long totalKmers = 0;
         long unique = 0;
-        long unique_left = 0;
-        long skip_chi2 = 0;
-        long skip_MW = 0;
-        long a_kmers = 0;
-        long b_kmers = 0;
+        long uniqueLeft = 0;
+        long skipChi2 = 0;
+        long skipMW = 0;
+        long aKmers = 0;
+        long bKmers = 0;
+        long nScarce = 0;
 
         File outDir = outputDir.get();
         if (!outDir.exists()) {
@@ -103,15 +107,15 @@ public class SpecificKmersFinder extends Tool {
 
 
         info("Splitting k-mers...");
-        int cur_file = 0;
+        int curFile = 0;
         for (BigLong2ShortHashMap hm : kmersHMs) {
-            debug("Started processing file #" + cur_file);
+            debug("Started processing file #" + curFile);
             Iterator<MutableLongShortEntry> it = hm.entryIterator();
             while (it.hasNext()) {
                 MutableLongShortEntry entry = it.next();
                 long key = entry.getKey();
                 if (entry.getValue() > 0) {
-                    total_kmers++;
+                    totalKmers++;
                     int num_files = 0;
                     int n_0_A = 0;
                     int n_0_B = 0;
@@ -142,15 +146,19 @@ public class SpecificKmersFinder extends Tool {
                     int n_1_A = A_length - n_0_A;
                     int n_1_B = B_length - n_0_B;
 
-
                     boolean chisq_bool = chisq(n_0_A, n_1_A, n_0_B, n_1_B, qvalue);
                     boolean isUniq = (n_1_A == 0) || (n_1_B == 0);
                     if (isUniq) {
-                        chisq_bool = true;
                         unique++;
                     }
-                    if((n_0_A+n_0_B)==0)    //in all files
+                    if (entry.getValue() <= Math.ceil((A_length + B_length) * 0.05)) { //skip scarce k-mers
+                        nScarce++;
+                        continue;
+                    }
+
+                    if ((n_0_A + n_0_B) == 0) {    //in all files
                         chisq_bool = true;
+                    }
 
                     if (chisq_bool) {
                         int pass = 0;
@@ -161,60 +169,61 @@ public class SpecificKmersFinder extends Tool {
                                 pass = 1;
                         }
                         if (pass == 1) {
-                            skip_MW++;
+                            skipMW++;
                         } else {
                             if (isUniq) {
-                                unique_left++;
+                                uniqueLeft++;
                             }
                             double mean_A = mean(groupA);
                             double mean_B = mean(groupB);
                             if (mean_A > mean_B) {
-                                a_kmers++;
+                                aKmers++;
                                 streamA.writeLong(key);
                                 streamA.writeShort((int) mean_A);
                             } else {
-                                b_kmers++;
+                                bKmers++;
                                 streamB.writeLong(key);
                                 streamB.writeShort((int) mean_B);
                             }
                         }
                     } else {
-                        skip_chi2++;
+                        skipChi2++;
                     }
                 }
             }
-            debug("Finished processing file #" + cur_file);
-            debug("Processed " + total_kmers + " k-mers");
-            cur_file++;
+            debug("Finished processing file #" + curFile);
+            debug("Processed " + totalKmers + " k-mers");
+            curFile++;
         }
 
         streamA.close();
         streamB.close();
-        long totalkmersleft = a_kmers+b_kmers;
+        long kmersLeft = aKmers + bKmers;
         info("Group A k-mers printed to " + fileA.getPath());
         info("Group B k-mers printed to " + fileB.getPath());
-        info("Total specific k-mers in Group A = " + a_kmers);
-        info("Total specific k-mers in Group B = " + b_kmers);
+        info("Total specific k-mers in Group A = " + aKmers);
+        info("Total specific k-mers in Group B = " + bKmers);
 
-        debug("Total unique kmers = " + unique);
-        debug("Total skipped by chi-squared test = " + skip_chi2);
-        debug("Total skipped by Mann-Whitney test = " + skip_MW);
-        debug("Total unique left = " + unique_left);
-        debug("Total kmers left = " + totalkmersleft);
-        debug("Parameters used : PValueChi = " + PValueChi2.get() + " that gives " + qvalue + " threshold" );
+        debug("Total unique k-mers = " + unique);
+        debug("Total scarce k-mers = = " + nScarce);
+        debug("Total skipped by chi-squared test = " + skipChi2);
+        debug("Total skipped by Mann-Whitney test = " + skipMW);
+        debug("Total unique left = " + uniqueLeft);
+        debug("Total kmers left = " + kmersLeft);
+        debug("Parameters used : PValueChi = " + PValueChi2.get() + " that gives " + qvalue + " threshold");
 
         debug("Specific-kmers has finished! Time = " + t);
-        debug("Processed " + total_kmers + " k-mers");
+        debug("Processed " + totalKmers + " k-mers");
 
     }
 
-    private boolean chisq(int c0, int c1, int p0, int p1, double value) {
+    private boolean chisq(float c0, float c1, float p0, float p1, double value) {
         float tmp = c0;
-        c0 = 100*c0/(c0+c1);
-        c1 = 100*c1/(tmp+c1);
+        c0 = 100 * c0 / (c0 + c1);
+        c1 = 100 * c1 / (tmp + c1);
         tmp = p0;
-        p0 = 100*p0/(p0+p1);
-        p1 = 100*p1/(tmp+p1);
+        p0 = 100 * p0 / (p0 + p1);
+        p1 = 100 * p1 / (tmp + p1);
         float gr_1 = c0 + c1;
         float gr_2 = p0 + p1;
         float all = gr_1 + gr_2;
@@ -222,9 +231,10 @@ public class SpecificKmersFinder extends Tool {
         float x2 = gr_1 / all * (p0 + c0);
         float x3 = gr_2 / all * (p1 + c1);
         float x4 = gr_2 / all * (p0 + c0);
-        double kk = Math.pow(Math.abs(p1 - x1) - 0.5, 2) / x1 + Math.pow(Math.abs(p0 - x2)- 0.5, 2) / x2 + Math.pow(Math.abs(c1 - x3)- 0.5, 2) / x3 + Math.pow(Math.abs(c0 - x4)- 0.5, 2) / x4;
+        double kk = Math.pow(Math.abs(p1 - x1) - 0.5, 2) / x1 + Math.pow(Math.abs(p0 - x2) - 0.5, 2) / x2 + Math.pow(Math.abs(c1 - x3) - 0.5, 2) / x3 + Math.pow(Math.abs(c0 - x4) - 0.5, 2) / x4;
         return value < kk;
-        }
+    }
+
 
     private double mean(double[] m) {
         double sum = 0;
