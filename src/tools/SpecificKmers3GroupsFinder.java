@@ -4,18 +4,17 @@ import io.IOUtils;
 import org.apache.commons.math.MathException;
 import org.apache.commons.math.distribution.ChiSquaredDistribution;
 import org.apache.commons.math.distribution.ChiSquaredDistributionImpl;
-import org.moeaframework.util.statistics.KruskalWallisTest;
+import org.apache.commons.math3.stat.inference.MannWhitneyUTest;
 import ru.ifmo.genetics.statistics.Timer;
 import ru.ifmo.genetics.structures.map.BigLong2ShortHashMap;
 import ru.ifmo.genetics.structures.map.MutableLongShortEntry;
 import ru.ifmo.genetics.utils.Misc;
-import ru.ifmo.genetics.utils.NumUtils;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileMVParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileParameterBuilder;
-import ru.ifmo.genetics.utils.tool.inputParameterBuilder.IntParameterBuilder;
+import ru.ifmo.genetics.utils.tool.inputParameterBuilder.DoubleParameterBuilder;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -26,7 +25,7 @@ import java.util.Iterator;
 public class SpecificKmers3GroupsFinder extends Tool {
 
     public static final String NAME = "specific-kmers-3";
-    public static final String DESCRIPTION = "Output k-mers specific to each of three groups of samples based on chi-squared & Kruskal-Wallis tests";
+    public static final String DESCRIPTION = "Output k-mers specific to each of three groups of samples based on chi-squared & Mann-Whitney tests";
 
     public final Parameter<File[]> Afiles = addParameter(new FileMVParameterBuilder("a-kmers")
             .mandatory()
@@ -52,22 +51,15 @@ public class SpecificKmers3GroupsFinder extends Tool {
             .withDefaultValue(0.05)
             .create());
 
-    public final Parameter<Double> PValueKW = addParameter(new DoubleParameterBuilder("p-value-kw")
-            .withShortOpt("pkw")
-            .withDescription("p-value for Kruskal-Wallis test")
+    public final Parameter<Double> PValueMW = addParameter(new DoubleParameterBuilder("p-value-mw")
+            .withShortOpt("pmw")
+            .withDescription("p-value for Mann-Whitney test")
             .withDefaultValue(0.05)
             .create());
 
     public final Parameter<File> outputDir = addParameter(new FileParameterBuilder("output-dir")
             .withDescription("Output directory")
             .withDefaultValue(workDir.append("kmers"))
-            .create());
-
-    public final Parameter<Integer> maximalBadFrequency = addParameter(new IntParameterBuilder("maximal-bad-frequence")
-            .optional()
-            .withShortOpt("b")
-            .withDescription("maximal frequency for a k-mer to be assumed erroneous")
-            .withDefaultValue(1)
             .create());
 
     @Override
@@ -78,9 +70,10 @@ public class SpecificKmers3GroupsFinder extends Tool {
     protected void runImpl() throws ExecutionFailedException, IOException {
         Timer t = new Timer();
         ArrayList<BigLong2ShortHashMap> kmersHMs = new ArrayList<>();
-        int A_length = Afiles.get().length;
-        int B_length = Bfiles.get().length;
-        int C_length = Cfiles.get().length;
+        int aLength = Afiles.get().length;
+        int bLength = Bfiles.get().length;
+        int cLength = Cfiles.get().length;
+        int totalLength = aLength + bLength + cLength;
 
         for (File file : Afiles.get()) {
             kmersHMs.add(IOUtils.loadKmers(new File[]{file}, 0, availableProcessors.get(), logger));
@@ -113,9 +106,7 @@ public class SpecificKmers3GroupsFinder extends Tool {
                 MutableLongShortEntry entry = it.next();
                 long key = entry.getKey();
                 short value = entry.getValue();
-                if (value > maximalBadFrequency.get()) {
-                    hm_all.put(key, (short) (hm_all.getWithZero(key) + 1));
-                }
+                hm_all.put(key, (short) (hm_all.getWithZero(key) + 1));
                 n_kmers = n_kmers + value;
             }
             files_kmers_hm.put(tmp_hm.toString(), n_kmers);
@@ -125,35 +116,18 @@ public class SpecificKmers3GroupsFinder extends Tool {
         if (!outDir.exists()) {
             outDir.mkdirs();
         }
-        File stDir = workDir.append("kmers").get();
-        if (!stDir.exists()) {
-            stDir.mkdirs();
-        }
-        File outFile = new File(outDir, "n_samples.kmers.bin");
-        File stFile = new File(stDir, "n_samples.stat.txt");
-
-        debug("Starting to print k-mers to " + outFile.getPath());
-        long c = 0;
-        try {
-            c = IOUtils.printKmers(hm_all, 0, outFile, stFile);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        info(NumUtils.groupDigits(hm_all.size()) + " k-mers found, "
-                + NumUtils.groupDigits(c) + " (" + String.format("%.1f", c * 100.0 / hm_all.size()) + "%) of them is good (not erroneous)");
 
         long n = 0;
-        long n_unique = 0;
-        long n_unique_left = 0;
-        long n_filtered_chi = 0;
-        long n_filtered_2 = 0;
-        long n_A = 0;
-        long n_B = 0;
-        long n_C = 0;
-        long n_error = 0;
-        long n_in_all = 0;
+        long nUnique = 0;
+        long nUniqueLeft = 0;
+        long nFilteredChi = 0;
+        long nFilteredMW = 0;
+        long nA = 0;
+        long nB = 0;
+        long nC = 0;
+        long nInAll = 0;
+        long nScarce = 0;
 
-        // File outDir = outputDir.get();
         if (!outDir.exists())
             outDir.mkdirs();
         File fileA = new File(outDir, "filtered_groupA.kmers.bin");
@@ -168,132 +142,131 @@ public class SpecificKmers3GroupsFinder extends Tool {
                 new FileOutputStream(fileC), 1 << 24));
 
         info("Splitting k-mers...");
-        int cur_file = 0;
+        int curFile = 0;
         Iterator<MutableLongShortEntry> it_all = hm_all.entryIterator();
         while (it_all.hasNext()) {
             n++;
             MutableLongShortEntry entry = it_all.next();
-            cur_file = 0;
+            curFile = 0;
+            if (entry.getValue() <= Math.ceil(totalLength * 0.05)) { //skip scarce k-mers
+                nScarce++;
+                continue;
+            }
+            if (entry.getValue() == totalLength) {  // if present in all files then useless
+                nInAll++;
+                continue;
+            }
 
             int n_0_A = 0;
             int n_0_B = 0;
             int n_0_C = 0;
-            double[] groupA = new double[A_length];
-            double[] groupB = new double[B_length];
-            double[] groupC = new double[C_length];
+            double[] groupA = new double[aLength];
+            double[] groupB = new double[bLength];
+            double[] groupC = new double[cLength];
 
             for (BigLong2ShortHashMap tmp_hm : kmersHMs) {
                 double d = tmp_hm.get(entry.getKey());
                 if (d != -1) {
-                    d = (short) (d * files_kmers_hm.get(kmersHMs.get(0).toString()) /  files_kmers_hm.get(tmp_hm.toString()));
-                    if (cur_file < A_length) {
-                        groupA[cur_file] = d;
+                    d = (d * files_kmers_hm.get(kmersHMs.get(0).toString()) /  files_kmers_hm.get(tmp_hm.toString()));
+                    if (curFile < aLength) {
+                        groupA[curFile] = d;
                     } else {
-                        if (cur_file < A_length + B_length) {
-                            groupB[cur_file - A_length] = d;
+                        if (curFile < aLength + bLength) {
+                            groupB[curFile - aLength] = d;
                         } else {
-                            groupC[cur_file - A_length - B_length] = d;
+                            groupC[curFile - aLength - bLength] = d;
                         }
                     }
                 } else {
-                    if (cur_file < A_length) {
+                    if (curFile < aLength) {
                         n_0_A += 1;
-                        groupA[cur_file] = 0;
+                        groupA[curFile] = 0;
                     } else {
-                        if (cur_file < A_length + B_length) {
+                        if (curFile < aLength + bLength) {
                             n_0_B += 1;
-                            groupB[cur_file - A_length] = 0;
+                            groupB[curFile - aLength] = 0;
                         } else {
                             n_0_C += 1;
-                            groupC[cur_file - A_length - B_length] = 0;
+                            groupC[curFile - aLength - bLength] = 0;
                         }
                     }
                 }
-                cur_file = cur_file + 1;
+                curFile = curFile + 1;
             }
 
-            int n_1_A = A_length - n_0_A;
-            int n_1_B = B_length - n_0_B;
-            int n_1_C = C_length - n_0_C;
-
-            if ((n_1_A + n_1_C + n_1_B) == 0) { // if absent in all groups then it`s definitely erroneous
-                n_error++;
-                continue;
-            }
-
-            if ((n_0_A + n_0_B + n_0_C) == 0) {  // if present in all files then useless
-                n_in_all++;
-                continue;
-            }
+            int n_1_A = aLength - n_0_A;
+            int n_1_B = bLength - n_0_B;
+            int n_1_C = cLength - n_0_C;
 
             boolean isUniq = (n_1_A + n_1_C) == 0 || (n_1_B + n_1_A) == 0 || (n_1_B + n_1_C) == 0; // if present only in one group then its unique
             if (isUniq)
-                n_unique++;
+                nUnique++;
 
             boolean chisq_bool = chisq(n_0_A, n_1_A, n_0_B, n_1_B, n_0_C, n_1_C, qvalue);
 
-            if (chisq_bool || isUniq) { //if k-mer is unique it`s also passes
+            if (chisq_bool) {
                 int pass = 0;
-                if (PValueKW.get() > 0) {   // if less then zero then skip this phase of filtration
-                    KruskalWallisTest kwtest = new KruskalWallisTest(3);
-                    kwtest.addAll(groupA, 0);
-                    kwtest.addAll(groupB, 1);
-                    kwtest.addAll(groupC, 2);
-                    if (!kwtest.test(PValueKW.get()))
+                if (PValueMW.get() > 0) {   // if less then zero then skip this phase of filtration
+                    MannWhitneyUTest mw = new MannWhitneyUTest();
+                    double A_B = mw.mannWhitneyUTest(groupA, groupB);
+                    double B_C = mw.mannWhitneyUTest(groupB, groupC);
+                    double A_C = mw.mannWhitneyUTest(groupA, groupC);
+                    if (!(A_B < PValueMW.get() || B_C < PValueMW.get() || A_C < PValueMW.get()))
                         pass = 1;
                 }
 
-                if (pass == 1)
-                    n_filtered_2++;
+                if (pass == 1){
+                    nFilteredMW++;
+                }
                 else {
-                    double mean_A = mean(groupA);
-                    double mean_B = mean(groupB);
-                    double mean_C = mean(groupC);
+                    double meanA = mean(groupA);
+                    double meanB = mean(groupB);
+                    double meanC = mean(groupC);
 
-                    if (mean_A > mean_B && mean_A > mean_C) {
+                    if (meanA > meanB && meanA > meanC) {
                         streamA.writeLong(entry.getKey());
-                        streamA.writeShort((int) mean_A);
-                        n_A++;
+                        streamA.writeShort((int) meanA);
+                        nA++;
                     } else {
-                        if (mean_B > mean_A && mean_B > mean_C) {
+                        if (meanB > meanA && meanB > meanC) {
                             streamB.writeLong(entry.getKey());
-                            streamB.writeShort((int) mean_B);
-                            n_B++;
+                            streamB.writeShort((int) meanB);
+                            nB++;
                         } else {
                             streamC.writeLong(entry.getKey());
-                            streamC.writeShort((int) mean_C);
-                            n_C++;
+                            streamC.writeShort((int) meanC);
+                            nC++;
                         }
                     }
                     if (isUniq)
-                        n_unique_left++;
+                        nUniqueLeft++;
                 }
-            } else n_filtered_chi++;
+            } else nFilteredChi++;
         }
 
         streamA.close();
         streamB.close();
         streamC.close();
-        long n_left = n_A + n_B + n_C;
+        long n_left = nA + nB + nC;
 
         info("Group A k-mers printed to " + fileA.getPath());
         info("Group B k-mers printed to " + fileB.getPath());
         info("Group C k-mers printed to " + fileC.getPath());
 
         debug("Total k-mers count = " + n);
-        debug("Total unique k-mers = " + n_unique);
-        debug("Total erroneous k-mers = " + n_error);
-        debug("Total k-mers present in all files = " + n_in_all);
+        debug("Total unique k-mers = " + nUnique);
+        debug("Total k-mers present in all files = " + nInAll);
         debug("Total k-mers left = " + n_left);
-        debug("Total group A k-mers = " + n_A);
-        debug("Total group B k-mers = " + n_B);
-        debug("Total group C k-mers = " + n_C);
-        debug("Total skipped by Chi-squared test = " + n_filtered_chi);
-        debug("Total skipped by Kruskal-Wallis test = " + n_filtered_2);
-        debug("Total unique left = " + n_unique_left);
-        debug("Parameters used : P-value for Chi-squared test = " + PValueChi2.get() + " that gives " + qvalue + " threshold, p-value for Kruskal-Wallis test = " + PValueKW.get());
+        debug("Total unique left = " + nUniqueLeft);
+        debug("Total group A k-mers = " + nA);
+        debug("Total group B k-mers = " + nB);
+        debug("Total group C k-mers = " + nC);
+        info("Total scarce k-mers = " + nScarce);
+        debug("Total skipped by Chi-squared test = " + nFilteredChi);
+        debug("Total skipped by Mann-Whitney test = " + nFilteredMW);
+        debug("Parameters used : P-value for Chi-squared test = " + PValueChi2.get() + " that gives " + qvalue + " threshold, p-value for Kruskal-Wallis test = " + PValueMW.get());
         debug("Memory used = " + Misc.usedMemoryAsString() + ", time = " + t);
-        info("Specific-kmers has finished! Time = " + t);
+        info("Specific-k-mers has finished! Time = " + t);
     }
 
 
