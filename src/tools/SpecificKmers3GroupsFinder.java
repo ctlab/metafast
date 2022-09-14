@@ -143,6 +143,11 @@ public class SpecificKmers3GroupsFinder extends Tool {
 
         info("Splitting k-mers...");
         int curFile = 0;
+        long meanSumKmers = 0;
+        for (BigLong2ShortHashMap tmp_hm : kmersHMs){
+            meanSumKmers += files_kmers_hm.get(tmp_hm.toString());
+        }
+        meanSumKmers /= totalLength;
         Iterator<MutableLongShortEntry> it_all = hm_all.entryIterator();
         while (it_all.hasNext()) {
             n++;
@@ -167,7 +172,7 @@ public class SpecificKmers3GroupsFinder extends Tool {
             for (BigLong2ShortHashMap tmp_hm : kmersHMs) {
                 double d = tmp_hm.get(entry.getKey());
                 if (d != -1) {
-                    d = (d * files_kmers_hm.get(kmersHMs.get(0).toString()) /  files_kmers_hm.get(tmp_hm.toString()));
+                    d = d * meanSumKmers / files_kmers_hm.get(tmp_hm.toString());
                     if (curFile < aLength) {
                         groupA[curFile] = d;
                     } else {
