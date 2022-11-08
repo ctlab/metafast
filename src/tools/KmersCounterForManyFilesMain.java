@@ -80,7 +80,8 @@ public class KmersCounterForManyFilesMain extends Tool {
         int i=0;
         while (i < files.length) {
             if ((names.get(i).endsWith("_r1") && i+1<files.length && names.get(i+1).endsWith("_r2")) ||
-                    (names.get(i).endsWith("_R1") && i+1<files.length && names.get(i+1).endsWith("_R2"))) {
+                    (names.get(i).endsWith("_R1") && i+1<files.length && names.get(i+1).endsWith("_R2")) ||
+                    (names.get(i).endsWith("_1") && i+1<files.length && names.get(i+1).endsWith("_2"))) {
                 KmersCounterMain counter = new KmersCounterMain();
                 counter.workDir.set(workDir.append("sub-counter"));
                 counter.k.set(k);
