@@ -88,13 +88,14 @@ public class SpecificKmers3GroupsFinder extends Tool {
             debug("Memory used = " + Misc.usedMemoryAsString() + ", time = " + t);
         }
 
-        ChiSquaredDistribution xi = new ChiSquaredDistributionImpl(1, 0.00001);
+        ChiSquaredDistribution xi = new ChiSquaredDistributionImpl(1, 1e-15D);
         double qvalue;
         try {
             qvalue = xi.inverseCumulativeProbability(1 - PValueChi2.get());
         } catch (MathException e) {
             throw new ExecutionFailedException("Error calculating chi-squared value!", e);
         }
+        MannWhitneyUTest mw = new MannWhitneyUTest();
 
         BigLong2ShortHashMap hm_all =  new BigLong2ShortHashMap((int) (Math.log(availableProcessors.get()) / Math.log(2)) + 4, 8);
         hm_all.resetValues();
@@ -204,23 +205,24 @@ public class SpecificKmers3GroupsFinder extends Tool {
             int n_1_C = cLength - n_0_C;
 
             boolean isUniq = (n_1_A + n_1_C) == 0 || (n_1_B + n_1_A) == 0 || (n_1_B + n_1_C) == 0; // if present only in one group then its unique
-            if (isUniq)
+            if (isUniq) {
                 nUnique++;
+            }
 
             boolean chisq_bool = chisq(n_0_A, n_1_A, n_0_B, n_1_B, n_0_C, n_1_C, qvalue);
 
             if (chisq_bool) {
                 int pass = 0;
-                if (PValueMW.get() > 0) {   // if less then zero then skip this phase of filtration
-                    MannWhitneyUTest mw = new MannWhitneyUTest();
+                if (PValueMW.get() > 0) {   // if less than zero, then skip this phase of filtration
                     double A_B = mw.mannWhitneyUTest(groupA, groupB);
                     double B_C = mw.mannWhitneyUTest(groupB, groupC);
                     double A_C = mw.mannWhitneyUTest(groupA, groupC);
-                    if (!(A_B < PValueMW.get() || B_C < PValueMW.get() || A_C < PValueMW.get()))
+                    if (!(A_B < PValueMW.get() || B_C < PValueMW.get() || A_C < PValueMW.get())) {
                         pass = 1;
+                    }
                 }
 
-                if (pass == 1){
+                if (pass == 1) {
                     nFilteredMW++;
                 }
                 else {
@@ -243,10 +245,13 @@ public class SpecificKmers3GroupsFinder extends Tool {
                             nC++;
                         }
                     }
-                    if (isUniq)
+                    if (isUniq) {
                         nUniqueLeft++;
+                    }
                 }
-            } else nFilteredChi++;
+            } else {
+                nFilteredChi++;
+            }
         }
 
         streamA.close();

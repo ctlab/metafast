@@ -17,12 +17,14 @@ kmers-color                              tools.ColorKmersMain                   
 kmers-filter                             tools.KmersFilter                                                                Filter k-mers from test set according to known samples
 kmers-grouped-counter                    tools.KmersGroupedSamplesCounter                                                 Count number of samples from 3 groups containing specified k-mers
 kmers-multiple-filters                   tools.KmersMultipleFilters                                                       Filter k-mers from test set according to three specified sets
+kmers-per-sample                         tools.KmersPerSampleCounter                                                      Counts the abundance of frequent k-mers from dataset in each sample
 kmers-samples-counter                    tools.KmersSamplesCounter                                                        Count number of samples containing k-mers from multiple samples
 matrix-builder                           tools.DistanceMatrixBuilderMain                                                  Builds the distance matrix for input sequences
 seq-builder                              tools.SeqBuilderMain                                                             Metagenome De Bruijn graph analysis and sequences building
 seq-builder-many                         tools.SeqBuilderForManyFilesMain                                                 Metagenome De Bruijn graph analysis and sequences building for many files independently
 seq2comp                                 tools.SequencesToComponents                                                      Transforms sequences to components
 specific-kmers                           tools.SpecificKmersFinder                                                        Output k-mers specific to groups of samples based on chi-squared & Mann-Whitney tests
+specific-kmers-3                         tools.SpecificKmers3GroupsFinder                                                 Output k-mers specific to each of three groups of samples based on chi-squared & Mann-Whitney tests
 supergraph-sequence-builder              tools.SupergraphSeqBuilderMain                                                   NOT COMPLETED
 unique-features                          tools.UniqueFeaturesBuilderMain                                                  Builds unique features for group of metagenomic samples
 unique-kmers                             tools.UniqueKmersFinder                                                          Output k-mers present in one dataset and missing in other

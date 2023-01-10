@@ -77,13 +77,14 @@ public class SpecificKmersFinder extends Tool {
             debug("Memory used = " + Misc.usedMemoryAsString() + ", time = " + t);
         }
 
-        ChiSquaredDistribution xi = new ChiSquaredDistributionImpl(1, 0.0001);
+        ChiSquaredDistribution xi = new ChiSquaredDistributionImpl(1, 1e-15D);
         double qvalue;
         try {
             qvalue = xi.inverseCumulativeProbability(1 - PValueChi2.get());
         } catch (MathException e) {
             throw new ExecutionFailedException("Error calculating chi-squared value!", e);
         }
+        MannWhitneyUTest mw = new MannWhitneyUTest();
 
         long totalKmers = 0;
         long unique = 0;
@@ -156,14 +157,13 @@ public class SpecificKmersFinder extends Tool {
                         continue;
                     }
 
-                    if ((n_0_A + n_0_B) == 0) {    //in all files
+                    if (n_0_A + n_0_B == 0) {    //in all files
                         chisq_bool = true;
                     }
 
                     if (chisq_bool) {
                         int pass = 0;
                         if (PValueMW.get() > 0) {
-                            MannWhitneyUTest mw = new MannWhitneyUTest();
                             double pvalue = mw.mannWhitneyUTest(groupA, groupB);
                             if (pvalue > PValueMW.get())
                                 pass = 1;
