@@ -16,7 +16,6 @@ import ru.ifmo.genetics.utils.pairs.Pair;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Tool;
 import structures.map.BigLong2BitLongaHashMap;
-import structures.map.BigLong2BitSetHashMap;
 
 import java.io.*;
 import java.util.Iterator;
@@ -279,6 +278,7 @@ public class IOUtils {
         }
     }
 
+    /*
     static class BitSetKmers2HMWorker extends KmersLoadWorker {
         BitSetKmers2HMWorker(BigLong2BitSetHashMap hm, int freqThreshold) {
             this.hm = hm;
@@ -306,6 +306,7 @@ public class IOUtils {
             }
         }
     }
+    */
 
     static class BitLongaKmers2HMWorker extends KmersLoadWorker {
         BitLongaKmers2HMWorker(BigLong2BitLongaHashMap hm, int freqThreshold) {
@@ -403,6 +404,7 @@ public class IOUtils {
         return new ImmutablePair<>(hm, freqSumAdded);
     }
 
+    /*
     public static BigLong2BitSetHashMap loadBitSetKmers(File[] files, int freqThreshold, int availableProcessors, Logger logger)
             throws ExecutionFailedException {
 
@@ -436,6 +438,7 @@ public class IOUtils {
 
         return hm;
     }
+    */
 
     public static BigLong2BitLongaHashMap loadBitLongaKmers(File[] files, int freqThreshold, int availableProcessors, Logger logger)
             throws ExecutionFailedException {
@@ -562,6 +565,7 @@ public class IOUtils {
         }
     }
 
+    /*
     public static void runBitSet(File[] files, BitSetKmers2HMWorker[] workers, BigLong2ShortHashMap hmForMonitoring, Logger logger)
             throws ExecutionFailedException {
         try {
@@ -596,6 +600,7 @@ public class IOUtils {
             throw new ExecutionFailedException("Can't load k-mers file", e);
         }
     }
+    */
 
     public static void runBitLonga(File[] files, BitLongaKmers2HMWorker[] workers, BigLong2ShortHashMap hmForMonitoring, Logger logger)
             throws ExecutionFailedException {
