@@ -11,8 +11,12 @@ import ru.ifmo.genetics.structures.map.BigLong2ShortHashMap;
 import ru.ifmo.genetics.structures.map.MutableLongLongEntry;
 import ru.ifmo.genetics.structures.map.MutableLongShortEntry;
 import ru.ifmo.genetics.utils.NumUtils;
+import ru.ifmo.genetics.utils.pairs.ImmutablePair;
+import ru.ifmo.genetics.utils.pairs.Pair;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Tool;
+import structures.map.BigLong2BitLongaHashMap;
+import structures.map.BigLong2BitSetHashMap;
 
 import java.io.*;
 import java.util.Iterator;
@@ -275,6 +279,62 @@ public class IOUtils {
         }
     }
 
+    static class BitSetKmers2HMWorker extends KmersLoadWorker {
+        BitSetKmers2HMWorker(BigLong2BitSetHashMap hm, int freqThreshold) {
+            this.hm = hm;
+            this.freqThreshold = freqThreshold;
+        }
+
+        final BigLong2BitSetHashMap hm;
+        final int freqThreshold;
+        int bitIndex;
+        long kmers = 0, kmersAdded = 0;
+        long freqSum = 0, freqSumAdded = 0;
+
+        public void setBitIndex(int index) {
+            bitIndex = index;
+        }
+
+        @Override
+        public void processKmer(long kmer, short freq) {
+            kmers++;
+            freqSum += freq;
+            if (freq > freqThreshold) {
+                hm.set(kmer, bitIndex);
+                kmersAdded++;
+                freqSumAdded += freq;
+            }
+        }
+    }
+
+    static class BitLongaKmers2HMWorker extends KmersLoadWorker {
+        BitLongaKmers2HMWorker(BigLong2BitLongaHashMap hm, int freqThreshold) {
+            this.hm = hm;
+            this.freqThreshold = freqThreshold;
+        }
+
+        final BigLong2BitLongaHashMap hm;
+        final int freqThreshold;
+        int bitIndex;
+        long kmers = 0, kmersAdded = 0;
+        long freqSum = 0, freqSumAdded = 0;
+
+        public void setBitIndex(int index) {
+            bitIndex = index;
+        }
+
+        @Override
+        public void processKmer(long kmer, short freq) {
+            kmers++;
+            freqSum += freq;
+            if (freq > freqThreshold) {
+                hm.set(kmer, bitIndex);
+                kmersAdded++;
+                freqSumAdded += freq;
+            }
+        }
+    }
+
     public static BigLong2ShortHashMap loadKmers(File[] files, int freqThreshold, int availableProcessors, Logger logger)
             throws ExecutionFailedException {
 
@@ -292,6 +352,108 @@ public class IOUtils {
         long kmers = 0, kmersAdded = 0;
         long freqSum = 0, freqSumAdded = 0;
         for (Kmers2HMWorker worker : workers) {
+            kmers += worker.kmers;
+            kmersAdded += worker.kmersAdded;
+            freqSum += worker.freqSum;
+            freqSumAdded += worker.freqSumAdded;
+        }
+
+        Tool.debug(logger,
+                "Added/All kmers count = " + NumUtils.groupDigits(kmersAdded) + "/" + NumUtils.groupDigits(kmers)
+                        + " (" + String.format("%.1f", kmersAdded * 100.0 / kmers) + "%)");
+        Tool.debug(logger,
+                "Added/All kmers frequency sum = " + NumUtils.groupDigits(freqSumAdded) + "/" + NumUtils.groupDigits(freqSum)
+                        + " (" + String.format("%.1f", freqSumAdded * 100.0 / freqSum) + "%)");
+        Tool.debug(logger, "k-mers HM size = " + NumUtils.groupDigits(hm.size()));
+
+        return hm;
+    }
+
+    public static Pair<BigLong2ShortHashMap, Long> loadKmersFreq(File[] files, int freqThreshold, int availableProcessors, Logger logger)
+            throws ExecutionFailedException {
+
+        BigLong2ShortHashMap hm = new BigLong2ShortHashMap(
+                (int) (Math.log(availableProcessors) / Math.log(2)) + 4, 12);
+
+        Kmers2HMWorker[] workers = new Kmers2HMWorker[availableProcessors];
+        for (int i = 0; i < workers.length; ++i) {
+            workers[i] = new Kmers2HMWorker(hm, freqThreshold);
+        }
+
+        run(files, workers, hm, logger);
+
+        // calculating statistics...
+        long kmers = 0, kmersAdded = 0;
+        long freqSum = 0, freqSumAdded = 0;
+        for (Kmers2HMWorker worker : workers) {
+            kmers += worker.kmers;
+            kmersAdded += worker.kmersAdded;
+            freqSum += worker.freqSum;
+            freqSumAdded += worker.freqSumAdded;
+        }
+
+        Tool.debug(logger,
+                "Added/All kmers count = " + NumUtils.groupDigits(kmersAdded) + "/" + NumUtils.groupDigits(kmers)
+                        + " (" + String.format("%.1f", kmersAdded * 100.0 / kmers) + "%)");
+        Tool.debug(logger,
+                "Added/All kmers frequency sum = " + NumUtils.groupDigits(freqSumAdded) + "/" + NumUtils.groupDigits(freqSum)
+                        + " (" + String.format("%.1f", freqSumAdded * 100.0 / freqSum) + "%)");
+        Tool.debug(logger, "k-mers HM size = " + NumUtils.groupDigits(hm.size()));
+
+        return new ImmutablePair<>(hm, freqSumAdded);
+    }
+
+    public static BigLong2BitSetHashMap loadBitSetKmers(File[] files, int freqThreshold, int availableProcessors, Logger logger)
+            throws ExecutionFailedException {
+
+        BigLong2BitSetHashMap hm = new BigLong2BitSetHashMap(
+                (int) (Math.log(availableProcessors) / Math.log(2)) + 4, 12, false, files.length);
+
+        BitSetKmers2HMWorker[] workers = new BitSetKmers2HMWorker[availableProcessors];
+        for (int i = 0; i < workers.length; ++i) {
+            workers[i] = new BitSetKmers2HMWorker(hm, freqThreshold);
+        }
+
+        runBitSet(files, workers, null, logger);
+
+        // calculating statistics...
+        long kmers = 0, kmersAdded = 0;
+        long freqSum = 0, freqSumAdded = 0;
+        for (BitSetKmers2HMWorker worker : workers) {
+            kmers += worker.kmers;
+            kmersAdded += worker.kmersAdded;
+            freqSum += worker.freqSum;
+            freqSumAdded += worker.freqSumAdded;
+        }
+
+        Tool.debug(logger,
+                "Added/All kmers count = " + NumUtils.groupDigits(kmersAdded) + "/" + NumUtils.groupDigits(kmers)
+                        + " (" + String.format("%.1f", kmersAdded * 100.0 / kmers) + "%)");
+        Tool.debug(logger,
+                "Added/All kmers frequency sum = " + NumUtils.groupDigits(freqSumAdded) + "/" + NumUtils.groupDigits(freqSum)
+                        + " (" + String.format("%.1f", freqSumAdded * 100.0 / freqSum) + "%)");
+        Tool.debug(logger, "k-mers HM size = " + NumUtils.groupDigits(hm.size()));
+
+        return hm;
+    }
+
+    public static BigLong2BitLongaHashMap loadBitLongaKmers(File[] files, int freqThreshold, int availableProcessors, Logger logger)
+            throws ExecutionFailedException {
+
+        BigLong2BitLongaHashMap hm = new BigLong2BitLongaHashMap(
+                (int) (Math.log(availableProcessors) / Math.log(2)) + 4, 12, false, files.length);
+
+        BitLongaKmers2HMWorker[] workers = new BitLongaKmers2HMWorker[availableProcessors];
+        for (int i = 0; i < workers.length; ++i) {
+            workers[i] = new BitLongaKmers2HMWorker(hm, freqThreshold);
+        }
+
+        runBitLonga(files, workers, null, logger);
+
+        // calculating statistics...
+        long kmers = 0, kmersAdded = 0;
+        long freqSum = 0, freqSumAdded = 0;
+        for (BitLongaKmers2HMWorker worker : workers) {
             kmers += worker.kmers;
             kmersAdded += worker.kmersAdded;
             freqSum += worker.freqSum;
@@ -381,6 +543,76 @@ public class IOUtils {
                 for (int i = 0; i < workers.length; ++i) {
                     workers[i].setDispatcher(dispatcher);
                     workers[i].setLatch(latch);
+                    new Thread(workers[i]).start();
+                }
+
+                try {
+                    latch.await();
+                } catch (InterruptedException e) {
+                    Tool.warn(logger, "Main thread interrupted");
+                    for (BytesWorker worker : workers) {
+                        worker.interrupt();
+                    }
+                    throw new ExecutionFailedException("Thread was interrupted", e);
+                }
+                Tool.debug(logger, NumUtils.memoryAsString(dispatcher.bytesRead) + " of data processed");
+            }
+        } catch (IOException e) {
+            throw new ExecutionFailedException("Can't load k-mers file", e);
+        }
+    }
+
+    public static void runBitSet(File[] files, BitSetKmers2HMWorker[] workers, BigLong2ShortHashMap hmForMonitoring, Logger logger)
+            throws ExecutionFailedException {
+        try {
+            int bitIndex=-1;
+            for (File file : files) {
+                bitIndex++;
+                Tool.info(logger, "Loading file " + file.getName() + "...");
+
+                InputStream is = new FileInputStream(file);
+                BytesDispatcher dispatcher = new BytesDispatcher(is, KMERS_WORK_RANGE_SIZE, hmForMonitoring);
+                CountDownLatch latch = new CountDownLatch(workers.length);
+
+                for (int i = 0; i < workers.length; ++i) {
+                    workers[i].setDispatcher(dispatcher);
+                    workers[i].setLatch(latch);
+                    workers[i].setBitIndex(bitIndex);
+                    new Thread(workers[i]).start();
+                }
+
+                try {
+                    latch.await();
+                } catch (InterruptedException e) {
+                    Tool.warn(logger, "Main thread interrupted");
+                    for (BytesWorker worker : workers) {
+                        worker.interrupt();
+                    }
+                    throw new ExecutionFailedException("Thread was interrupted", e);
+                }
+                Tool.debug(logger, NumUtils.memoryAsString(dispatcher.bytesRead) + " of data processed");
+            }
+        } catch (IOException e) {
+            throw new ExecutionFailedException("Can't load k-mers file", e);
+        }
+    }
+
+    public static void runBitLonga(File[] files, BitLongaKmers2HMWorker[] workers, BigLong2ShortHashMap hmForMonitoring, Logger logger)
+            throws ExecutionFailedException {
+        try {
+            int bitIndex=-1;
+            for (File file : files) {
+                bitIndex++;
+                Tool.info(logger, "Loading file " + file.getName() + "...");
+
+                InputStream is = new FileInputStream(file);
+                BytesDispatcher dispatcher = new BytesDispatcher(is, KMERS_WORK_RANGE_SIZE, hmForMonitoring);
+                CountDownLatch latch = new CountDownLatch(workers.length);
+
+                for (int i = 0; i < workers.length; ++i) {
+                    workers[i].setDispatcher(dispatcher);
+                    workers[i].setLatch(latch);
+                    workers[i].setBitIndex(bitIndex);
                     new Thread(workers[i]).start();
                 }
 
