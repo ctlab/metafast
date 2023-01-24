@@ -10,26 +10,27 @@ import java.util.Set;
 
 import static org.junit.Assert.*;
 
-public class Long2BitLongaHashMapTest {
+public class Long2BitShortaHashMapTest {
     private Random rand;
-    private Long2BitLongaHashMap hm;
+    private Long2BitShortaHashMap hm;
+    private final int SZ = 16;
 
     @Before
     public void before() {
         rand = new Random(239);
-        hm = new Long2BitLongaHashMap(20, 0.75f, 130);
+        hm = new Long2BitShortaHashMap(20, 0.75f, 130);
     }
     
     @Test
     public void testCreate() {
         assertEquals(130, hm.data.sizeBitSet);
-        assertEquals(3, hm.data.valueForFreeKey.length);
+        assertEquals(9, hm.data.valueForFreeKey.length);
         assertNull(hm.data.values[0]);
 
         hm.reset();
 
         assertEquals(130, hm.data.sizeBitSet);
-        assertEquals(3, hm.data.valueForFreeKey.length);
+        assertEquals(9, hm.data.valueForFreeKey.length);
         assertNull(hm.data.values[0]);
     }
 
@@ -66,23 +67,24 @@ public class Long2BitLongaHashMapTest {
 
     @Test
     public void testSet() {
-        long[] prev = hm.set(12, 62);
-        long[] cur = new long[3];
-        cur[0] = 1L<<62;
+        
+        short[] prev = hm.set(12, 14);
+        short[] cur = new short[9];
+        cur[0] = (short) (1L<<14);
         assertNull(prev);
         assertArrayEquals(cur, hm.data.values[getPositionInt(hm.data, 12)]);
 
-        prev = hm.set(12, 63);
+        prev = hm.set(12, 15);
         assertArrayEquals(cur, prev);
-        cur[0] |= 1L<<63;
+        cur[0] |= 1L<<15;
         assertArrayEquals(cur, hm.data.values[getPositionInt(hm.data, 12)]);
 
-        prev = hm.set(12, 64);
+        prev = hm.set(12, 16);
         assertArrayEquals(cur, prev);
         cur[1] |= 1L<<0;
         assertArrayEquals(cur, hm.data.values[getPositionInt(hm.data, 12)]);
 
-        prev = hm.set(12, 65);
+        prev = hm.set(12, 17);
         assertArrayEquals(cur, prev);
         cur[1] |= 1L<<1;
         assertArrayEquals(cur, hm.data.values[getPositionInt(hm.data, 12)]);
@@ -92,7 +94,7 @@ public class Long2BitLongaHashMapTest {
 
 
         int n_tests = 10000;
-        long[][] vals = new long[n_tests][];
+        short[][] vals = new short[n_tests][];
         int[] keys = new int[n_tests];
         for (int i = 0; i < n_tests; i++) {
             boolean f = true;
@@ -111,12 +113,12 @@ public class Long2BitLongaHashMapTest {
                 int val = rand.nextInt(130);
                 prev = hm.set(keys[i], val);
                 if (vals[i] == null) {
-                    vals[i] = new long[3];
+                    vals[i] = new short[9];
                     assertNull(prev);
                 } else {
                     assertArrayEquals(vals[i], prev);
                 }
-                vals[i][val/64] |= 1L<<(val%64);
+                vals[i][val/SZ] |= 1L<<(val%SZ);
                 assertArrayEquals(vals[i], hm.data.values[getPositionInt(hm.data, keys[i])]);
             }
         }
@@ -136,20 +138,20 @@ public class Long2BitLongaHashMapTest {
     public void testGet() {
         assertNull(hm.get(12));
 
-        hm.set(12, 62);
-        long[] cur = new long[3];
-        cur[0] = 1L<<62;
+        hm.set(12, 14);
+        short[] cur = new short[9];
+        cur[0] = (short) (1L<<14);
         assertArrayEquals(cur, hm.get(12));
 
-        hm.set(12, 63);
-        cur[0] |= 1L<<63;
+        hm.set(12, 15);
+        cur[0] |= 1L<<15;
         assertArrayEquals(cur, hm.get(12));
 
-        hm.set(12, 64);
+        hm.set(12, 16);
         cur[1] |= 1L<<0;
         assertArrayEquals(cur, hm.get(12));
 
-        hm.set(12, 65);
+        hm.set(12, 17);
         cur[1] |= 1L<<1;
         assertArrayEquals(cur, hm.get(12));
 
@@ -158,7 +160,7 @@ public class Long2BitLongaHashMapTest {
 
 
         int n_tests = 10000;
-        long[][] vals = new long[n_tests][];
+        short[][] vals = new short[n_tests][];
         int[] keys = new int[n_tests];
         for (int i = 0; i < n_tests; i++) {
             boolean f = true;
@@ -178,9 +180,9 @@ public class Long2BitLongaHashMapTest {
                 int val = rand.nextInt(130);
                 hm.set(keys[i], val);
                 if (vals[i] == null) {
-                    vals[i] = new long[3];
+                    vals[i] = new short[9];
                 }
-                vals[i][val/64] |= 1L<<(val%64);
+                vals[i][val/SZ] |= 1L<<(val%SZ);
                 assertArrayEquals(vals[i], hm.get(keys[i]));
             }
         }
@@ -202,9 +204,9 @@ public class Long2BitLongaHashMapTest {
             assertFalse(hm.get(12, i));
         }
 
-        hm.set(12, 62);
+        hm.set(12, 14);
         Set<Integer> ids = new HashSet<>();
-        ids.add(62);
+        ids.add(14);
         for (int i = 0; i < 130; i++) {
             if (ids.contains(i)) {
                 assertTrue(hm.get(12, i));
@@ -214,8 +216,8 @@ public class Long2BitLongaHashMapTest {
         }
 
 
-        hm.set(12, 63);
-        ids.add(63);
+        hm.set(12, 15);
+        ids.add(15);
         for (int i = 0; i < 130; i++) {
             if (ids.contains(i)) {
                 assertTrue(hm.get(12, i));
@@ -224,8 +226,8 @@ public class Long2BitLongaHashMapTest {
             }
         }
 
-        hm.set(12, 64);
-        ids.add(64);
+        hm.set(12, 16);
+        ids.add(16);
         for (int i = 0; i < 130; i++) {
             if (ids.contains(i)) {
                 assertTrue(hm.get(12, i));
@@ -234,8 +236,8 @@ public class Long2BitLongaHashMapTest {
             }
         }
 
-        hm.set(12, 65);
-        ids.add(65);
+        hm.set(12, 17);
+        ids.add(17);
         for (int i = 0; i < 130; i++) {
             if (ids.contains(i)) {
                 assertTrue(hm.get(12, i));
@@ -308,24 +310,24 @@ public class Long2BitLongaHashMapTest {
 
     @Test
     public void testGetWithEmpty() {
-        long[] empty = new long[1];
+        short[] empty = new short[1];
 
         assertArrayEquals(empty, hm.getWithEmpty(12));
 
-        hm.set(12, 62);
-        long[] cur = new long[3];
-        cur[0] = 1L<<62;
+        hm.set(12, 14);
+        short[] cur = new short[9];
+        cur[0] = (short) (1L<<14);
         assertArrayEquals(cur, hm.getWithEmpty(12));
 
-        hm.set(12, 63);
-        cur[0] |= 1L<<63;
+        hm.set(12, 15);
+        cur[0] |= 1L<<15;
         assertArrayEquals(cur, hm.getWithEmpty(12));
 
-        hm.set(12, 64);
+        hm.set(12, 16);
         cur[1] |= 1L<<0;
         assertArrayEquals(cur, hm.getWithEmpty(12));
 
-        hm.set(12, 65);
+        hm.set(12, 17);
         cur[1] |= 1L<<1;
         assertArrayEquals(cur, hm.getWithEmpty(12));
 
@@ -334,7 +336,7 @@ public class Long2BitLongaHashMapTest {
 
 
         int n_tests = 10000;
-        long[][] vals = new long[n_tests][];
+        short[][] vals = new short[n_tests][];
         int[] keys = new int[n_tests];
         for (int i = 0; i < n_tests; i++) {
             boolean f = true;
@@ -354,9 +356,9 @@ public class Long2BitLongaHashMapTest {
                 int val = rand.nextInt(130);
                 hm.set(keys[i], val);
                 if (vals[i] == null) {
-                    vals[i] = new long[3];
+                    vals[i] = new short[9];
                 }
-                vals[i][val/64] |= 1L<<(val%64);
+                vals[i][val/SZ] |= 1L<<(val%SZ);
                 assertArrayEquals(vals[i], hm.getWithEmpty(keys[i]));
             }
         }
@@ -376,21 +378,21 @@ public class Long2BitLongaHashMapTest {
     public void testGetCardinality() {
         assertEquals(0, hm.getCardinality(12));
 
-        hm.set(12, 62);
+        hm.set(12, 14);
         Set<Integer> ids = new HashSet<>();
-        ids.add(62);
+        ids.add(14);
         assertEquals(ids.size(), hm.getCardinality(12));
 
-        hm.set(12, 63);
-        ids.add(63);
+        hm.set(12, 15);
+        ids.add(15);
         assertEquals(ids.size(), hm.getCardinality(12));
 
-        hm.set(12, 64);
-        ids.add(64);
+        hm.set(12, 16);
+        ids.add(16);
         assertEquals(ids.size(), hm.getCardinality(12));
 
-        hm.set(12, 65);
-        ids.add(65);
+        hm.set(12, 17);
+        ids.add(17);
         assertEquals(ids.size(), hm.getCardinality(12));
 
         hm.reset();
@@ -399,7 +401,7 @@ public class Long2BitLongaHashMapTest {
 
         int n_tests = 10000;
         Set<Integer>[] vals = new Set[n_tests];
-        int[] keys = new int[n_tests];
+                int[] keys = new int[n_tests];
         for (int i = 0; i < n_tests; i++) {
             boolean f = true;
             while (f) {
@@ -438,30 +440,30 @@ public class Long2BitLongaHashMapTest {
 
     @Test
     public void testGetCardinalityRange() {
-        assertEquals(0, hm.getCardinality(12, 62, 66));
+        assertEquals(0, hm.getCardinality(12, 14, 18));
 
-        hm.set(12, 62);
-        assertEquals(1, hm.getCardinality(12, 62, 63));
+        hm.set(12, 14);
+        assertEquals(1, hm.getCardinality(12, 14, 15));
 
-        hm.set(12, 63);
-        assertEquals(1, hm.getCardinality(12, 63, 64));
-        assertEquals(2, hm.getCardinality(12, 62, 64));
+        hm.set(12, 15);
+        assertEquals(1, hm.getCardinality(12, 15, 16));
+        assertEquals(2, hm.getCardinality(12, 14, 16));
 
-        hm.set(12, 64);
-        assertEquals(1, hm.getCardinality(12, 64, 65));
-        assertEquals(3, hm.getCardinality(12, 62, 65));
+        hm.set(12, 16);
+        assertEquals(1, hm.getCardinality(12, 16, 17));
+        assertEquals(3, hm.getCardinality(12, 14, 17));
 
-        hm.set(12, 65);
-        assertEquals(1, hm.getCardinality(12, 65, 66));
-        assertEquals(4, hm.getCardinality(12, 62, 66));
+        hm.set(12, 17);
+        assertEquals(1, hm.getCardinality(12, 17, 18));
+        assertEquals(4, hm.getCardinality(12, 14, 18));
 
         hm.reset();
-        assertEquals(0, hm.getCardinality(12, 62, 66));
+        assertEquals(0, hm.getCardinality(12, 14, 18));
 
 
         int n_tests = 10000;
         Set<Integer>[] vals = new Set[n_tests];
-        int[] keys = new int[n_tests];
+                int[] keys = new int[n_tests];
         for (int i = 0; i < n_tests; i++) {
             boolean f = true;
             while (f) {
@@ -513,7 +515,7 @@ public class Long2BitLongaHashMapTest {
     }
 
 
-    private static int getPositionInt(Long2BitLongaHashMap.MapData curData, long key) {
+    private static int getPositionInt(Long2BitShortaHashMap.MapData curData, long key) {
         long h = HashCommon.murmurHash3(key);
         int pos = (int)(h & (long)curData.capacityMask);
         long[] keys = curData.keys;

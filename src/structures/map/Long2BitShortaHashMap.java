@@ -10,21 +10,21 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-public class Long2BitLongaHashMap extends LongHashSet implements Long2BitLongaHashMapInterface {
+public class Long2BitShortaHashMap extends LongHashSet implements Long2BitShortaHashMapInterface {
 
-    private final static int BITS_PER_WORD = 6; // size(long)=64=2^6
+    private final static int BITS_PER_WORD = 4; // size(short)=16=2^4
 
 
 
     protected class MapData extends SetData {
-        protected final long[][] values;
-        protected volatile long[] valueForFreeKey;
+        protected final short[][] values;
+        protected volatile short[] valueForFreeKey;
         protected volatile int sizeBitSet;
 
         public MapData(int capacity, float maxLoadFactor, int sizeBitSet) {
             super(capacity, maxLoadFactor);
-            values = new long[capacity][];
-            valueForFreeKey = new long[(sizeBitSet>>BITS_PER_WORD) + 1];
+            values = new short[capacity][];
+            valueForFreeKey = new short[(sizeBitSet>>BITS_PER_WORD) + 1];
             this.sizeBitSet = sizeBitSet;
         }
     }
@@ -32,17 +32,17 @@ public class Long2BitLongaHashMap extends LongHashSet implements Long2BitLongaHa
     protected volatile MapData data;
 
     // constructors
-    public Long2BitLongaHashMap() {
+    public Long2BitShortaHashMap() {
         this(20, DEFAULT_MAX_LOAD_FACTOR, 0);  // 1 M elements
     }
-    public Long2BitLongaHashMap(int capacity) {
+    public Long2BitShortaHashMap(int capacity) {
         this(
                 NumUtils.getPowerOf2(capacity),
                 DEFAULT_MAX_LOAD_FACTOR,
                 0
         );
     }
-    public Long2BitLongaHashMap(int logCapacity, float maxLoadFactor, int sizeBitSet) {
+    public Long2BitShortaHashMap(int logCapacity, float maxLoadFactor, int sizeBitSet) {
         if (logCapacity > 30) {
             throw new IllegalArgumentException("log capacity > 30!");
         }
@@ -60,12 +60,12 @@ public class Long2BitLongaHashMap extends LongHashSet implements Long2BitLongaHa
 
 
     @Override
-    public long[] set(long key, int bitIndex) {
+    public short[] set(long key, int bitIndex) {
         if (key == FREE) {
             writeLock.lock();
             try {
                 MapData curData = data;
-                long[] prev = curData.valueForFreeKey.clone();
+                short[] prev = curData.valueForFreeKey.clone();
 
                 curData.valueForFreeKey[bitIndex>>BITS_PER_WORD]|=1L<<(bitIndex&((1L<<BITS_PER_WORD) - 1));
                 if (!curData.containsFreeKey) {
@@ -86,9 +86,9 @@ public class Long2BitLongaHashMap extends LongHashSet implements Long2BitLongaHa
             try {
                 if (curData == data && (curData.keys[pos] == FREE || curData.keys[pos] == key)) {  // i.e. nothing has changed
                     if (curData.values[pos] == null) {
-                        curData.values[pos] = new long[(data.sizeBitSet>>BITS_PER_WORD) + 1];
+                        curData.values[pos] = new short[(data.sizeBitSet>>BITS_PER_WORD) + 1];
                     }
-                    long[] prev = curData.values[pos].clone();
+                    short[] prev = curData.values[pos].clone();
                     curData.values[pos][bitIndex>>BITS_PER_WORD]|=1L<<(bitIndex&((1L<<BITS_PER_WORD) - 1));
                     if (curData.keys[pos] == FREE) {
                         curData.keys[pos] = key;
@@ -133,7 +133,7 @@ public class Long2BitLongaHashMap extends LongHashSet implements Long2BitLongaHa
 
     @Override
     public boolean get(long key, int bitIndex) {
-        long[] val = get(key);
+        short[] val = get(key);
         if (val == null) {
             return false;
         }
@@ -141,7 +141,7 @@ public class Long2BitLongaHashMap extends LongHashSet implements Long2BitLongaHa
     }
 
     @Override
-    public long[] get(long key) {
+    public short[] get(long key) {
         MapData curData = data;
         if (key == FREE) {
             if (!curData.containsFreeKey) {
@@ -159,20 +159,20 @@ public class Long2BitLongaHashMap extends LongHashSet implements Long2BitLongaHa
     }
 
     @Override
-    public long[] getWithEmpty(long key) {
-        long[] value = get(key);
+    public short[] getWithEmpty(long key) {
+        short[] value = get(key);
         if (value == null)
-            return new long[1];
+            return new short[1];
         return value;
     }
 
     @Override
     public int getCardinality(long key) {
-        long[] value = get(key);
+        short[] value = get(key);
         if (value == null)
             return 0;
         int count = 0;
-        for (long l : value) {
+        for (short l : value) {
             count += countSetBits(l);
         }
         return count;
@@ -180,7 +180,7 @@ public class Long2BitLongaHashMap extends LongHashSet implements Long2BitLongaHa
 
     @Override
     public int getCardinality(long key, int from, int to) {
-        long[] value = get(key);
+        short[] value = get(key);
         if (value == null)
             return 0;
         int count = 0;
@@ -188,55 +188,24 @@ public class Long2BitLongaHashMap extends LongHashSet implements Long2BitLongaHa
         long bitFrom = from&((1L<<BITS_PER_WORD) - 1);
         long bitTo = to&((1L<<BITS_PER_WORD) - 1);
         if ((from>>BITS_PER_WORD) == (to>>BITS_PER_WORD)) {
-            return countSetBits(value[from>>BITS_PER_WORD] & ((1L<<bitTo)-(1L<<bitFrom)));
+            return countSetBits((short) (value[from>>BITS_PER_WORD] & ((1L<<bitTo)-(1L<<bitFrom))));
         } else {
-            long all = 0xFFFFFFFFFFFFFFFFL;
-            count += countSetBits(value[from>>BITS_PER_WORD] & (all - ((1L<<bitFrom)-1)));
+            short all = (short)0xFFFF;
+            count += countSetBits((short) (value[from>>BITS_PER_WORD] & (all - ((1L<<bitFrom)-1))));
             for (int i = (from>>BITS_PER_WORD) + 1; i < (to>>BITS_PER_WORD); i++) {
                 count += countSetBits(value[i]);
             }
-            count += countSetBits(value[to>>BITS_PER_WORD] & ((1L<<bitTo) - 1));
+            count += countSetBits((short) (value[to>>BITS_PER_WORD] & ((1L<<bitTo) - 1)));
         }
         return count;
     }
 
-    private int countSetBits(long i)
-    {
-        i = i - ((i >> 1) & 0x5555555555555555L);
-        i = (i & 0x3333333333333333L) +
-                ((i >> 2) & 0x3333333333333333L);
-        i = ((i + (i >> 4)) & 0x0F0F0F0F0F0F0F0FL);
-        return (int)((i*0x0101010101010101L)>>56);
+    private int countSetBits(short i) {
+        i = (short) ((i & 0x5555) + ((i >> 1) & 0x5555));
+        i = (short) ((i & 0x3333) + ((i >> 2) & 0x3333));
+        i = (short) ((i & 0x0F0F) + ((i >> 4) & 0x0F0F));
+        return ((short)(i * 0x0101))>>8;
     }
-
-    /*
-    Inefficient implementation
-    @Override
-    public int getCardinality(long key) {
-        long[] value = get(key);
-        if (value == null)
-            return 0;
-        return getCardinality(value, 0, value.length<<BITS_PER_WORD);
-    }
-
-
-
-    @Override
-    public int getCardinality(long key, int from, int to) {
-        long[] value = get(key);
-        if (value == null)
-            return 0;
-        return getCardinality(value, from, to);
-    }
-
-    private int getCardinality(long[] bits, int from, int to) {
-        int counter = 0;
-        for (int i = from; i < to; i++) {
-            counter += (bits[i>>BITS_PER_WORD]>>(i&((1L<<BITS_PER_WORD) - 1)))&1;
-        }
-        return counter;
-    }
-    */
 
     @Override
     public boolean contains(long key) {
@@ -258,7 +227,7 @@ public class Long2BitLongaHashMap extends LongHashSet implements Long2BitLongaHa
             Arrays.fill(curData.keys, FREE);
             Arrays.fill(curData.values, null);
             curData.containsFreeKey = false;
-            curData.valueForFreeKey = new long[(curData.sizeBitSet>>BITS_PER_WORD) + 1];
+            curData.valueForFreeKey = new short[(curData.sizeBitSet>>BITS_PER_WORD) + 1];
             curData.size = 0;
         } finally {
             writeLock.unlock();
@@ -271,7 +240,7 @@ public class Long2BitLongaHashMap extends LongHashSet implements Long2BitLongaHa
         MapData curData = data;
         try {
             Arrays.fill(curData.values, null);
-            curData.valueForFreeKey = new long[(curData.sizeBitSet>>BITS_PER_WORD) + 1];
+            curData.valueForFreeKey = new short[(curData.sizeBitSet>>BITS_PER_WORD) + 1];
         } finally {
             writeLock.unlock();
         }
@@ -284,7 +253,7 @@ public class Long2BitLongaHashMap extends LongHashSet implements Long2BitLongaHa
     }
 
     @Override
-    public long[] valueAt(long pos) {
+    public short[] valueAt(long pos) {
         MapData curData = data;
         if (pos == curData.capacity) {
             if (!curData.containsFreeKey) {
@@ -313,13 +282,13 @@ public class Long2BitLongaHashMap extends LongHashSet implements Long2BitLongaHa
             out.writeLong(curData.keys[i]);
             out.writeInt(curData.values[i].length);
             for (int j = 0; j < curData.values[i].length; j++) {
-                out.writeLong(curData.values[i][j]);
+                out.writeShort(curData.values[i][j]);
             }
         }
         out.writeBoolean(curData.containsFreeKey);
         out.writeInt(curData.valueForFreeKey.length);
         for (int j = 0; j < curData.valueForFreeKey.length; j++) {
-            out.writeLong(curData.valueForFreeKey[j]);
+            out.writeShort(curData.valueForFreeKey[j]);
         }
     }
 
@@ -336,17 +305,17 @@ public class Long2BitLongaHashMap extends LongHashSet implements Long2BitLongaHa
         for (int i = 0; i < capacity; i++) {
             newData.keys[i] = in.readLong();
             int len = in.readInt();
-            long[] bytes = new long[len];
+            short[] bytes = new short[len];
             for (int j = 0; j < len; j++) {
-                bytes[j] = in.readLong();
+                bytes[j] = in.readShort();
             }
             newData.values[i] = bytes;
         }
         newData.containsFreeKey = in.readBoolean();
         int len = in.readInt();
-        long[] bytes = new long[len];
+        short[] bytes = new short[len];
         for (int j = 0; j < len; j++) {
-            bytes[j] = in.readLong();
+            bytes[j] = in.readShort();
         }
         newData.valueForFreeKey = bytes;
         newData.size = size;
@@ -356,14 +325,14 @@ public class Long2BitLongaHashMap extends LongHashSet implements Long2BitLongaHa
     }
 
     @Override
-    public Iterator<MutableLongBitLongaEntry> entryIterator() {
+    public Iterator<MutableLongBitShortaEntry> entryIterator() {
         return new MyIterator(data);
     }
 
-    protected class MyIterator implements Iterator<MutableLongBitLongaEntry> {
+    protected class MyIterator implements Iterator<MutableLongBitShortaEntry> {
         private final MapData curData;
         private int index = 0;
-        private final MutableLongBitLongaEntry entry = new MutableLongBitLongaEntry();
+        private final MutableLongBitShortaEntry entry = new MutableLongBitShortaEntry();
 
         MyIterator(MapData curData) {
             this.curData = curData;
@@ -384,7 +353,7 @@ public class Long2BitLongaHashMap extends LongHashSet implements Long2BitLongaHa
         }
 
         @Override
-        public MutableLongBitLongaEntry next() {
+        public MutableLongBitShortaEntry next() {
             if (hasNext()){
                 if (index < curData.capacity) {
                     entry.setKey(curData.keys[index]);

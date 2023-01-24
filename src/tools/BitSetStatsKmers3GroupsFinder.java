@@ -4,6 +4,7 @@ import io.IOUtils;
 import org.apache.commons.math.MathException;
 import org.apache.commons.math.distribution.ChiSquaredDistribution;
 import org.apache.commons.math.distribution.ChiSquaredDistributionImpl;
+import org.apache.commons.math3.stat.StatUtils;
 import org.apache.commons.math3.stat.inference.MannWhitneyUTest;
 import ru.ifmo.genetics.statistics.Timer;
 import ru.ifmo.genetics.structures.map.BigLong2ShortHashMap;
@@ -16,11 +17,9 @@ import ru.ifmo.genetics.utils.tool.Tool;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.DoubleParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileMVParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileParameterBuilder;
-import ru.ifmo.genetics.utils.tool.inputParameterBuilder.IntParameterBuilder;
 import ru.ifmo.genetics.utils.tool.values.InMemoryValue;
 import ru.ifmo.genetics.utils.tool.values.InValue;
-import structures.map.BigLong2BitShortaHashMap;
-import structures.map.MutableLongBitShortaEntry;
+import structures.map.BigLong2BitSetHashMap;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -29,11 +28,13 @@ import java.util.Iterator;
 import java.util.stream.Stream;
 
 /**
- Implementation of statistical tests with custom bitset based on long[].
+ Implementation of statistical tests with BitSet.
+ @deprecated Memory inefficient. Use {@link StatsKmers3GroupsFinder} instead.
  */
-public class StatsKmers3GroupsFinder extends Tool {
+/*@Deprecated
+public class BitSetStatsKmers3GroupsFinder extends Tool {
 
-    public static final String NAME = "stats-kmers-3";
+    public static final String NAME = "bitset-stats-kmers-3";
     public static final String DESCRIPTION = "Output k-mers statistically significant to each of three groups of samples based on chi-squared & Mann-Whitney test";
 
     public final Parameter<File[]> Afiles = addParameter(new FileMVParameterBuilder("a-kmers")
@@ -60,23 +61,15 @@ public class StatsKmers3GroupsFinder extends Tool {
             .withDefaultValue(0.05)
             .create());
 
+    public final Parameter<File> outputDir = addParameter(new FileParameterBuilder("output-dir")
+            .withDescription("Output directory")
+            .withDefaultValue(workDir.append("kmers"))
+            .create());
+
     public final Parameter<Double> PValueMW = addParameter(new DoubleParameterBuilder("p-value-mw")
             .withShortOpt("pmw")
             .withDescription("p-value for Mann-Whitney test")
             .withDefaultValue(0.05)
-            .create());
-
-    public final Parameter<Integer> maximalBadFrequency = addParameter(new IntParameterBuilder("maximal-bad-frequence")
-            .optional()
-            .withShortOpt("b")
-            .withDescription("maximal frequency for a k-mer to be assumed erroneous (while detecting presence in samples)")
-            .withDefaultValue(0)
-            .create());
-
-
-    public final Parameter<File> outputDir = addParameter(new FileParameterBuilder("output-dir")
-            .withDescription("Output directory")
-            .withDefaultValue(workDir.append("kmers"))
             .create());
 
     private final InMemoryValue<File> filteredKmersFilePr = new InMemoryValue<File>();
@@ -97,10 +90,14 @@ public class StatsKmers3GroupsFinder extends Tool {
         int Clength = Cfiles.get().length;
         int totalLength = Alength + Blength + Clength;
 
+        //BigLong2BitSetHashMap Akmers = IOUtils.loadBitSetKmers(Afiles.get(), 0, availableProcessors.get(), logger);
+        //BigLong2BitSetHashMap Bkmers = IOUtils.loadBitSetKmers(Bfiles.get(), 0, availableProcessors.get(), logger);
+        //BigLong2BitSetHashMap Ckmers = IOUtils.loadBitSetKmers(Cfiles.get(), 0, availableProcessors.get(), logger);
+        //debug("Memory used = " + Misc.usedMemoryAsString() + ", time = " + t);
         File[] all_files = Stream.of(Afiles.get(), Bfiles.get(), Cfiles.get()).flatMap(Stream::of).toArray(File[]::new);
-        //BigLong2BitLongaHashMap allKmers = IOUtils.loadBitLongaKmers(all_files, 0, availableProcessors.get(), logger);
-        BigLong2BitShortaHashMap allKmers = IOUtils.loadBitShortaKmers(all_files, maximalBadFrequency.get(), availableProcessors.get(), logger);
+        BigLong2BitSetHashMap allKmers = IOUtils.loadBitSetKmers(all_files, 0, availableProcessors.get(), logger);
         debug("Memory used = " + Misc.usedMemoryAsString() + ", time = " + t);
+        BigLong2ShortHashMap hm = IOUtils.loadKmers(all_files, 0, availableProcessors.get(), logger);
 
         ChiSquaredDistribution xi = new ChiSquaredDistributionImpl(1, 1e-15D);
         double qvalue;
@@ -132,15 +129,15 @@ public class StatsKmers3GroupsFinder extends Tool {
         info("Applying chi-squared test...");
         BigLong2ShortHashMap hm_chisq = new BigLong2ShortHashMap(
                 (int) (Math.log(availableProcessors.get()) / Math.log(2)) + 4, 12);
-        Iterator<MutableLongBitShortaEntry> it_all = allKmers.entryIterator();
+        Iterator<MutableLongShortEntry> it_all = hm.entryIterator();
         while (it_all.hasNext()) {
             n++;
-            MutableLongBitShortaEntry entry = it_all.next();
+            MutableLongShortEntry entry = it_all.next();
             long key = entry.getKey();
 
-            int n_1_A = allKmers.getCardinality(key, 0, Alength);
-            int n_1_B = allKmers.getCardinality(key, Alength, Alength+Blength);
-            int n_1_C = allKmers.getCardinality(key, Alength+Blength, totalLength);
+            int n_1_A = allKmers.getWithEmpty(key).get(0, Alength).cardinality();
+            int n_1_B = allKmers.getWithEmpty(key).get(Alength, Alength+Blength).cardinality();
+            int n_1_C = allKmers.getWithEmpty(key).get(Alength+Blength, totalLength).cardinality();
 
             int n_0_A = Alength - n_1_A;
             int n_0_B = Blength - n_1_B;
@@ -163,11 +160,12 @@ public class StatsKmers3GroupsFinder extends Tool {
             boolean chisq_bool = chisq(n_0_A, n_1_A, n_0_B, n_1_B, n_0_C, n_1_C, qvalue);
 
             if (chisq_bool) {
-                hm_chisq.put(key, (short)1);
+                hm_chisq.put(key, entry.getValue());
             } else {
                 nFilteredChi++;
             }
         }
+        hm.reset();
 
         long c = IOUtils.printKmers(hm_chisq, 0, filteredKmers, stFile);
         if (c != n - nInAll - nScarce - nFilteredChi) {
@@ -175,9 +173,6 @@ public class StatsKmers3GroupsFinder extends Tool {
         }
         filteredKmersFilePr.set(filteredKmers);
         info("Survived after chi-squared test k-mers printed to: " + filteredKmers.getPath());
-
-        allKmers.reset();
-        debug("Memory used = " + Misc.usedMemoryAsString() + ", time = " + t);
 
 
         info("Loading k-mers frequencies...");
@@ -191,16 +186,14 @@ public class StatsKmers3GroupsFinder extends Tool {
 
         int i = 0;
         for (File file : Afiles.get()) {
-            BigLong2ShortHashMap add_hm = new BigLong2ShortHashMap((int) (Math.log(availableProcessors.get()) / Math.log(2)) + 4, 12);
+            AkmersHMs.set(i, new BigLong2ShortHashMap((int) (Math.log(availableProcessors.get()) / Math.log(2)) + 4, 12));
             Pair<BigLong2ShortHashMap, Long> tmp = IOUtils.loadKmersFreq(new File[]{file}, 0, availableProcessors.get(), logger);
-            BigLong2ShortHashMap tmp_hm = tmp.first();
             Iterator<MutableLongShortEntry> it = hm_chisq.entryIterator();
             while (it.hasNext()) {
                 MutableLongShortEntry entry = it.next();
                 long key = entry.getKey();
-                add_hm.put(key, tmp_hm.getWithZero(key));
+                AkmersHMs.get(i).put(key, tmp.first().getWithZero(key));
             }
-            AkmersHMs.add(add_hm);
             AkmersFreq[i] = tmp.second();
             i++;
             debug("Memory used = " + Misc.usedMemoryAsString() + ", time = " + t);
@@ -208,16 +201,14 @@ public class StatsKmers3GroupsFinder extends Tool {
 
         i = 0;
         for (File file : Bfiles.get()) {
-            BigLong2ShortHashMap add_hm = new BigLong2ShortHashMap((int) (Math.log(availableProcessors.get()) / Math.log(2)) + 4, 12);
+            BkmersHMs.set(i, new BigLong2ShortHashMap((int) (Math.log(availableProcessors.get()) / Math.log(2)) + 4, 12));
             Pair<BigLong2ShortHashMap, Long> tmp = IOUtils.loadKmersFreq(new File[]{file}, 0, availableProcessors.get(), logger);
-            BigLong2ShortHashMap tmp_hm = tmp.first();
             Iterator<MutableLongShortEntry> it = hm_chisq.entryIterator();
             while (it.hasNext()) {
                 MutableLongShortEntry entry = it.next();
                 long key = entry.getKey();
-                add_hm.put(key, tmp_hm.getWithZero(key));
+                BkmersHMs.get(i).put(key, tmp.first().getWithZero(key));
             }
-            BkmersHMs.add(add_hm);
             BkmersFreq[i] = tmp.second();
             i++;
             debug("Memory used = " + Misc.usedMemoryAsString() + ", time = " + t);
@@ -225,16 +216,14 @@ public class StatsKmers3GroupsFinder extends Tool {
 
         i = 0;
         for (File file : Cfiles.get()) {
-            BigLong2ShortHashMap add_hm = new BigLong2ShortHashMap((int) (Math.log(availableProcessors.get()) / Math.log(2)) + 4, 12);
+            CkmersHMs.set(i, new BigLong2ShortHashMap((int) (Math.log(availableProcessors.get()) / Math.log(2)) + 4, 12));
             Pair<BigLong2ShortHashMap, Long> tmp = IOUtils.loadKmersFreq(new File[]{file}, 0, availableProcessors.get(), logger);
-            BigLong2ShortHashMap tmp_hm = tmp.first();
             Iterator<MutableLongShortEntry> it = hm_chisq.entryIterator();
             while (it.hasNext()) {
                 MutableLongShortEntry entry = it.next();
                 long key = entry.getKey();
-                add_hm.put(key, tmp_hm.getWithZero(key));
+                CkmersHMs.get(i).put(key, tmp.first().getWithZero(key));
             }
-            CkmersHMs.add(add_hm);
             CkmersFreq[i] = tmp.second();
             i++;
             debug("Memory used = " + Misc.usedMemoryAsString() + ", time = " + t);
@@ -256,7 +245,7 @@ public class StatsKmers3GroupsFinder extends Tool {
         double meanSumKmers = Stream.of(AkmersFreq, BkmersFreq, CkmersFreq).flatMapToDouble(Arrays::stream).sum() / totalLength;
         Iterator<MutableLongShortEntry> it = hm_chisq.entryIterator();
         while (it.hasNext()) {
-            MutableLongShortEntry entry = it.next();
+            MutableLongShortEntry entry = it_all.next();
             double[] groupA = new double[Alength];
             double[] groupB = new double[Blength];
             double[] groupC = new double[Clength];
@@ -283,9 +272,9 @@ public class StatsKmers3GroupsFinder extends Tool {
             }
 
             if (pass == 1) {
-                double meanA = mean(groupA);
-                double meanB = mean(groupB);
-                double meanC = mean(groupC);
+                double meanA = StatUtils.mean(groupA);
+                double meanB = StatUtils.mean(groupB);
+                double meanC = StatUtils.mean(groupC);
 
                 if (meanA > meanB && meanA > meanC) {
                     streamA.writeLong(entry.getKey());
@@ -303,7 +292,10 @@ public class StatsKmers3GroupsFinder extends Tool {
                     }
                 }
 
-                if ((meanA + meanB) == 0 || (meanA + meanC) == 0 || (meanB + meanC) == 0) {
+                int n_1_A = allKmers.getWithEmpty(key).get(0, Alength).cardinality();
+                int n_1_B = allKmers.getWithEmpty(key).get(Alength, Alength+Blength).cardinality();
+                int n_1_C = allKmers.getWithEmpty(key).get(Alength+Blength, totalLength).cardinality();
+                if ((n_1_A + n_1_C) == 0 || (n_1_B + n_1_A) == 0 || (n_1_B + n_1_C) == 0) {
                     nUniqueLeft++;
                 }
             } else {
@@ -331,9 +323,9 @@ public class StatsKmers3GroupsFinder extends Tool {
         debug("Total k-mers present in all files = " + nInAll);
         debug("Total k-mers left = " + n_left);
         debug("Total unique left = " + nUniqueLeft);
-        info("Total group A k-mers = " + nA);
-        info("Total group B k-mers = " + nB);
-        info("Total group C k-mers = " + nC);
+        debug("Total group A k-mers = " + nA);
+        debug("Total group B k-mers = " + nB);
+        debug("Total group C k-mers = " + nC);
         debug("Total scarce k-mers = " + nScarce);
         debug("Total skipped by Chi-squared test = " + nFilteredChi);
         debug("Total skipped by Mann-Whitney test = " + nFilteredMW);
@@ -341,7 +333,6 @@ public class StatsKmers3GroupsFinder extends Tool {
         debug("Memory used = " + Misc.usedMemoryAsString() + ", time = " + t);
         info("chi-squared-kmers-3 has finished! Time elapsed = " + t);
     }
-
 
     public static boolean chisq(float c0, float c1, float p0, float p1, float q0, float q1, double value) {
         float tmp = c0;
@@ -368,19 +359,11 @@ public class StatsKmers3GroupsFinder extends Tool {
         return value < stat;
     }
 
-    private static double mean(double[] m) {
-        double sum = 0;
-        for (double v : m) {
-            sum += v;
-        }
-        return sum / m.length;
-    }
-
-    public StatsKmers3GroupsFinder() {
+    public BitSetStatsKmers3GroupsFinder() {
         super(NAME, DESCRIPTION);
     }
 
     public static void main(String[] args) {
-        new StatsKmers3GroupsFinder().mainImpl(args);
+        new BitSetStatsKmers3GroupsFinder().mainImpl(args);
     }
-}
+}*/
