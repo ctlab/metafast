@@ -29,7 +29,7 @@ import java.util.Iterator;
 import java.util.stream.Stream;
 
 /**
- Implementation of statistical tests with custom bitset based on long[].
+ Implementation of statistical tests with custom bitset based on short[].
  */
 public class StatsKmers3GroupsFinder extends Tool {
 
@@ -102,7 +102,7 @@ public class StatsKmers3GroupsFinder extends Tool {
         BigLong2BitShortaHashMap allKmers = IOUtils.loadBitShortaKmers(all_files, maximalBadFrequency.get(), availableProcessors.get(), logger);
         debug("Memory used = " + Misc.usedMemoryAsString() + ", time = " + t);
 
-        ChiSquaredDistribution xi = new ChiSquaredDistributionImpl(1, 1e-15D);
+        ChiSquaredDistribution xi = new ChiSquaredDistributionImpl(2, 1e-15D);
         double qvalue;
         try {
             qvalue = xi.inverseCumulativeProbability(1 - PValueChi2.get());
