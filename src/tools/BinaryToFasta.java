@@ -130,7 +130,7 @@ public class BinaryToFasta extends Tool {
                     outFiles[i] = new File(outputFile.get() + "_" + (i + 1) + ".fasta");
 
                     ConnectedComponent component = components.get(i);
-                    info("Component " + (i + 1) + ", size = " + component.size + " kmers, " +
+                    debug("Component " + (i + 1) + ", size = " + component.size + " kmers, " +
                             "weight = " + component.weight);
 
                     int j = 1;

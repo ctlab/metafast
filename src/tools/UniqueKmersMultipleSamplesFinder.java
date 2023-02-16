@@ -159,6 +159,7 @@ public class UniqueKmersMultipleSamplesFinder extends Tool {
                     + NumUtils.groupDigits(c) + " (" + String.format("%.1f", c * 100.0 / hm.size())
                     + "%) of them is good (present in one dataset and missing in other)");
 
+            /*
             if (hm.size() == 0) {
                 warn("No k-mers found in reads! Perhaps you reads file is empty or k-mer size is too big");
             } else if (c == 0 || c < (long) (hm.size() * 0.03)) {
@@ -170,6 +171,7 @@ public class UniqueKmersMultipleSamplesFinder extends Tool {
             } else if (hm.size() >= (long) (allKmersNumber * 0.99)) {
                 warn("Almost all possible k-mers were found in reads! Perhaps you should increase k-mer size");
             }
+            */
 
             info("Good k-mers printed to " + outFile.getPath());
         }
