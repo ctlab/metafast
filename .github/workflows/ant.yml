@@ -41,7 +41,7 @@ jobs:
       env:
           GITHUB_TOKEN: ${{ secrets.ACTIONS_GITHUB_TOKEN }}
       run: |
-        cd ~/tmp
+        cd ~/metafx_new
         git config user.email "ivart07@mail.ru"
         git config user.name "ivartb"
         git add bin/metafx-modules/metafast.sh
