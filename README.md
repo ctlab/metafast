@@ -1,3 +1,5 @@
+![Build](https://github.com/ctlab/metafast/actions/workflows/ant.yml/badge.svg)
+
 # MetaFast
 
 <img align="right" src="logo.jpg" alt="MetaFast" width="400">

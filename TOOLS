@@ -25,6 +25,8 @@ seq-builder-many                         tools.SeqBuilderForManyFilesMain       
 seq2comp                                 tools.SequencesToComponents                                                      Transforms sequences to components
 specific-kmers                           tools.SpecificKmersFinder                                                        Output k-mers specific to groups of samples based on chi-squared & Mann-Whitney tests
 specific-kmers-3                         tools.SpecificKmers3GroupsFinder                                                 Output k-mers specific to each of three groups of samples based on chi-squared & Mann-Whitney tests
+stats-kmers                              tools.StatsKmersFinder                                                           Output k-mers statistically significant to each of two groups of samples based on chi-squared & Mann-Whitney test
+stats-kmers-3                            tools.StatsKmers3GroupsFinder                                                    Output k-mers statistically significant to each of three groups of samples based on chi-squared & Mann-Whitney test
 supergraph-sequence-builder              tools.SupergraphSeqBuilderMain                                                   NOT COMPLETED
 unique-features                          tools.UniqueFeaturesBuilderMain                                                  Builds unique features for group of metagenomic samples
 unique-kmers                             tools.UniqueKmersFinder                                                          Output k-mers present in one dataset and missing in other

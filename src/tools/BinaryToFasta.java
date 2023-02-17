@@ -154,7 +154,7 @@ public class BinaryToFasta extends Tool {
 
                 for (int i = 0; i < components.size(); i++) {
                     ConnectedComponent component = components.get(i);
-                    info("Component " + (i + 1) + ", size = " + component.size + " kmers, " +
+                    debug("Component " + (i + 1) + ", size = " + component.size + " kmers, " +
                             "weight = " + component.weight);
 
                     int j = 1;
