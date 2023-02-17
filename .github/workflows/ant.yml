@@ -1,0 +1,50 @@
+# This workflow will build a Java project with Ant
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-ant
+
+name: Build
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up JDK 8
+      uses: actions/setup-java@v3
+      with:
+        java-version: '8'
+        distribution: 'temurin'
+    - name: Build with Ant
+      run: ant -noinput -buildfile build.xml
+    - name: Git clone
+      run: |
+        cd ~
+        git clone https://github.com/ivartb/metafx_new
+    - name: Upload sh
+      uses: actions/upload-artifact@v3
+      with:
+        name: metafast.sh
+        path: out/metafast.sh
+    - name: Download sh
+      uses: actions/download-artifact@v3
+      with:
+        name: metafast.sh
+        path: ~/metafx_new/bin/metafx-modules/
+    - name: Git push
+      env:
+          GITHUB_TOKEN: ${{ secrets.ACTIONS_GITHUB_TOKEN }}
+      run: |
+        cd ~/tmp
+        git config user.email "ivart07@mail.ru"
+        git config user.name "ivartb"
+        git add bin/metafx-modules/metafast.sh
+        git commit -m "Automatically update metafast.sh"
+        git remote set-url --push origin https://ivartb:$GITHUB_TOKEN@github.com/ivartb/metafx_new
+        git push
