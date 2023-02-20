@@ -113,7 +113,7 @@ public class FeaturesCalculatorMain extends Tool {
         int curFiles = 0;
 
         BigLong2ShortHashMap selected = null;
-        if (selectedKmers.get() != null) {
+        if (selectedKmers.get() != null && selectedKmers.get().length > 0) {
             selected = IOUtils.loadKmers(selectedKmers.get(), 0, availableProcessors.get(), logger);
         }
 
