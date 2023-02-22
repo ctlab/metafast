@@ -27,7 +27,7 @@ import java.util.concurrent.CountDownLatch;
 public class IOUtils {
 
     static final int READS_WORK_RANGE_SIZE = 1 << 15;   // 32 K reads
-    static final int KMERS_WORK_RANGE_SIZE = 16777220;   // ~16 Mb of data
+    static final int KMERS_WORK_RANGE_SIZE = 16777200;   // ~16 Mb of data
 
 
 

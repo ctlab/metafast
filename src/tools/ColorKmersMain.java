@@ -8,6 +8,7 @@ import ru.ifmo.genetics.structures.map.BigLong2ShortHashMap;
 import ru.ifmo.genetics.structures.map.MutableLongShortEntry;
 import ru.ifmo.genetics.utils.FileUtils;
 import ru.ifmo.genetics.utils.Misc;
+import ru.ifmo.genetics.utils.NumUtils;
 import ru.ifmo.genetics.utils.tool.ExecutionFailedException;
 import ru.ifmo.genetics.utils.tool.Parameter;
 import ru.ifmo.genetics.utils.tool.Tool;
@@ -131,7 +132,7 @@ public class ColorKmersMain extends Tool {
         } catch (IOException e) {
             throw new ExecutionFailedException("Cannot write results to: " + outFile);
         }
-        info(c + " colored k-mers printed to " + outFile.getPath());
+        info(NumUtils.groupDigits(c) + " colored k-mers printed to " + outFile.getPath());
     }
 
     public ColorKmersMain() {
