@@ -282,7 +282,7 @@ public class StatsKmersFinder extends Tool {
         debug("Total scarce k-mers = " + nScarce);
         debug("Total skipped by Chi-squared test = " + nFilteredChi);
         debug("Total skipped by Mann-Whitney test = " + nFilteredMW);
-        debug("Parameters used : P-value for Chi-squared test = " + PValueChi2.get() + " that gives " + qvalue + " threshold, p-value for Kruskal-Wallis test = " + PValueMW.get());
+        debug("Parameters used : P-value for Chi-squared test = " + PValueChi2.get() + " that gives " + qvalue + " threshold, p-value for Mann-Whitney test = " + PValueMW.get());
         debug("Memory used = " + Misc.usedMemoryAsString() + ", time = " + t);
         info("stats-kmers has finished! Time elapsed = " + t);
     }
