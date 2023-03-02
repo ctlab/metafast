@@ -91,6 +91,10 @@ public class UniqueKmersMultipleSamplesFinder extends Tool {
             error("The size of k-mer must be no more than 31.");
             System.exit(1);
         }
+        if (minSamples.get() > maxSamples.get()) {
+            error("--min-samples parameter cannot be greater than --max-samples parameter.");
+            System.exit(1);
+        }
 
 
         Timer t = new Timer();
