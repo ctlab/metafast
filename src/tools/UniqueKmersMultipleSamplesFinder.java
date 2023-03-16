@@ -176,7 +176,10 @@ public class UniqueKmersMultipleSamplesFinder extends Tool {
                 warn("Almost all possible k-mers were found in reads! Perhaps you should increase k-mer size");
             }
             */
-
+            if (c == 0) {
+                info("No good k-mers found. Stop at maxSamples=" + i);
+                break;
+            }
             info("Good k-mers printed to " + outFile.getPath());
         }
     }
