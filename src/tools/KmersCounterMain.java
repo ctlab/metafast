@@ -127,11 +127,7 @@ public class KmersCounterMain extends Tool {
                 (name1.endsWith("_R1") && name2.endsWith("_R2"))) {
                 return name1.substring(0, name1.length()-3);
             } else {
-                if (name1.endsWith("_1") && name2.endsWith("_2")) {
-                    return name1.substring(0, name1.length()-2);
-                } else {
-                    return name1 + "+";
-                }
+                return name1 + "+";
             }
 
         } else {

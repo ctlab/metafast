@@ -112,7 +112,7 @@ For testing on realistic metagenomic communities, the CAMI Challenge dataset was
 
 **Q** Does MetaFast works with paired-end reads?
 
-**A** No, MetaFast accepts only one file per sample. If you have two files with paired-end reads (i.e. `reads_1.fastq` and `reads_2.fastq`), you need to combine them into one file before running MetaFast. On Unix-like systems, one can do it running ```cat reads_1.fastq reads_2.fastq > reads_all.fastq```
+**A** Yes, MetaFast can process paired-end reads. For correct detection, files should be named with suffixes "_R1"&"_R2" or "_r1"&"_r2" after sample name before extension. For example, sample_r1.fastq & sample_r2.fastq, or reads_R1.fq.gz & reads_R2.fq.gz
 
 **Q** Can I compare samples with different read lengths or the number of reads?
 
