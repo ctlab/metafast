@@ -17,6 +17,8 @@ import ru.ifmo.genetics.utils.tool.inputParameterBuilder.DoubleParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileMVParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.FileParameterBuilder;
 import ru.ifmo.genetics.utils.tool.inputParameterBuilder.IntParameterBuilder;
+import ru.ifmo.genetics.utils.tool.values.InMemoryValue;
+import ru.ifmo.genetics.utils.tool.values.InValue;
 import structures.map.BigLong2BitShortaHashMap;
 import structures.map.MutableLongBitShortaEntry;
 
@@ -72,8 +74,15 @@ public class StatsKmersFinder extends Tool {
             .create());
 
 
+    private final InMemoryValue<File[]> resultingKmerFilesPr = new InMemoryValue<File[]>();
+    public final InValue<File[]> resultingKmerFiles =
+            addOutput("resulting-kmers-file", resultingKmerFilesPr, File[].class);
+
+
+
     @Override
     protected void cleanImpl() {
+        resultingKmerFilesPr.set(new File[]{new File(outputDir.get(), "filtered_groupA.kmers.bin")});
     }
 
     @Override

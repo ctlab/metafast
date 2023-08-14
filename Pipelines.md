@@ -7,7 +7,12 @@ Here three possible usage pipelines of MetaFast toolkit are presented. Each pipe
 * [Pipeline 2. Unique metagenomic features finder](#pipeline-2-unique-metagenomic-features-finder)
 * [Pipeline 3. Specific metagenomic features counter](#pipeline-3-specific-metagenomic-features-counter)
 * [Pipeline 4. Colored metagenomic features finder](#pipeline-4-colored-metagenomic-features-finder)
+* [Pipeline 5. Statistical metagenomic features finder](#pipeline-5-statistical-metagenomic-features-finder)
 * [Format conversion tools](#format-conversion-tools)
+  * [Components to GFA converter](#components-to-gfa-converter)
+  * [Binary to Fasta converter](#binary-to-fasta-converter)
+  * [Binary to tab-separated converter](#binary-to-tab-separated-converter)
+  * [Sequence to components converter](#sequence-to-components-converter)
 
 ## Pipeline 1. Metagenomic distance estimation
 
@@ -60,7 +65,7 @@ java -jar metafast.jar -t heatmap-maker -i <dist_matrix_<date>_<time>_original_o
 Pipeline for extracting **unique** features from groups of metagenomic samples and manipulating with them. Also, supports features construction for samples with unknown category for further category prediction.
 
 `
-java -jar metafast.jar -t unique-features -k <k> -pos <postiveFiles> -neg <negativeFiles> --min-samples <int> --max-samples <int> -b <int> [--split]
+java -jar metafast.jar -t unique-features -k <k> -pos <positiveFiles> -neg <negativeFiles> --min-samples <int> --max-samples <int> -b <int> [--split]
 `
 
 `k` – k-mer size
@@ -213,10 +218,106 @@ java -jar metafast.jar -t features-calculator -k <k> -cm <components.bin> -ka <*
 `
 
 
+## Pipeline 5. Statistical metagenomic features finder
+
+Pipeline for extracting statistically-significant features from groups of metagenomic samples and manipulating with them. Also, supports features construction for samples with unknown category for further category prediction.
+
+`
+java -jar metafast.jar -t stats-features -k <k> -pos <postiveFiles> -neg <negativeFiles> -pchi2 <float> -pmw <float> -b <int> [--split]
+`
+
+
+`k` – k-mer size
+
+`pos` – list of reads files from positive group
+
+`neg` – list of reads files from negative group
+
+`pchi2` – p-value for chi-squared test
+
+`pmw` – p-value for Mann-Whitney test
+
+`b` – maximal frequency for a k-mer to be assumed erroneous
+
+`split` – saves each component in separate file
+
+**Output files in _workDir_:**
+
+`kmer-counter-posneg\pos\kmers\*.kmers.bin` – k-mers from input files from **positive** group in binary format
+
+`kmer-counter-posneg\neg\kmers\*.kmers.bin` – k-mers from input files from **negative** group in binary format
+
+`stats-kmers\kmers\filtered_groupA.kmers.bin` – statistically significant k-mers for **positive** group in binary format
+
+`stats-kmers\kmers\filtered_groupB.kmers.bin` – statistically significant k-mers for **negative** group in binary format
+
+`component-extractor\components.bin` – components built around unique k-mers in binary format
+
+`comp2seq\kmers-counter-many\kmers\component_*.kmers.bin` – k-mers from components in binary format
+
+`comp2seq\kmers_fasta\component_*.fasta` – k-mers from components in fasta format
+
+`comp2seq\seq-builder-many\sequences\component_*.seq.fasta` – contigs from components in fasta format
+
+`features-calculator\vectors\*` – feature vectors of components' coverage by input files
+
+
+
+![Pipeline 5](img/pipe5.svg)
+
+Step-by-step data processing is presented on the image above. Order of tools to run:
+
+1. **K-mers counter**  
+   Extract k-mers from each metagenomic sample and saves in internal binary format for further processing (`workDir/kmers/*.kmers.bin`). This step can be performed separately for metagenomes with known and unknown categories. For the convenience of further explanations we will refer to samples with known categories as _group\_1.kmers.bin_ and _group\_2.kmers.bin_ for two categories and _ungroupped.kmers.bin_ for samples with unknown category.   
+   `
+   java -jar metafast.jar -t kmer-counter-many -k <k> -i <inputFiles>
+   `
+2. **Statistical k-mers finder**  
+   Extract k-mers with a statistically significant difference in abundance between categories of samples.  
+   `
+   java -jar metafast.jar -t stats-kmers -k <k> -A <group_1.kmers.bin> -B <group_2.kmers.bin> -pchi2 <float> -pmw <float>
+   `
+3. **Component extractor**  
+   Extract local environment in the de Bruijn graph around specified k-mers. These subgraph components can be used as features specific for analyzed category  (`workDir/components.bin`)  
+   `
+   java -jar metafast.jar -t component-extractor -k <k> -i <group_1.kmers.bin> --pivot <filtered_groupA.kmers.bin>
+   `
+4. **Features calculator**  
+   Counts coverage of each component (subgraph) by k-mers for each metagenomic sample independently. For each sample outputs numerical features vector of coverages  (`workDir/vectors/*.vec`). Features vectors for samples with known categories can be further used to train machine learning model to predict categories for samples with unknown categories.  
+   `
+   java -jar metafast.jar -t features-calculator -k <k> -cm <components.bin> -ka <*.kmers.bin>
+   `
+5. **Sequence extractor**
+
+Split specific subgraph components into linear genomic sequences, that can be used for analysis with external tools. It can be run via a single command:  
+`
+java -jar metafast.jar -t comp2seq -k <k> -cf <components.bin> [--split]
+`  
+`Split` flag determines, whether to save sequences from all components into separate files. Resulting sequences can be found in `workDir/seq-builder-many/sequences/*.seq.fasta`. Alternatively, the following steps result in the same sequences:
+
+1. Transform subgraphs from binary format to fasta  
+   `
+   java -jar metafast.jar -t bin2fasta -k <k> -cf <components.bin> -o <components.fasta>
+   `
+1. Extract linear sequences from subgraphs' k-mers  
+   `
+   java -jar metafast.jar -f seq-builder-many -k <k> -i <components.fasta>
+   `
+
+
 
 ## Format conversion tools
 
-#### Binary to Fasta convertor
+
+#### Components to GFA converter
+
+Tool accepts de Bruijn graph components in internal MetaFast binary format and outputs them in GFA format. Which can be further visualised via [Bandage](https://github.com/rrwick/Bandage). Nodes graph coverage is controlled with `-i` parameter containing samples' k-mers and `-cov` parameter responsible for total coverage calculation mode.
+
+`
+java -jar metafast.jar -t comp2graph -k <k> -cf <binary components> [-i <samples' k-mers>] [-cov]
+`
+
+#### Binary to Fasta converter
 
 Tool accepts k-mers or components in internal MetaFast binary format and outputs them in fasta format. Components are printed as a set of k-mers and different components can be printed separately (`--split` option).
 
@@ -224,7 +325,7 @@ Tool accepts k-mers or components in internal MetaFast binary format and outputs
 java -jar metafast.jar -t bin2fasta -k <k> {-kf <binary k-mers> | -cf <binary components>} [--split]
 `
 
-#### Binary to tab-separated convertor
+#### Binary to tab-separated converter
 
 Tool accepts k-mers or components in internal MetaFast binary format and outputs them in tab-separated format. First column contains k-mers and second column contains their respective number of occurences.
 
@@ -232,7 +333,7 @@ Tool accepts k-mers or components in internal MetaFast binary format and outputs
 java -jar metafast.jar -t view -k <k> {-kf <binary k-mers> | -cf <binary components>}
 `
 
-#### Sequence to components convertor
+#### Sequence to components converter
 
 Tool accepts genomic sequences in fasta format and converts them to components, so that they can be used for features calculations.
 

@@ -32,6 +32,7 @@ Here is a short version of it.
 * [Citation](#citation)
 * [Contact](#contact)
 * [License](#license)
+* [Publications using MetaFast](#publications-using-metafast)
 * [See also](#see-also)
 
 
@@ -135,13 +136,25 @@ Bioinformatics, 32(18), 2760-2767.
 
 ## Contact
 
-Please report any problems directly to the GitHub [issue tracker](https://github.com/ctlab/metafast/issues).<br/>
+Please report any problems directly to the GitHub [issue tracker](https://github.com/ctlab/metafast/issues). <br/>
 Also, you can send your feedback to [abivanov@itmo.ru](mailto:abivanov@itmo.ru).
 
 
 ## License
 
 The MIT License (MIT)
+
+## Publications using MetaFast
+
+There are several papers about bioinformatics projects, which used various MetaFast pipelines for data analysis:
+
+* Analysis of human gut microbiota of patients with Crohn's disease, ulcerative colitis and healthy controls <br/>
+  Khachatryan, L., Xiang, Y., Ivanov, A., Glaab, E., Graham, G., Granata, I., ... & Poussin, C. (2023). Results and lessons learned from the sbv IMPROVER metagenomics diagnostics for inflammatory bowel disease challenge. Scientific Reports, 13(1),  [doi: 10.1038/s41598-023-33050-0](https://doi.org/10.1038/s41598-023-33050-0)
+* Analysis of human gut microbiota of patients undergoing melanoma immunotherapy <br/>
+  Olekhnovich, E. I., Ivanov, A. B., Babkina, A. A., Sokolov, A. A., Ulyantsev, V. I., Fedorov, D. E., & Ilina, E. N. (2023). Consistent Stool Metagenomic Biomarkers Associated with the Response To Melanoma Immunotherapy. Msystems, 8(2), e01023-22. [doi: 10.1128/msystems.01023-22](https://doi.org/10.1128/msystems.01023-22)
+* Analysis of gut microbiota time-series samples from patients undergoing microbiome transplantation
+  Olekhnovich, E. I., Ivanov, A. B., Ulyantsev, V. I., & Ilina, E. N. (2021). Separation of donor and recipient microbial diversity allows determination of taxonomic and functional features of gut microbiota restructuring following fecal transplantation. Msystems, 6(4), e00811-21. [doi: 10.1128/msystems.00811-21](https://doi.org/10.1128/msystems.00811-21)
+
 
 
 ## See also
