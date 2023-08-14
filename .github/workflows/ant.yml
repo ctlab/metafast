@@ -26,7 +26,7 @@ jobs:
     - name: Git clone
       run: |
         cd ~
-        git clone https://github.com/ivartb/metafx_new
+        git clone https://github.com/ctlab/metafx
     - name: Upload sh
       uses: actions/upload-artifact@v3
       with:
@@ -36,15 +36,15 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: metafast.sh
-        path: ~/metafx_new/bin/metafx-modules/
+        path: ~/metafx/bin/metafx-modules/
     - name: Git push
       env:
           GITHUB_TOKEN: ${{ secrets.ACTIONS_GITHUB_TOKEN }}
       run: |
-        cd ~/metafx_new
+        cd ~/metafx
         git config user.email "ivart07@mail.ru"
         git config user.name "ivartb"
         git add bin/metafx-modules/metafast.sh
         git commit -m "Automatically update metafast.sh"
-        git remote set-url --push origin https://ivartb:$GITHUB_TOKEN@github.com/ivartb/metafx_new
+        git remote set-url --push origin https://ivartb:$GITHUB_TOKEN@github.com/ctlab/metafx
         git push
