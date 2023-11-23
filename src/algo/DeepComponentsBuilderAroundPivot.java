@@ -76,7 +76,7 @@ public class DeepComponentsBuilderAroundPivot {
         Collections.sort(ans);
 
         PrintWriter statPW = new PrintWriter(statFP);
-        statPW.println("# component.no\tcomponent.size\tcomponent.weight\tnumPivotKmers\tusedFreqThreshold");
+        statPW.println("# component.no\tcomponent.size\tcomponent.weight\tcomponent.nPivotKmers\tusedFreqThreshold");
         for (int i = 0; i < ans.size(); i++) {
             ConnectedComponent comp = ans.get(i);
             statPW.println((i + 1) + "\t" + comp.size + "\t" + comp.weight + "\t" + comp.n_pivot + "\t" + comp.usedFreqThreshold);

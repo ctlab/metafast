@@ -24,7 +24,7 @@ import java.util.List;
  * Created by -- on 22.09.2023.
  */
 
-public class DeepComponentExtractorMain extends Tool {
+public class DeepComponentsExtractorMain extends Tool {
     public static final String NAME = "component-extractor-deep";
     public static final String DESCRIPTION = "Extract graph components using depth first search from tangled graph based on pivot k-mers";
 
@@ -103,10 +103,10 @@ public class DeepComponentExtractorMain extends Tool {
 
 
     public static void main(String[] args) {
-        new DeepComponentExtractorMain().mainImpl(args);
+        new DeepComponentsExtractorMain().mainImpl(args);
     }
 
-    public DeepComponentExtractorMain() {
+    public DeepComponentsExtractorMain() {
         super(NAME, DESCRIPTION);
     }
 }

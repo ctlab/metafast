@@ -74,10 +74,10 @@ public class ComponentsBuilderAroundPivot {
         Collections.sort(ans);
 
         PrintWriter statPW = new PrintWriter(statFP);
-        statPW.println("# component.no\tcomponent.size\tcomponent.weight\tusedFreqThreshold");
+        statPW.println("# component.no\tcomponent.size\tcomponent.weight\tcomponent.nPivotKmers\tusedFreqThreshold");
         for (int i = 0; i < ans.size(); i++) {
             ConnectedComponent comp = ans.get(i);
-            statPW.println((i + 1) + "\t" + comp.size + "\t" + comp.weight + "\t" + comp.usedFreqThreshold);
+            statPW.println((i + 1) + "\t" + comp.size + "\t" + comp.weight + "\t" + comp.n_pivot + "\t" + comp.usedFreqThreshold);
         }
         statPW.close();
     }
@@ -122,6 +122,7 @@ public class ComponentsBuilderAroundPivot {
         hm.put(startKmer, (short) -value);  // removing
         pivot.put(startKmer, (short) -value);
         comp.add(startKmer, value);
+        comp.add_pivot();
 
         // extend to right
         {
@@ -146,6 +147,7 @@ public class ComponentsBuilderAroundPivot {
                     hm.put(neighbour, (short) -value);
                     if (pivot.get(neighbour) > 0) {
                         pivot.put(neighbour, (short) -value);
+                        comp.add_pivot();
                     }
                     comp.add(neighbour, value);
                 }
@@ -153,13 +155,15 @@ public class ComponentsBuilderAroundPivot {
                 else {
                     for (long neighbour : rightNeighbours) {
                         List<Long> kmersOnPath = new ArrayList<Long>();
-                        boolean goodPath = dfs(neighbour, startKmer, hm, pivot, k, kmersOnPath);
-                        if (goodPath) {
+                        int n_piv = dfs(neighbour, startKmer, hm, pivot, k, kmersOnPath);
+                        if (n_piv > 0) {
                             value = hm.get(neighbour);
                             hm.put(neighbour, (short) -value);
                             if (pivot.get(neighbour) > 0) {
                                 pivot.put(neighbour, (short) -value);
+                                comp.add_pivot();
                             }
+                            comp.add_pivot(n_piv);
                             comp.add(neighbour, value);
                             int pathLength = kmersOnPath.size();
                             for (long foundKmer: kmersOnPath) {
@@ -209,6 +213,7 @@ public class ComponentsBuilderAroundPivot {
                     hm.put(neighbour, (short) -value);
                     if (pivot.get(neighbour) > 0) {
                         pivot.put(neighbour, (short) -value);
+                        comp.add_pivot();
                     }
                     comp.add(neighbour, value);
                 }
@@ -216,14 +221,17 @@ public class ComponentsBuilderAroundPivot {
                 else {
                     for (long neighbour : leftNeighbours) {
                         List<Long> kmersOnPath = new ArrayList<Long>();
-                        boolean goodPath = dfs(neighbour, startKmer, hm, pivot, k, kmersOnPath);
-                        if (goodPath) {
+                        int n_piv = dfs(neighbour, startKmer, hm, pivot, k, kmersOnPath);
+                        if (n_piv > 0) {
                             value = hm.get(neighbour);
                             hm.put(neighbour, (short) -value);
                             if (pivot.get(neighbour) > 0) {
                                 pivot.put(neighbour, (short) -value);
+                                comp.add_pivot();
                             }
+                            comp.add_pivot(n_piv);
                             comp.add(neighbour, value);
+
                             int pathLength = kmersOnPath.size();
                             for (long foundKmer: kmersOnPath) {
                                 value = hm.get(foundKmer);
@@ -301,6 +309,7 @@ public class ComponentsBuilderAroundPivot {
                 hm.put(neighbour, (short) -value);
                 if (pivot.get(neighbour) > 0) {
                     pivot.put(neighbour, (short) -value);
+                    comp.add_pivot();
                 }
                 comp.add(neighbour, value);
             }
@@ -309,13 +318,15 @@ public class ComponentsBuilderAroundPivot {
             {
                 for (long neighbour: neighbours) {
                     List<Long> kmersOnPath = new ArrayList<Long>();
-                    boolean goodPath = dfs(neighbour, kmer, hm, pivot, k, kmersOnPath);
-                    if (goodPath) {
+                    int n_piv = dfs(neighbour, kmer, hm, pivot, k, kmersOnPath);
+                    if (n_piv > 0) {
                         value = hm.get(neighbour);
                         hm.put(neighbour, (short) -value);
                         if (pivot.get(neighbour) > 0) {
                             pivot.put(neighbour, (short) -value);
+                            comp.add_pivot();
                         }
+                        comp.add_pivot(n_piv);
                         comp.add(neighbour, value);
                         int pathLength = kmersOnPath.size();
                         for (long foundKmer: kmersOnPath) {
@@ -346,11 +357,11 @@ public class ComponentsBuilderAroundPivot {
     }
 
 
-    private static boolean dfs(long startKmer, long parentKmer, Long2ShortHashMapInterface hm,
+    private static int dfs(long startKmer, long parentKmer, Long2ShortHashMapInterface hm,
                                BigLong2ShortHashMap pivot, int k, List<Long> kmersOnPath) {
-        boolean foundPivot = false;
         long kmer = startKmer;
         long prev = parentKmer;
+        int n_pivot = 0;
 
         while (true) {
             int right_neighbours = 0;
@@ -396,7 +407,7 @@ public class ComponentsBuilderAroundPivot {
                 short value = hm.get(neighbour);
                 hm.put(neighbour, (short) -value);
                 if (pivot.get(neighbour) > 0) {
-                    foundPivot = true;
+                    n_pivot += 1;
                     pivot.put(neighbour, (short) -value);
                 }
                 prev = kmer;
@@ -410,7 +421,7 @@ public class ComponentsBuilderAroundPivot {
 
         }
 
-        return foundPivot;
+        return n_pivot;
     }
 
 

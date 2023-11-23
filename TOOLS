@@ -6,7 +6,7 @@ comparison-script                        tools.CompareReadsAndComponentsMain    
 component-colored                        tools.ColoredComponentMain                                                       Extract graph components from tangled graph based on k-mers coloring
 component-cutter                         tools.ComponentCutterMain                                                        Build graph components from tangled graph
 component-extractor                      tools.ComponentExtractorMain                                                     Extract graph components from tangled graph based on pivot k-mers
-component-extractor-deep                 tools.DeepComponentExtractorMain                                                 Extract graph components using depth first search from tangled graph based on pivot k-mers
+component-extractor-deep                 tools.DeepComponentsExtractorMain                                                Extract graph components using depth first search from tangled graph based on pivot k-mers
 component-paths                          tools.ComponentPathsMain                                                         Extracts paths in the components
 dist-matrix-calculator                   tools.DistanceMatrixCalculatorMain                                               Calculates distance matrix using features values
 double-view                              tools.DoubleViewMain                                                             Converts two binary k-mers files to single text file
