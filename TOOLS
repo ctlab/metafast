@@ -1,10 +1,12 @@
 antibody-sequences-finder                tools.AntibodyFinderMain                                                         Antibody sequences finder in De Bruijn graph
 bin2fasta                                tools.BinaryToFasta                                                              Converts different binary objects to FASTA format
+comp2graph                               tools.ComponentsToGraph                                                          Transforms components in binary format to de Bruijn graph in GFA format
 comp2seq                                 tools.ComponentsToSequences                                                      Transforms components in binary format to FASTA sequences (contigs)
 comparison-script                        tools.CompareReadsAndComponentsMain                                              Statistics
 component-colored                        tools.ColoredComponentMain                                                       Extract graph components from tangled graph based on k-mers coloring
 component-cutter                         tools.ComponentCutterMain                                                        Build graph components from tangled graph
 component-extractor                      tools.ComponentExtractorMain                                                     Extract graph components from tangled graph based on pivot k-mers
+component-extractor-deep                 tools.DeepComponentExtractorMain                                                 Extract graph components using depth first search from tangled graph based on pivot k-mers
 component-paths                          tools.ComponentPathsMain                                                         Extracts paths in the components
 dist-matrix-calculator                   tools.DistanceMatrixCalculatorMain                                               Calculates distance matrix using features values
 double-view                              tools.DoubleViewMain                                                             Converts two binary k-mers files to single text file
@@ -25,6 +27,7 @@ seq-builder-many                         tools.SeqBuilderForManyFilesMain       
 seq2comp                                 tools.SequencesToComponents                                                      Transforms sequences to components
 specific-kmers                           tools.SpecificKmersFinder                                                        Output k-mers specific to groups of samples based on chi-squared & Mann-Whitney tests
 specific-kmers-3                         tools.SpecificKmers3GroupsFinder                                                 Output k-mers specific to each of three groups of samples based on chi-squared & Mann-Whitney tests
+stats-features                           tools.StatsFeaturesBuilderMain                                                   Builds statistically significant features for group of metagenomic samples
 stats-kmers                              tools.StatsKmersFinder                                                           Output k-mers statistically significant to each of two groups of samples based on chi-squared & Mann-Whitney test
 stats-kmers-3                            tools.StatsKmers3GroupsFinder                                                    Output k-mers statistically significant to each of three groups of samples based on chi-squared & Mann-Whitney test
 supergraph-sequence-builder              tools.SupergraphSeqBuilderMain                                                   NOT COMPLETED

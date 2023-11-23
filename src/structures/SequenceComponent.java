@@ -17,7 +17,7 @@ public class SequenceComponent implements Comparable<SequenceComponent> {
     public Set<Long> kmers;
     public long size;
     public long weight;
-
+    public long n_pivot;
 
     public SequenceComponent() {
         kmers = new LongArraySet();
