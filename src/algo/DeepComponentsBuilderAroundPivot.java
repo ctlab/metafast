@@ -424,8 +424,6 @@ public class DeepComponentsBuilderAroundPivot {
         }
 
         assert neighbours != null;
-        //    boolean isBestAdded = false;
-        int best = 0;
         for (long neighbour : neighbours) {
             // На каждой итерации заглядываем в следующего соседа и получаем число интересующих к-меров на пути макс. длины.
             // Если дошли до максимальной глубины и получили лучший путь, то обновляем лучший путь и фиксируем число
@@ -460,7 +458,6 @@ public class DeepComponentsBuilderAroundPivot {
             }
         }
 
-        // выдаем
         return globalBest;
     }
 
