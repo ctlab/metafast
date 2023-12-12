@@ -24,7 +24,7 @@ public class ConnectedComponent implements Comparable<ConnectedComponent> {
 
     public int no;          // id of this component, can be not initialized
     public long weight;     // weight of this component
-    public long n_pivot;
+    public long n_pivot;    // number of pivot k-mers in component, can be not initialized
 
     /**
      * Threshold used to construct this component!

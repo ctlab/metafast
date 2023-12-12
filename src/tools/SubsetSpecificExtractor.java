@@ -17,11 +17,11 @@ import java.io.*;
 public class SubsetSpecificExtractor extends Tool {
 
     public static final String NAME = "subset-specific";
-    public static final String DESCRIPTION = "Output subset of top most specific k-mers due to ranking from given file";
+    public static final String DESCRIPTION = "Output subset of top most specific k-mers based on given statistical ranking";
 
     public final Parameter<File> inputFile = addParameter(new FileParameterBuilder("input-kmers")
             .mandatory()
-            .withShortOpt("in")
+            .withShortOpt("i")
             .withDescription("file with filtered k-mers in binary format")
             .create());
 
@@ -31,10 +31,10 @@ public class SubsetSpecificExtractor extends Tool {
             .withDescription("file with k-mers ranks in binary format")
             .create());
 
-    public final Parameter<Integer> NKmers = addParameter(new IntParameterBuilder("num-kmers")
+    public final Parameter<Integer> NBest = addParameter(new IntParameterBuilder("num-kmers")
             .mandatory()
-            .withShortOpt("nk")
-            .withDescription("size of k-mers subset to be extracted")
+            .withShortOpt("n")
+            .withDescription("number of most specific k-mers to be extracted")
             .create());
 
     public final Parameter<File> outputDir = addParameter(new FileParameterBuilder("output-dir")
@@ -50,16 +50,18 @@ public class SubsetSpecificExtractor extends Tool {
     @Override
     protected void runImpl() throws ExecutionFailedException, IOException {
         Timer t = new Timer();
-        DataInputStream streamIn = new DataInputStream(new BufferedInputStream(new FileInputStream(ranksFile.get()), 1 << 24));
+        DataInputStream ranksStream = new DataInputStream(new BufferedInputStream(new FileInputStream(ranksFile.get()), 1 << 24));
         BigLong2ShortHashMap kmersFile = IOUtils.loadKmers(new File[]{inputFile.get()}, 0, availableProcessors.get(), logger);
-        BestKmersExtractor bb = new BestKmersExtractor(kmersFile, streamIn);
-        File file = new File(outputDir.get(), ranksFile.get().getName().toString().split("\\.")[0].split("_ranks")[0] + "_top_" + NKmers.get().toString() + ".kmers.bin");
-        DataOutputStream streamA = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(file), 1 << 24));
-        bb.outTopNKmers(NKmers.get(), streamA);
-        streamA.close();
-        if (kmersFile.size() < NKmers.get()){
+
+        if (kmersFile.size() < NBest.get()){
             throw new ExecutionFailedException("Trying to extract more k-mers then present in input file!");
         }
+
+        BestKmersExtractor extractor = new BestKmersExtractor(kmersFile, ranksStream);
+        File file = new File(outputDir.get(), ranksFile.get().getName().split("\\.")[0].split("_ranks")[0] + "_top_" + NBest.get().toString() + ".kmers.bin");
+        DataOutputStream outputStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(file), 1 << 24));
+        extractor.outTopNKmers(NBest.get(), outputStream);
+        outputStream.close();
 
         debug("Memory used = " + Misc.usedMemoryAsString() + ", time = " + t);
         info("subset-specific has finished! Time elapsed = " + t);

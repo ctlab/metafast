@@ -162,8 +162,7 @@ public class DeepComponentsBuilderAroundPivot {
                         int n_piv = dfs(neighbour, startKmer, hm, pivot, k, bestPath, kmersOnPath, 0, depth, 0);
                         assert bestPath.size() <= depth;
 
-                        if (kmersOnPath.size() > 0) {
-
+                        if (n_piv > 0) {
                             value = hm.get(neighbour);
                             hm.put(neighbour, (short) -value);
                             value = pivot.get(neighbour);
@@ -239,7 +238,6 @@ public class DeepComponentsBuilderAroundPivot {
                         assert bestPath.size() <= depth;
 
                         if (n_piv > 0) {
-
                             value = hm.get(neighbour);
                             hm.put(neighbour, (short) -value);
                             if (pivot.get(neighbour) > 0) {
@@ -306,12 +304,14 @@ public class DeepComponentsBuilderAroundPivot {
                 if (val == prev) {
                     n_neighbours = right_neighbours;
                     neighbours = rightNeighbours;
+                    break;
                 }
             }
             for (long val : KmerOperations.rightNeighbours(kmer, k)) {
                 if (val == prev) {
                     n_neighbours = left_neighbours;
                     neighbours = leftNeighbours;
+                    break;
                 }
             }
 
@@ -340,7 +340,7 @@ public class DeepComponentsBuilderAroundPivot {
                     int n_piv = dfs(neighbour, kmer, hm, pivot, k, bestPath, kmersOnPath, 0, depth, 0);
                     assert bestPath.size() <= depth;
 
-                    if (kmersOnPath.size() > 0) {
+                    if (n_piv > 0) {
                         value = hm.get(neighbour);
                         hm.put(neighbour, (short) -value);
                         if (pivot.get(neighbour) > 0) {
@@ -381,28 +381,36 @@ public class DeepComponentsBuilderAroundPivot {
     }
 
 
+    /**
+     *
+     * @param startKmer – k-mer to start DFS
+     * @param parentKmer – previous for `startKmer`
+     * @param hm – hashmap with all k-mers
+     * @param pivot – hashmap with all pivot k-mers
+     * @param k – k-mers length
+     * @param kmersOnPath – hashset of all k-mers in current path
+     * @param bestPath – list of vertices in current path
+     * @param pivotKmersOnPath – amount of pivot k-mers on current path
+     * @param depthAvailable – available depth in k-mers
+     * @param globalBest – amount of pivot k-mers on the best path
+     * @return amount of pivot k-mers on best selected path
+     */
     private static int dfs(long startKmer, long parentKmer, Long2ShortHashMapInterface hm,
-                           BigLong2ShortHashMap pivot, int k, HashSet<Long> kmersOnPath, List<Long> bestPath, int pivotKmersOnPath, int depthLeft, int globalBest) {
-        // передаем начальный к-мер, его предка, хэшмапу с со всеми кмерами, хешмапу с интересующими кмерами, длину кмера,
-        // сет в котором будем хранить текущий путь, список, в котором будем хранить лучший путь, число интересующих
-        // кмеров в kmersOnPath, оставшуюся глубину прохода и число интересующих к-меров на лучшем пути максимально
-        // возможной длины
-        long kmer = startKmer;
-        long prev = parentKmer;
-
-        if (depthLeft == 0) {
+                           BigLong2ShortHashMap pivot, int k, HashSet<Long> kmersOnPath,
+                           List<Long> bestPath, int pivotKmersOnPath, int depthAvailable, int globalBest) {
+        if (depthAvailable == 0) {
             return pivotKmersOnPath;
         }
 
         List<Long> rightNeighbours = new ArrayList<Long>();
-        for (long neighbour : KmerOperations.rightNeighbours(kmer, k)) {
+        for (long neighbour : KmerOperations.rightNeighbours(startKmer, k)) {
             short value = hm.get(neighbour);
             if (value > 0) {
                 rightNeighbours.add(neighbour);
             }
         }
         List<Long> leftNeighbours = new ArrayList<Long>();
-        for (long neighbour : KmerOperations.leftNeighbours(kmer, k)) {
+        for (long neighbour : KmerOperations.leftNeighbours(startKmer, k)) {
             short value = hm.get(neighbour);
             if (value > 0) {
                 leftNeighbours.add(neighbour);
@@ -410,52 +418,60 @@ public class DeepComponentsBuilderAroundPivot {
         }
 
         List<Long> neighbours = null;
-        for (long val : KmerOperations.leftNeighbours(kmer, k)) {
-            if (val == prev) {
+        for (long val : KmerOperations.leftNeighbours(startKmer, k)) {
+            if (val == parentKmer) {
                 neighbours = rightNeighbours;
                 break;
             }
         }
-        for (long val : KmerOperations.rightNeighbours(kmer, k)) {
-            if (val == prev) {
+        for (long val : KmerOperations.rightNeighbours(startKmer, k)) {
+            if (val == parentKmer) {
                 neighbours = leftNeighbours;
                 break;
             }
         }
 
         assert neighbours != null;
+        /*
+        Explore each neighbour and update amount of pivot k-mers on each path.
+        Update `bestPath` if it is better, than path of maximal depth.
+         */
+        boolean hasNeigbours = false;
         for (long neighbour : neighbours) {
-            // На каждой итерации заглядываем в следующего соседа и получаем число интересующих к-меров на пути макс. длины.
-            // Если дошли до максимальной глубины и получили лучший путь, то обновляем лучший путь и фиксируем число
-            // интересующих к-меров в нем.
-
-            // копируем путь чтобы не набрать лишнего при обходе разных соседей
+            // make true copy
             HashSet<Long> kmersOnPathBack = new HashSet<Long>(kmersOnPath);
 
-            // исследуем путь следующего соседа при условии что он ещё не встречался на текущем пути внутри или вне функции
+            // explore each neighbour which is available and not on current path
             short value = hm.get(neighbour);
-            if (value > 0 & !kmersOnPath.contains(neighbour)) {
+            if (value > 0 && !kmersOnPath.contains(neighbour)) {
                 kmersOnPathBack.add(neighbour);
-            } else continue;
+                hasNeigbours = true;
+            } else {
+                continue;
+            }
 
             int n_pivot;
-            // запускаем следующий обход, подаем удлиненный на один к-мер путь, максимальная глубина уменьшается,
-            // число интересующих к-меров изменяется в соотвествии с поданным к-мером, лучший путь пересчитываем
             if (pivot.get(neighbour) > 0) {
-                n_pivot = dfs(neighbour, kmer, hm, pivot, k, kmersOnPathBack, bestPath, pivotKmersOnPath + 1, depthLeft - 1, globalBest);
+                n_pivot = dfs(neighbour, startKmer, hm, pivot, k, kmersOnPathBack, bestPath, pivotKmersOnPath + 1, depthAvailable - 1, globalBest);
             } else {
-                n_pivot = dfs(neighbour, kmer, hm, pivot, k, kmersOnPathBack, bestPath, pivotKmersOnPath, depthLeft - 1, globalBest);
+                n_pivot = dfs(neighbour, startKmer, hm, pivot, k, kmersOnPathBack, bestPath, pivotKmersOnPath, depthAvailable - 1, globalBest);
             }
-            // обновляем лучший путь только на максимальной глубине
-            if (n_pivot > globalBest & depthLeft == 1) {
-                bestPath.clear();
-                bestPath.addAll(kmersOnPathBack);
-                globalBest = n_pivot;
-            }
-            // для прокидывания globalBest при обратном пути
+
+            // update best path only for max depth
             if (n_pivot > globalBest) {
                 globalBest = n_pivot;
+                if (depthAvailable == 1) {
+                    bestPath.clear();
+                    bestPath.addAll(kmersOnPathBack);
+                }
             }
+        }
+
+        // update best path if no more neighbours
+        if (!hasNeigbours && pivotKmersOnPath > globalBest) {
+            globalBest = pivotKmersOnPath;
+            bestPath.clear();
+            bestPath.addAll(kmersOnPath);
         }
 
         return globalBest;

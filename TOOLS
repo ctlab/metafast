@@ -6,7 +6,6 @@ comparison-script                        tools.CompareReadsAndComponentsMain    
 component-colored                        tools.ColoredComponentMain                                                       Extract graph components from tangled graph based on k-mers coloring
 component-cutter                         tools.ComponentCutterMain                                                        Build graph components from tangled graph
 component-extractor                      tools.ComponentExtractorMain                                                     Extract graph components from tangled graph based on pivot k-mers
-component-extractor-deep                 tools.DeepComponentsExtractorMain                                                Extract graph components using depth first search from tangled graph based on pivot k-mers
 component-paths                          tools.ComponentPathsMain                                                         Extracts paths in the components
 dist-matrix-calculator                   tools.DistanceMatrixCalculatorMain                                               Calculates distance matrix using features values
 double-view                              tools.DoubleViewMain                                                             Converts two binary k-mers files to single text file
@@ -30,10 +29,9 @@ specific-kmers-3                         tools.SpecificKmers3GroupsFinder       
 stats-features                           tools.StatsFeaturesBuilderMain                                                   Builds statistically significant features for group of metagenomic samples
 stats-kmers                              tools.StatsKmersFinder                                                           Output k-mers statistically significant to each of two groups of samples based on chi-squared & Mann-Whitney test
 stats-kmers-3                            tools.StatsKmers3GroupsFinder                                                    Output k-mers statistically significant to each of three groups of samples based on chi-squared & Mann-Whitney test
-subset-specific                          tools.SubsetSpecificExtractor                                                    Output subset of top most specific k-mers due to ranking from given file
+subset-specific                          tools.SubsetSpecificExtractor                                                    Output subset of top most specific k-mers based on given statistical ranking
 supergraph-sequence-builder              tools.SupergraphSeqBuilderMain                                                   NOT COMPLETED
-top-rank-test-kmers                      tools.TopRankTestsKmersFinder                                                    Output specified number of best (by p-value) k-mers that statistically significant to one of two or three groups of samples based on Mann-Whitney test (for two groups) and and Kruskal-Wallis (for three groups), save files for faster subsequent extractions
-top-stats-kmers                          tools.TopStatsKmersFinder                                                        Output specified number of best (by p-value) k-mers that statistically significant to one of two or three groups of samples based on chi-squared test and save files for faster subsequent extractions
+top-stats-kmers                          tools.TopStatsKmersFinder                                                        Output specified number of best (by p-value) k-mers based on chi-squared test
 unique-features                          tools.UniqueFeaturesBuilderMain                                                  Builds unique features for group of metagenomic samples
 unique-kmers                             tools.UniqueKmersFinder                                                          Output k-mers present in one dataset and missing in other
 unique-kmers-multi                       tools.UniqueKmersMultipleSamplesFinder                                           Output k-mers present in one dataset in fixed number of samples and missing in other

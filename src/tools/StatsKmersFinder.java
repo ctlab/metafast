@@ -29,7 +29,7 @@ import java.util.Iterator;
 import java.util.stream.Stream;
 
 /**
- Implementation of statistical tests with custom bitset based on short[].
+ * Implementation of statistical tests with custom bitset based on short[].
  */
 public class StatsKmersFinder extends Tool {
 

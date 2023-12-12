@@ -23,6 +23,7 @@ public class SequenceComponent implements Comparable<SequenceComponent> {
         kmers = new LongArraySet();
         size = 0;
         weight = 0;
+        n_pivot = 0;
     }
 
 

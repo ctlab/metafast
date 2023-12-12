@@ -21,13 +21,14 @@ import java.util.Iterator;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-
+/**
+ * Output specified number of best (by p-value) k-mers that statistically significant to one of two or three
+ * groups of samples based on chi-squared test and save files for faster subsequent extractions.
+ */
 public class TopStatsKmersFinder extends Tool {
 
     public static final String NAME = "top-stats-kmers";
-    public static final String DESCRIPTION = "Output specified number of best (by p-value) k-mers that statistically" +
-            " significant to one of two or three groups of samples based on chi-squared test and save files for faster " +
-            "subsequent extractions";
+    public static final String DESCRIPTION = "Output specified number of best (by p-value) k-mers based on chi-squared test";
 
     public final Parameter<File[]> Afiles = addParameter(new FileMVParameterBuilder("a-kmers")
             .mandatory()
@@ -49,7 +50,7 @@ public class TopStatsKmersFinder extends Tool {
 
     public final Parameter<Integer> NBest = addParameter(new IntParameterBuilder("num-kmers")
             .mandatory()
-            .withShortOpt("nk")
+            .withShortOpt("n")
             .withDescription("number of most specific k-mers to be extracted")
             .create());
 
@@ -65,13 +66,15 @@ public class TopStatsKmersFinder extends Tool {
             .withDefaultValue(workDir.append("kmers"))
             .create());
 
-    private final InMemoryValue<File> filteredKmersFilePr = new InMemoryValue<File>();
-    public final InValue<File> filteredKmersFile =
-            addOutput("filtered-kmers-file", filteredKmersFilePr, File.class);
+
+    private final InMemoryValue<File[]> resultingKmerFilesPr = new InMemoryValue<File[]>();
+    public final InValue<File[]> resultingKmerFiles =
+            addOutput("resulting-kmers-file", resultingKmerFilesPr, File[].class);
 
 
     @Override
     protected void cleanImpl() {
+        resultingKmerFilesPr.set(new File[]{new File(outputDir.get(), "top_" + NBest.get().toString() + "_chi_squared_specific.kmers.bin")});
     }
 
     @Override
@@ -153,14 +156,11 @@ public class TopStatsKmersFinder extends Tool {
 
         File allKmersFile = new File(outDir, "all.kmers.bin");
         File allRanksFile = new File(outDir, "all_chi_squared_ranks.bin");
-        DataOutputStream streamKmers = new DataOutputStream(new BufferedOutputStream(
-                new FileOutputStream(allKmersFile), 1 << 24));
-        DataOutputStream streamRanks = new DataOutputStream(new BufferedOutputStream(
-                new FileOutputStream(allRanksFile), 1 << 24));
+        DataOutputStream streamKmers = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(allKmersFile), 1 << 24));
+        DataOutputStream streamRanks = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(allRanksFile), 1 << 24));
 
         File filteredKmersFile = new File(outDir, "top_" + NBest.get().toString() + "_chi_squared_specific.kmers.bin");
-        DataOutputStream stream = new DataOutputStream(new BufferedOutputStream(
-                new FileOutputStream(filteredKmersFile), 1 << 24));
+        DataOutputStream stream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(filteredKmersFile), 1 << 24));
 
         int[] sortedIndices = IntStream.range(0, n)
                 .boxed().sorted((i, j) -> pvalues[j].compareTo(pvalues[i])) // sort in descending order
@@ -195,7 +195,7 @@ public class TopStatsKmersFinder extends Tool {
 
         debug("All non-unique and not scarce k-mers printed to " + allKmersFile.getPath());
         debug("Ranks for non-unique and not scarce k-mers printed to " + allRanksFile.getPath());
-        debug("Filtered k-mers printed to " + filteredKmersFile.getPath());
+        info("Filtered k-mers printed to " + filteredKmersFile.getPath());
         debug("Total k-mers count = " + n);
         debug("Total unique k-mers = " + nUnique);
         debug("Total k-mers present in all files = " + nInAll);
