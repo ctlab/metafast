@@ -1,5 +1,6 @@
 antibody-sequences-finder                tools.AntibodyFinderMain                                                         Antibody sequences finder in De Bruijn graph
 bin2fasta                                tools.BinaryToFasta                                                              Converts different binary objects to FASTA format
+comp2graph                               tools.ComponentsToGraph                                                          Transforms components in binary format to de Bruijn graph in GFA format
 comp2seq                                 tools.ComponentsToSequences                                                      Transforms components in binary format to FASTA sequences (contigs)
 comparison-script                        tools.CompareReadsAndComponentsMain                                              Statistics
 component-colored                        tools.ColoredComponentMain                                                       Extract graph components from tangled graph based on k-mers coloring
@@ -25,9 +26,12 @@ seq-builder-many                         tools.SeqBuilderForManyFilesMain       
 seq2comp                                 tools.SequencesToComponents                                                      Transforms sequences to components
 specific-kmers                           tools.SpecificKmersFinder                                                        Output k-mers specific to groups of samples based on chi-squared & Mann-Whitney tests
 specific-kmers-3                         tools.SpecificKmers3GroupsFinder                                                 Output k-mers specific to each of three groups of samples based on chi-squared & Mann-Whitney tests
+stats-features                           tools.StatsFeaturesBuilderMain                                                   Builds statistically significant features for group of metagenomic samples
 stats-kmers                              tools.StatsKmersFinder                                                           Output k-mers statistically significant to each of two groups of samples based on chi-squared & Mann-Whitney test
 stats-kmers-3                            tools.StatsKmers3GroupsFinder                                                    Output k-mers statistically significant to each of three groups of samples based on chi-squared & Mann-Whitney test
+subset-specific                          tools.SubsetSpecificExtractor                                                    Output subset of top most specific k-mers based on given statistical ranking
 supergraph-sequence-builder              tools.SupergraphSeqBuilderMain                                                   NOT COMPLETED
+top-stats-kmers                          tools.TopStatsKmersFinder                                                        Output specified number of best (by p-value) k-mers based on chi-squared test
 unique-features                          tools.UniqueFeaturesBuilderMain                                                  Builds unique features for group of metagenomic samples
 unique-kmers                             tools.UniqueKmersFinder                                                          Output k-mers present in one dataset and missing in other
 unique-kmers-multi                       tools.UniqueKmersMultipleSamplesFinder                                           Output k-mers present in one dataset in fixed number of samples and missing in other

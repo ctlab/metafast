@@ -24,6 +24,7 @@ public class ConnectedComponent implements Comparable<ConnectedComponent> {
 
     public int no;          // id of this component, can be not initialized
     public long weight;     // weight of this component
+    public long n_pivot;    // number of pivot k-mers in component, can be not initialized
 
     /**
      * Threshold used to construct this component!
@@ -45,6 +46,7 @@ public class ConnectedComponent implements Comparable<ConnectedComponent> {
         kmers = new LongArrayList();
         size = 0;
         weight = 0;
+        n_pivot = 0;
     }
 
     public ConnectedComponent(SequenceComponent component) {
@@ -52,8 +54,16 @@ public class ConnectedComponent implements Comparable<ConnectedComponent> {
         kmers.addAll(component.kmers);
         size = component.size;
         weight = component.weight;
+        n_pivot = component.n_pivot;
     }
 
+    public void add_pivot(int p) {
+        n_pivot += p;
+    }
+
+    public void add_pivot() {
+        n_pivot += 1;
+    }
 
     public void add(long kmer, short w) {
         kmers.add(kmer);

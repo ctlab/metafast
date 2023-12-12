@@ -29,7 +29,7 @@ import java.util.Iterator;
 import java.util.stream.Stream;
 
 /**
- Implementation of statistical tests with custom bitset based on short[].
+ * Implementation of statistical tests with custom bitset based on short[].
  */
 public class StatsKmersFinder extends Tool {
 
@@ -155,7 +155,7 @@ public class StatsKmersFinder extends Tool {
             boolean chisq_bool = chisq(n_0_A, n_1_A, n_0_B, n_1_B, qvalue);
 
             if (chisq_bool) {
-                hm_chisq.put(key, (short)1);
+                hm_chisq.put(key, (short) 1);
             } else {
                 nFilteredChi++;
             }
